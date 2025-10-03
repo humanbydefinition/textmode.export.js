@@ -1,8 +1,8 @@
-**textmode.export.js v0.0.0**
+**textmode.export.js v0.0.1**
 
 ***
 
-# textmode.export.js v0.0.0
+# textmode.export.js v0.0.1
 
 ## Interfaces
 
@@ -27,4 +27,4 @@
 
 | Function | Description |
 | ------ | ------ |
-| [createTextmodeExportPlugin](functions/createTextmodeExportPlugin.md) | Initializes the export plugin for `textmode.js` use. |
+| [createTextmodeExportPlugin](functions/createTextmodeExportPlugin.md) | Creates and returns a textmode export plugin instance. In UMD builds, this is also available globally as `createTextmodeExportPlugin`. |

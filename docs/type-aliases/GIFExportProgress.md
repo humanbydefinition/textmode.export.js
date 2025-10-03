@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.0**](../README.md)
+[**textmode.export.js v0.0.1**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **GIFExportProgress** = `object`
 
-Defined in: [exporters/gif/types.ts:10](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/gif/types.ts#L10)
+Defined in: [exporters/gif/types.ts:10](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L10)
 
 Progress information emitted during the GIF export process.
 
@@ -18,7 +18,7 @@ Progress information emitted during the GIF export process.
 
 > `optional` **frameIndex**: `number`
 
-Defined in: [exporters/gif/types.ts:18](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/gif/types.ts#L18)
+Defined in: [exporters/gif/types.ts:18](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L18)
 
 Number of frames that have been recorded so far.
 
@@ -28,7 +28,7 @@ Number of frames that have been recorded so far.
 
 > `optional` **message**: `string`
 
-Defined in: [exporters/gif/types.ts:26](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/gif/types.ts#L26)
+Defined in: [exporters/gif/types.ts:26](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L26)
 
 Optional status message for UI consumption.
 
@@ -38,7 +38,7 @@ Optional status message for UI consumption.
 
 > **state**: `"idle"` \| `"recording"` \| `"completed"` \| `"error"`
 
-Defined in: [exporters/gif/types.ts:14](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/gif/types.ts#L14)
+Defined in: [exporters/gif/types.ts:14](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L14)
 
 Current state of the recording process.
 
@@ -48,6 +48,6 @@ Current state of the recording process.
 
 > `optional` **totalFrames**: `number`
 
-Defined in: [exporters/gif/types.ts:22](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/gif/types.ts#L22)
+Defined in: [exporters/gif/types.ts:22](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L22)
 
 Total number of frames planned for the recording.

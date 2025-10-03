@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.0**](../README.md)
+[**textmode.export.js v0.0.1**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: TextmodeExportAPI
 
-Defined in: [types.ts:10](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L10)
+Defined in: [types.ts:10](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L10)
 
 Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
 
@@ -16,7 +16,7 @@ Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` 
 
 > **copyCanvas**(`options?`): `Promise`\<`void`\>
 
-Defined in: [types.ts:21](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L21)
+Defined in: [types.ts:21](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L21)
 
 Copies the current canvas to the user's clipboard as an image.
 
@@ -36,7 +36,7 @@ Copies the current canvas to the user's clipboard as an image.
 
 > **saveCanvas**(`options?`): `Promise`\<`void`\>
 
-Defined in: [types.ts:15](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L15)
+Defined in: [types.ts:15](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L15)
 
 Saves the current canvas content to an image file *(`'png'` by default)*.
 
@@ -56,7 +56,7 @@ Saves the current canvas content to an image file *(`'png'` by default)*.
 
 > **saveGIF**(`options?`): `Promise`\<`void`\>
 
-Defined in: [types.ts:53](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L53)
+Defined in: [types.ts:53](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L53)
 
 Records an animated GIF and saves it to disk.
 
@@ -76,7 +76,7 @@ Records an animated GIF and saves it to disk.
 
 > **saveStrings**(`options?`): `void`
 
-Defined in: [types.ts:33](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L33)
+Defined in: [types.ts:33](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L33)
 
 Downloads the current text content as a plain-text file.
 
@@ -96,7 +96,7 @@ Downloads the current text content as a plain-text file.
 
 > **saveSVG**(`options?`): `void`
 
-Defined in: [types.ts:27](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L27)
+Defined in: [types.ts:27](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L27)
 
 Downloads the current frame as an SVG file.
 
@@ -116,7 +116,7 @@ Downloads the current frame as an SVG file.
 
 > **saveWEBM**(`options?`): `Promise`\<`void`\>
 
-Defined in: [types.ts:59](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L59)
+Defined in: [types.ts:59](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L59)
 
 Captures a WEBM video and saves it to disk.
 
@@ -136,7 +136,7 @@ Captures a WEBM video and saves it to disk.
 
 > **toString**(`options?`): `string`
 
-Defined in: [types.ts:47](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L47)
+Defined in: [types.ts:47](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L47)
 
 Produces the current text content as a string.
 
@@ -158,7 +158,7 @@ The textual representation of the artwork.
 
 > **toSVG**(`options?`): `string`
 
-Defined in: [types.ts:40](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/types.ts#L40)
+Defined in: [types.ts:40](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L40)
 
 Generates the SVG markup for the current frame.
 

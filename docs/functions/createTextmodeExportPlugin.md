@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.0**](../README.md)
+[**textmode.export.js v0.0.1**](../README.md)
 
 ***
 
@@ -8,35 +8,17 @@
 
 > **createTextmodeExportPlugin**(`options`): `TextmodePlugin`
 
-Defined in: [index.ts:31](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/index.ts#L31)
+Defined in: [index.ts:36](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/index.ts#L36)
 
-Initializes the export plugin for `textmode.js` use.
+Creates and returns a textmode export plugin instance.
+In UMD builds, this is also available globally as `createTextmodeExportPlugin`.
 
 ## Parameters
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `options` | [`TextmodeExportPluginOptions`](../interfaces/TextmodeExportPluginOptions.md) | Plugin options |
+| Parameter | Type |
+| ------ | ------ |
+| `options` | [`TextmodeExportPluginOptions`](../interfaces/TextmodeExportPluginOptions.md) |
 
 ## Returns
 
 `TextmodePlugin`
-
-The export plugin instance to pass to `textmode.js`.
-
-## Example
-
-```typescript
-import { textmode } from 'textmode.js';
-import { createExportPlugin } from 'textmode.export.js';
-
-const exportPlugin = createExportPlugin({ overlay: true });
-
-const textmodifier = textmode.create({
- plugins: [exportPlugin],
-});
-
-// Now textmodifier has export methods like saveSVG, saveCanvas, etc.
-// textmodifier.saveSVG({ filename: 'my-artwork' });
-// textmodifier.saveCanvas({ format: 'png', scale: 2.0 });
-```

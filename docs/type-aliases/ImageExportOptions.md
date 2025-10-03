@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.0**](../README.md)
+[**textmode.export.js v0.0.1**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **ImageExportOptions** = `object`
 
-Defined in: [exporters/image/types.ts:13](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/image/types.ts#L13)
+Defined in: [exporters/image/types.ts:13](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/image/types.ts#L13)
 
 Options for exporting the textmode content to image format.
 
@@ -18,7 +18,7 @@ Options for exporting the textmode content to image format.
 
 > `optional` **filename**: `string`
 
-Defined in: [exporters/image/types.ts:17](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/image/types.ts#L17)
+Defined in: [exporters/image/types.ts:17](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/image/types.ts#L17)
 
 Target filename without extension. Defaults to an auto-generated value.
 
@@ -28,7 +28,7 @@ Target filename without extension. Defaults to an auto-generated value.
 
 > `optional` **format**: `"png"` \| `"jpg"` \| `"webp"`
 
-Defined in: [exporters/image/types.ts:22](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/image/types.ts#L22)
+Defined in: [exporters/image/types.ts:22](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/image/types.ts#L22)
 
 The image format to export *(`'png'`, `'jpg'`, or `'webp'`)*. Defaults to `'png'`.
 
@@ -38,7 +38,7 @@ The image format to export *(`'png'`, `'jpg'`, or `'webp'`)*. Defaults to `'png'
 
 > `optional` **scale**: `number`
 
-Defined in: [exporters/image/types.ts:31](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/image/types.ts#L31)
+Defined in: [exporters/image/types.ts:31](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/image/types.ts#L31)
 
 Scale factor for the output image.
 

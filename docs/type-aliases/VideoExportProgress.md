@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.0**](../README.md)
+[**textmode.export.js v0.0.1**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **VideoExportProgress** = `object`
 
-Defined in: [exporters/video/types.ts:11](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/video/types.ts#L11)
+Defined in: [exporters/video/types.ts:11](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/video/types.ts#L11)
 
 Progress information emitted during the video export process.
 
@@ -18,7 +18,7 @@ Progress information emitted during the video export process.
 
 > `optional` **frameIndex**: `number`
 
-Defined in: [exporters/video/types.ts:19](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/video/types.ts#L19)
+Defined in: [exporters/video/types.ts:19](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/video/types.ts#L19)
 
 Number of frames that have been recorded so far.
 
@@ -28,7 +28,7 @@ Number of frames that have been recorded so far.
 
 > `optional` **message**: `string`
 
-Defined in: [exporters/video/types.ts:27](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/video/types.ts#L27)
+Defined in: [exporters/video/types.ts:27](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/video/types.ts#L27)
 
 Optional status message for UI consumption.
 
@@ -38,7 +38,7 @@ Optional status message for UI consumption.
 
 > **state**: `"idle"` \| `"recording"` \| `"encoding"` \| `"completed"` \| `"error"`
 
-Defined in: [exporters/video/types.ts:15](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/video/types.ts#L15)
+Defined in: [exporters/video/types.ts:15](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/video/types.ts#L15)
 
 Current state of the recording process.
 
@@ -48,6 +48,6 @@ Current state of the recording process.
 
 > `optional` **totalFrames**: `number`
 
-Defined in: [exporters/video/types.ts:23](https://github.com/humanbydefinition/textmode.export.js/blob/b139a19f4bf774f3e0d95bc7580f4dc7e25a4c0f/src/exporters/video/types.ts#L23)
+Defined in: [exporters/video/types.ts:23](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/video/types.ts#L23)
 
 Total number of frames planned for the recording.
