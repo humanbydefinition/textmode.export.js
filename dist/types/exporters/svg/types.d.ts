@@ -1,0 +1,111 @@
+/**
+ * RGBA color representation.
+ */
+export interface RGBA {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+}
+/**
+ * 2D position coordinates.
+ */
+export interface Position {
+    x: number;
+    y: number;
+}
+/**
+ * Cell position in grid coordinates.
+ */
+export interface CellPosition {
+    x: number;
+    y: number;
+    cellX: number;
+    cellY: number;
+}
+/**
+ * Cell transformation data.
+ */
+export interface CellTransform {
+    isInverted: boolean;
+    flipHorizontal: boolean;
+    flipVertical: boolean;
+    rotation: number;
+}
+/**
+ * Complete data for a single SVG cell.
+ */
+export interface SVGCellData {
+    charIndex: number;
+    primaryColor: RGBA;
+    secondaryColor: RGBA;
+    transform: CellTransform;
+    position: CellPosition;
+}
+/**
+ * Framebuffer data extracted for SVG generation.
+ */
+export interface FramebufferData {
+    characterPixels: Uint8Array;
+    primaryColorPixels: Uint8Array;
+    secondaryColorPixels: Uint8Array;
+    transformPixels: Uint8Array;
+    rotationPixels: Uint8Array;
+}
+/**
+ * Options for exporting the textmode content to SVG format.
+ */
+export type SVGExportOptions = {
+    /**
+     * The filename to save the SVG file as.
+     *
+     * If not provided, a default filename is used.
+     */
+    filename?: string;
+    /**
+     * Whether to include cell background rectangles in the SVG output.
+     *
+     * When `false`, only the character paths are included.
+     *
+     * Defaults to `true`.
+     */
+    includeBackgroundRectangles?: boolean;
+    /**
+     * The drawing mode for ASCII characters.
+     *
+     * When set to `'fill'`, characters are rendered as filled shapes.
+     *
+     * When set to `'stroke'`, characters are rendered as outlines.
+     *
+     * Defaults to `'fill'`.
+     */
+    drawMode?: 'fill' | 'stroke';
+    /**
+     * The stroke width to use when drawMode is set to `'stroke'`.
+     *
+     * Defaults to `1.0`.
+     */
+    strokeWidth?: number;
+};
+/**
+ * Path object interface for character glyphs.
+ */
+export interface GlyphPath {
+    getBoundingBox(): {
+        x1: number;
+        y1: number;
+        x2: number;
+        y2: number;
+    };
+    toSVG(): string;
+}
+/**
+ * Internal options used by SVG generation (with all defaults applied).
+ */
+export interface SVGGenerationOptions {
+    includeBackgroundRectangles: boolean;
+    drawMode: 'fill' | 'stroke';
+    strokeWidth: number;
+    filename?: string;
+}
+//# sourceMappingURL=types.d.ts.map

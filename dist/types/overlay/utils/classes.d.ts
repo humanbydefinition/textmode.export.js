@@ -1,0 +1,35 @@
+export declare const overlayClasses: {
+    readonly root: "textmode-export-overlay";
+    readonly stack: "textmode-export-overlay__stack";
+    readonly stackDense: "textmode-export-overlay__stack--dense";
+    readonly stackCompact: "textmode-export-overlay__stack--compact";
+    readonly section: "textmode-export-overlay__section";
+    readonly header: "textmode-export-overlay__header";
+    readonly headerTitleRow: "textmode-export-overlay__header-title-row";
+    readonly headerLinks: "textmode-export-overlay__header-links";
+    readonly row: "textmode-export-overlay__row";
+    readonly label: "textmode-export-overlay__label";
+    readonly field: "textmode-export-overlay__field";
+    readonly fieldCompact: "textmode-export-overlay__field--compact";
+    readonly fieldDense: "textmode-export-overlay__field--dense";
+    readonly fieldFull: "textmode-export-overlay__field--full";
+    readonly fieldChannel: "textmode-export-overlay__field--channel";
+    readonly input: "textmode-export-overlay__input";
+    readonly checkbox: "textmode-export-overlay__checkbox";
+    readonly muted: "textmode-export-overlay__muted";
+    readonly status: "textmode-export-overlay__status";
+    readonly statusGif: "textmode-export-overlay__status--gif";
+    readonly statusVideo: "textmode-export-overlay__status--video";
+    readonly statusTitle: "textmode-export-overlay__status-title";
+    readonly statusValue: "textmode-export-overlay__status-value";
+    readonly divider: "textmode-export-overlay__divider";
+    readonly title: "textmode-export-overlay__title";
+    readonly button: "textmode-export-overlay__button";
+    readonly buttonPrimary: "textmode-export-overlay__button--primary";
+    readonly buttonSecondary: "textmode-export-overlay__button--secondary";
+    readonly buttonFull: "textmode-export-overlay__button--full";
+    readonly supportLink: "textmode-export-overlay__support-link";
+    readonly supportIcon: "textmode-export-overlay__support-icon";
+    readonly linkIcon: "textmode-export-overlay__link-icon";
+};
+//# sourceMappingURL=classes.d.ts.map

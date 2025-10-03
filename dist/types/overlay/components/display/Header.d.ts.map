@@ -1,0 +1,1 @@
+{"version":3,"file":"Header.d.ts","sourceRoot":"","sources":["../../../../../src/overlay/components/display/Header.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,SAAS,EAAE,MAAM,mBAAmB,CAAC;AAK9C,qBAAa,MAAO,SAAQ,SAAS,CAAC,IAAI,CAAC;IACzC,OAAO,CAAC,MAAM,CAAC,QAAQ,CAAC,cAAc,CAAgC;IAEtE,MAAM,IAAI,WAAW;IAoDrB,OAAO,CAAC,WAAW;IAWnB,OAAO,CAAC,WAAW;CAuBpB"}

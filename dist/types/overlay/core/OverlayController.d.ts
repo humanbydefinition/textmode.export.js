@@ -1,0 +1,48 @@
+import type { Textmodifier } from 'textmode.js';
+import type { TextmodeExportAPI } from '../../types';
+import { EventBus } from './EventBus';
+import { StateManager } from './StateManager';
+import type { OverlayEvents } from '../models/OverlayEvents';
+import type { OverlayState } from '../models/OverlayState';
+import type { FormatDefinition } from '../models/FormatDefinition';
+export declare class OverlayController {
+    private readonly _textmodifier;
+    private readonly _state;
+    private readonly _events;
+    private readonly _exportService;
+    private readonly _clipboardService;
+    private readonly _definitions;
+    private readonly _formats;
+    private readonly _eventUnsubscribers;
+    private _shadowHost;
+    private _shadowRoot;
+    private _overlayElement;
+    private _optionsContainer;
+    private _copyButtonContainer;
+    private _positionService;
+    private _header;
+    private _formatField;
+    private _formatSelect;
+    private _exportButton;
+    private _copyButton;
+    private _currentFormat;
+    private _currentBlade?;
+    private readonly _handleFormatSelectChange;
+    private readonly _handleExportClickSafe;
+    private readonly _handleCopyClickSafe;
+    constructor(textmodifier: Textmodifier, exportAPI: TextmodeExportAPI, state: StateManager<OverlayState>, events: EventBus<OverlayEvents>, definitions: ReadonlyArray<FormatDefinition>);
+    $mount(): void;
+    $dispose(): void;
+    private _initializeFormatMap;
+    private _createOverlay;
+    private _renderStaticContent;
+    private _prepareFormatOptions;
+    private _registerEventHandlers;
+    private _handleFormatChange;
+    private _switchFormat;
+    private _updateCopyButtonState;
+    private _handleExportClick;
+    private _handleCopyClick;
+    private _updateExportButton;
+}
+//# sourceMappingURL=OverlayController.d.ts.map
