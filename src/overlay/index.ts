@@ -6,7 +6,6 @@ import { StateManager } from './core/StateManager';
 import { createInitialOverlayState } from './models/OverlayState';
 import type { OverlayEvents } from './models/OverlayEvents';
 import { getExportFormatDefinitions } from './formatRegistry';
-import './style.css';
 
 export type { ExportFormat } from './types';
 

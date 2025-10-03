@@ -19,6 +19,7 @@ import { GIFBlade } from '../blades/GIFBlade';
 import { VideoBlade } from '../blades/VideoBlade';
 import type { GIFExportProgress } from '../../exporters/gif';
 import type { VideoExportProgress } from '../../exporters/video';
+import overlayStyles from '../style.css?inline';
 
 interface FormatContext {
   definition: FormatDefinition;
@@ -36,6 +37,8 @@ export class OverlayController {
   private readonly _formats = new Map<ExportFormat, FormatContext>();
   private readonly _eventUnsubscribers: Array<() => void> = [];
 
+  private _shadowHost!: HTMLDivElement;
+  private _shadowRoot!: ShadowRoot;
   private _overlayElement!: HTMLDivElement;
   private _optionsContainer!: HTMLDivElement;
   private _copyButtonContainer!: HTMLDivElement;
@@ -90,7 +93,7 @@ export class OverlayController {
   public $mount(): void {
     this._createOverlay();
     this._renderStaticContent();
-    this._positionService = new PositionService(this._textmodifier, this._overlayElement);
+    this._positionService = new PositionService(this._textmodifier, this._shadowHost);
     this._positionService.bind();
     this._switchFormat(this._currentFormat);
   }
@@ -115,8 +118,8 @@ export class OverlayController {
     }
     this._formats.clear();
     this._currentBlade = undefined;
-    if (this._overlayElement?.isConnected) {
-      this._overlayElement.remove();
+    if (this._shadowHost?.isConnected) {
+      this._shadowHost.remove();
     }
     this._positionService?.dispose();
   }
@@ -133,10 +136,27 @@ export class OverlayController {
   }
 
   private _createOverlay(): void {
+    // Create shadow host container
+    this._shadowHost = document.createElement('div');
+    this._shadowHost.dataset.plugin = 'textmode-export-overlay-host';
+    this._shadowHost.style.cssText = 'position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2147483647;';
+    
+    // Attach shadow root for complete style isolation
+    this._shadowRoot = this._shadowHost.attachShadow({ mode: 'open' });
+    
+    // Inject styles into shadow DOM
+    const styleElement = document.createElement('style');
+    styleElement.textContent = overlayStyles;
+    this._shadowRoot.appendChild(styleElement);
+    
+    // Create overlay element inside shadow DOM
     this._overlayElement = document.createElement('div');
     this._overlayElement.dataset.plugin = 'textmode-export-overlay';
     this._overlayElement.classList.add(overlayClasses.root, overlayClasses.stack);
-    document.body.appendChild(this._overlayElement);
+    this._shadowRoot.appendChild(this._overlayElement);
+    
+    // Mount shadow host to document body
+    document.body.appendChild(this._shadowHost);
   }
 
   private _renderStaticContent(): void {
