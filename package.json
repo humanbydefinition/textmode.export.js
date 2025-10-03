@@ -1,0 +1,72 @@
+{
+  "name": "textmode.export.js",
+  "version": "0.0.1",
+  "description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, and plain text.",
+  "type": "module",
+  "types": "./dist/types/index.d.ts",
+  "main": "./dist/textmode.export.umd.js",
+  "module": "./dist/textmode.export.esm.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/textmode.export.esm.js",
+      "require": "./dist/textmode.export.umd.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc",
+    "preview": "vite preview",
+    "build:docs": "typedoc",
+    "dev:docs": "typedoc --watch"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@types/node": "^24.5.2",
+    "terser": "^5.44.0",
+    "typedoc": "^0.28.13",
+    "typedoc-plugin-markdown": "^4.9.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.7",
+    "vite-plugin-css-injected-by-js": "^3.5.2"
+  },
+  "dependencies": {
+    "gifenc": "^1.0.1",
+    "textmode.js": "^0.3.2-beta.2",
+    "webm-writer": "^1.0.0"
+  },
+  "peerDependencies": {
+    "textmode.js": ">=0.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/humanbydefinition/textmode.export.js.git"
+  },
+  "keywords": [
+    "textmode",
+    "textmode.js",
+    "ascii",
+    "petscii",
+    "export",
+    "plugin",
+    "gif",
+    "video",
+    "webm",
+    "svg",
+    "image",
+    "png",
+    "jpg",
+    "webp",
+    "creative-coding",
+    "canvas"
+  ],
+  "author": "humanbydefinition",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/humanbydefinition/textmode.export.js/issues"
+  },
+  "homepage": "https://code.textmode.art",
+  "files": [
+    "dist"
+  ]
+}
