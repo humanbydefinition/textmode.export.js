@@ -1,6 +1,6 @@
 {
   "name": "textmode.export.js",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, and plain text.",
   "type": "module",
   "types": "./dist/types/index.d.ts",
