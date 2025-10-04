@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.1**](../README.md)
+[**textmode.export.js v1.0.0**](../README.md)
 
 ***
 
@@ -8,7 +8,7 @@
 
 > **GIFExportOptions** = `object`
 
-Defined in: [exporters/gif/types.ts:32](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L32)
+Defined in: [exporters/gif/types.ts:32](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L32)
 
 Options for exporting the textmode content to GIF format.
 
@@ -18,7 +18,7 @@ Options for exporting the textmode content to GIF format.
 
 > `optional` **filename**: `string`
 
-Defined in: [exporters/gif/types.ts:36](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L36)
+Defined in: [exporters/gif/types.ts:36](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L36)
 
 Target filename without extension. Defaults to an auto-generated value.
 
@@ -28,7 +28,7 @@ Target filename without extension. Defaults to an auto-generated value.
 
 > `optional` **frameCount**: `number`
 
-Defined in: [exporters/gif/types.ts:40](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L40)
+Defined in: [exporters/gif/types.ts:40](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L40)
 
 Desired total number of frames to capture. Defaults to `300`.
 
@@ -38,7 +38,7 @@ Desired total number of frames to capture. Defaults to `300`.
 
 > `optional` **frameRate**: `number`
 
-Defined in: [exporters/gif/types.ts:44](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L44)
+Defined in: [exporters/gif/types.ts:44](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L44)
 
 Target frame rate for the export, in frames per second. Defaults to `60`.
 
@@ -48,7 +48,7 @@ Target frame rate for the export, in frames per second. Defaults to `60`.
 
 > `optional` **onProgress**: (`progress`) => `void`
 
-Defined in: [exporters/gif/types.ts:60](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L60)
+Defined in: [exporters/gif/types.ts:60](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L60)
 
 Progress callback invoked throughout the recording lifecycle.
 
@@ -68,7 +68,7 @@ Progress callback invoked throughout the recording lifecycle.
 
 > `optional` **repeat**: `number`
 
-Defined in: [exporters/gif/types.ts:56](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L56)
+Defined in: [exporters/gif/types.ts:56](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L56)
 
 GIF loop count. 0 = loop forever. Defaults to `0`.
 
@@ -78,7 +78,7 @@ GIF loop count. 0 = loop forever. Defaults to `0`.
 
 > `optional` **scale**: `number`
 
-Defined in: [exporters/gif/types.ts:52](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/exporters/gif/types.ts#L52)
+Defined in: [exporters/gif/types.ts:52](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/exporters/gif/types.ts#L52)
 
 Scale factor for the output image.
 

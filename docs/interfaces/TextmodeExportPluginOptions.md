@@ -1,4 +1,4 @@
-[**textmode.export.js v0.0.1**](../README.md)
+[**textmode.export.js v1.0.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 # Interface: TextmodeExportPluginOptions
 
-Defined in: [types.ts:65](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L65)
+Defined in: [types.ts:65](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/types.ts#L65)
 
 Options for configuring the export plugin.
 
@@ -14,4 +14,4 @@ Options for configuring the export plugin.
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="overlay"></a> `overlay?` | `boolean` | Controls whether the export overlay UI should be created. Defaults to `true`. | [types.ts:70](https://github.com/humanbydefinition/textmode.export.js/blob/241a52e7274d60bd9f433936679cfec4de4793a9/src/types.ts#L70) |
+| <a id="overlay"></a> `overlay?` | `boolean` | Controls whether the export overlay UI should be created. Defaults to `true`. | [types.ts:70](https://github.com/humanbydefinition/textmode.export.js/blob/ca75473df965aa1ff01c2e4c1b01c8321648d368/src/types.ts#L70) |

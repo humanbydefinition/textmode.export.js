@@ -1,8 +1,8 @@
-**textmode.export.js v0.0.1**
+**textmode.export.js v1.0.0**
 
 ***
 
-# textmode.export.js v0.0.1
+# textmode.export.js v1.0.0
 
 ## Interfaces
 
