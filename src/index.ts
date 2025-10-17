@@ -58,7 +58,7 @@ export const createTextmodeExportPlugin = (
          * @returns Promise that resolves when the file is saved
          */
         saveCanvas: async (options: ImageExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           return new ImageExporter().$saveImage(textmodifier.canvas, options);
         },
 
@@ -69,7 +69,7 @@ export const createTextmodeExportPlugin = (
          * @throws Error if the Clipboard API is not supported or if copying fails
          */
         copyCanvas: async (options: ImageExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           return new ImageExporter().$copyImageToClipboard(textmodifier.canvas, options);
         },
 
@@ -78,7 +78,7 @@ export const createTextmodeExportPlugin = (
          * @param options Export options
          */
         saveSVG: (options: SVGExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           new SVGExporter().$saveSVG(textmodifier, options);
         },
 
@@ -87,7 +87,7 @@ export const createTextmodeExportPlugin = (
          * @param options Export options
          */
         saveStrings: (options: TXTExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           new TXTExporter().$saveTXT(textmodifier, options);
         },
 
@@ -97,7 +97,7 @@ export const createTextmodeExportPlugin = (
          * @returns String containing the SVG content
          */
         toSVG: (options: SVGExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           return new SVGExporter().$generateSVG(textmodifier, options);
         },
 
@@ -107,7 +107,7 @@ export const createTextmodeExportPlugin = (
          * @returns String containing the TXT content
          */
         toString: (options: TXTExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           return new TXTExporter().$generateTXT(textmodifier, options);
         },
 
@@ -117,7 +117,7 @@ export const createTextmodeExportPlugin = (
          * @returns Promise that resolves when the file is saved
          */
         saveGIF: async (options: GIFExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           return new GIFExporter(textmodifier, api.registerPostDrawHook).$saveGIF(options);
         },
 
@@ -127,7 +127,7 @@ export const createTextmodeExportPlugin = (
          * @returns Promise that resolves when the file is saved
          */
         saveWEBM: async (options: VideoExportOptions = {}) => {
-          api.flushDrawCommands();
+          
           return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveWEBM(options);
         },
       };
