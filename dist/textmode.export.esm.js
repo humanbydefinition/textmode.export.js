@@ -2047,11 +2047,11 @@ const Xe = (s = {}) => {
   const t = s.overlay ?? !0;
   let e;
   return { name: "textmode-export", version: "1.0.0", async install(r, a) {
-    const i = { saveCanvas: async (n = {}) => (a.flushDrawCommands(), new bt().$saveImage(r.canvas, n)), copyCanvas: async (n = {}) => (a.flushDrawCommands(), new bt().$copyImageToClipboard(r.canvas, n)), saveSVG: (n = {}) => {
-      a.flushDrawCommands(), new gt().$saveSVG(r, n);
+    const i = { saveCanvas: async (n = {}) => new bt().$saveImage(r.canvas, n), copyCanvas: async (n = {}) => new bt().$copyImageToClipboard(r.canvas, n), saveSVG: (n = {}) => {
+      new gt().$saveSVG(r, n);
     }, saveStrings: (n = {}) => {
-      a.flushDrawCommands(), new vt().$saveTXT(r, n);
-    }, toSVG: (n = {}) => (a.flushDrawCommands(), new gt().$generateSVG(r, n)), toString: (n = {}) => (a.flushDrawCommands(), new vt().$generateTXT(r, n)), saveGIF: async (n = {}) => (a.flushDrawCommands(), new me(r, a.registerPostDrawHook).$saveGIF(n)), saveWEBM: async (n = {}) => (a.flushDrawCommands(), new Ce(r, a.registerPostDrawHook).$saveWEBM(n)) };
+      new vt().$saveTXT(r, n);
+    }, toSVG: (n = {}) => new gt().$generateSVG(r, n), toString: (n = {}) => new vt().$generateTXT(r, n), saveGIF: async (n = {}) => new me(r, a.registerPostDrawHook).$saveGIF(n), saveWEBM: async (n = {}) => new Ce(r, a.registerPostDrawHook).$saveWEBM(n) };
     Object.assign(r, i), t && (e = Qe(r, i));
   }, async uninstall(r) {
     e?.$dispose(), e = void 0;
