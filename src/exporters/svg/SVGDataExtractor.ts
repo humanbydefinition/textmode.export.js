@@ -10,34 +10,25 @@ import { pixelsToRGBA } from '../../utils/pixels';
 export class SVGDataExtractor extends DataExtractor {
 
     /**
-     * Extracts transform data from transform pixels
-     * @param transformPixels Transform framebuffer pixels
-     * @param rotationPixels Rotation framebuffer pixels
+     * Extracts transform data from character pixels
+     * @param characterPixels Character framebuffer pixels
      * @param pixelIndex Pixel index in the array
      * @returns Transform data object
      */
     private _extractTransformData(
-        transformPixels: Uint8Array,
-        rotationPixels: Uint8Array,
+        characterPixels: Uint8Array,
         pixelIndex: number
     ): CellTransform {
-        // Extract transform data from transform framebuffer
-        const transformR = transformPixels[pixelIndex];
-        const transformG = transformPixels[pixelIndex + 1];
-        const transformB = transformPixels[pixelIndex + 2];
+        // Extract packed flags from blue channel (bits 0-2: invert, flipX, flipY)
+        const packedFlags = characterPixels[pixelIndex + 2];
+        
+        const isInverted = (packedFlags & 1) !== 0;        // bit 0
+        const flipHorizontal = (packedFlags & 2) !== 0;    // bit 1
+        const flipVertical = (packedFlags & 4) !== 0;      // bit 2
 
-        // R channel for inversion, G channel for horizontal flip, B channel for vertical flip
-        const isInverted = transformR === 255;
-        const flipHorizontal = transformG === 255;
-        const flipVertical = transformB === 255;
-
-        // Calculate rotation angle from rotation framebuffer
-        const rotationRed = rotationPixels[pixelIndex];
-        const rotationGreen = rotationPixels[pixelIndex + 1];
-
-        // Decode using two-channel precision
-        const scaledAngle = rotationRed + (rotationGreen / 255);
-        const rotation = Math.round(((scaledAngle * 360) / 255) * 100) / 100;
+        // Extract rotation from alpha channel (0-1 range normalized to 0-360 degrees)
+        const rotationNormalized = characterPixels[pixelIndex + 3] / 255;
+        const rotation = Math.round((rotationNormalized * 360) * 100) / 100;
 
         return {
             isInverted,
@@ -93,8 +84,7 @@ export class SVGDataExtractor extends DataExtractor {
 
                 // Extract transform data
                 const transform = this._extractTransformData(
-                    framebufferData.transformPixels,
-                    framebufferData.rotationPixels,
+                    framebufferData.characterPixels,
                     pixelIdx
                 );
 

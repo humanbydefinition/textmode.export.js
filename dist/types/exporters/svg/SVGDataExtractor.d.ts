@@ -7,9 +7,8 @@ import type { TextmodeGrid } from 'textmode.js';
  */
 export declare class SVGDataExtractor extends DataExtractor {
     /**
-     * Extracts transform data from transform pixels
-     * @param transformPixels Transform framebuffer pixels
-     * @param rotationPixels Rotation framebuffer pixels
+     * Extracts transform data from character pixels
+     * @param characterPixels Character framebuffer pixels
      * @param pixelIndex Pixel index in the array
      * @returns Transform data object
      */

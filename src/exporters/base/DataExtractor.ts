@@ -15,10 +15,8 @@ export class DataExtractor {
         const characterPixels: Uint8Array = framebuffer.readPixels(0);
         const primaryColorPixels: Uint8Array = framebuffer.readPixels(1);
         const secondaryColorPixels: Uint8Array = framebuffer.readPixels(2);
-        const rotationPixels: Uint8Array = framebuffer.readPixels(3);
-        const transformPixels: Uint8Array = framebuffer.readPixels(4);
 
-        return { characterPixels, primaryColorPixels, secondaryColorPixels, transformPixels, rotationPixels };
+        return { characterPixels, primaryColorPixels, secondaryColorPixels };
     }
 
     /**
