@@ -112,7 +112,7 @@ export class SVGContentGenerator {
             gridInfo.cellWidth,
             gridInfo.cellHeight,
             fontInfo.fontSize,
-            character.advanceWidth
+            character.glyphData
         );
 
         if (!pathData) return '';

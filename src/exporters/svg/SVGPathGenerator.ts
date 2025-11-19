@@ -23,6 +23,8 @@ interface GlyphData {
     ys: number[];
     /** Composite glyph parts (for composite glyphs) */
     parts?: unknown[];
+    /** Advance width of the glyph */
+    advanceWidth: number;
 }
 
 /**
@@ -57,6 +59,8 @@ export class SVGPathGenerator {
         fontSize: number
     ): GlyphPath {
         const scale = fontSize / fontData.head.unitsPerEm;
+
+        console.log("Scale factor:", scale);
 
         return {
             getBoundingBox: () => {
@@ -153,8 +157,10 @@ export class SVGPathGenerator {
         y: number,
         fontSize: number
     ): GlyphPath | null {
-        const codePoint = character.codePointAt(0) ?? 0;
-        const glyphData = font.getGlyphData(codePoint);
+        const glyphData = font.characterMap.get(character).glyphData;
+
+        console.log('Glyph data for character', character, glyphData);
+
         if (!glyphData) {
             return null;
         }
@@ -182,12 +188,16 @@ export class SVGPathGenerator {
         cellWidth: number,
         cellHeight: number,
         fontSize: number,
-        advanceWidth: number
+        glyphData: GlyphData | null
     ): string | null {
+        if (!glyphData) {
+            return null;
+        }
+
         const fontData = font.font;
         // Center the glyph in the cell
         const scale = fontSize / fontData.head.unitsPerEm;
-        const scaledGlyphWidth = advanceWidth * scale;
+        const scaledGlyphWidth = glyphData.advanceWidth * scale;
         const xOffset = cellX + (cellWidth - scaledGlyphWidth) / 2;
         const yOffset = cellY + (cellHeight + fontSize * 0.7) / 2;
 
