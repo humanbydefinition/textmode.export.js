@@ -19,14 +19,14 @@ tm.draw(() => {
     const time = tm.frameCount * 0.01;
     const step = 3;
     
+    tm.translate(-tm.grid.cols / 2, -tm.grid.rows / 2, 0);
+
     for (let y = 0; y < tm.grid.rows; y += step) {
         for (let x = 0; x < tm.grid.cols; x += step) {
             tm.push();
             
-            // Calculate distance from center
-            const centerX = tm.grid.cols / 2;
-            const centerY = tm.grid.rows / 2;
-            const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+            // Calculate distance from center (center is now at 0,0,0)
+            const distance = Math.sqrt(x ** 2 + y ** 2);
             
             // Create ripple effect
             const wave = Math.sin(distance * 0.3 - time * 8) * 0.5 + 0.5;
@@ -53,7 +53,8 @@ tm.draw(() => {
             }
             
             tm.cellColor(0, 0, 0);
-            tm.rect(x, y, step, step);
+            tm.translate(x, y, 0);
+            tm.rect(step, step);
             
             tm.pop();
         }

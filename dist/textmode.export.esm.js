@@ -1,7 +1,6 @@
 class At {
   $extractFramebufferData(t) {
-    const e = t.readPixels(0), r = t.readPixels(1), a = t.readPixels(2), i = t.readPixels(3);
-    return { characterPixels: e, primaryColorPixels: r, secondaryColorPixels: a, transformPixels: t.readPixels(4), rotationPixels: i };
+    return { characterPixels: t.readPixels(0), primaryColorPixels: t.readPixels(1), secondaryColorPixels: t.readPixels(2) };
   }
   $getCharacterIndex(t, e) {
     return t[e] + (t[e + 1] << 8);
@@ -29,9 +28,9 @@ function ft(s, t) {
   return { r: s[t], g: s[t + 1], b: s[t + 2], a: s[t + 3] };
 }
 class Wt extends At {
-  _extractTransformData(t, e, r) {
-    const a = t[r] === 255, i = t[r + 1] === 255, n = t[r + 2] === 255, c = e[r] + e[r + 1] / 255;
-    return { isInverted: a, flipHorizontal: i, flipVertical: n, rotation: Math.round(360 * c / 255 * 100) / 100 };
+  _extractTransformData(t, e) {
+    const r = t[e + 2], a = !!(1 & r), i = !!(2 & r), n = !!(4 & r), c = t[e + 3] / 255;
+    return { isInverted: a, flipHorizontal: i, flipVertical: n, rotation: Math.round(360 * c * 100) / 100 };
   }
   _calculateCellPosition(t, e, r) {
     return { x: t, y: e, cellX: t * r.cellWidth, cellY: e * r.cellHeight };
@@ -42,7 +41,7 @@ class Wt extends At {
     for (let i = 0; i < e.rows; i++) for (let n = 0; n < e.cols; n++) {
       const c = 4 * a, l = this.$getCharacterIndex(t.characterPixels, c);
       let p = ft(t.primaryColorPixels, c), o = ft(t.secondaryColorPixels, c);
-      const d = this._extractTransformData(t.transformPixels, t.rotationPixels, c);
+      const d = this._extractTransformData(t.characterPixels, c);
       if (d.isInverted) {
         const m = p;
         p = o, o = m;

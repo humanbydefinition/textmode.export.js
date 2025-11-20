@@ -54,8 +54,6 @@ export interface FramebufferData {
     characterPixels: Uint8Array;
     primaryColorPixels: Uint8Array;
     secondaryColorPixels: Uint8Array;
-    transformPixels: Uint8Array;
-    rotationPixels: Uint8Array;
 }
 
 /**
