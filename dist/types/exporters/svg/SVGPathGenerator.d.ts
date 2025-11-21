@@ -1,5 +1,30 @@
 import type { TextmodeFont } from 'textmode.js';
 /**
+ * Glyph data structure for parsed glyphs.
+ * Mirrors the shape used by textmode.js internally for Typr glyph data.
+ */
+interface GlyphData {
+    /** Number of contours (-1 for composite glyphs) */
+    noc: number;
+    /** Bounding box coordinates */
+    xMin: number;
+    yMin: number;
+    xMax: number;
+    yMax: number;
+    /** End points of each contour */
+    endPts: number[];
+    /** Point flags indicating curve/line segments */
+    flags: number[];
+    /** X coordinates of all points */
+    xs: number[];
+    /** Y coordinates of all points */
+    ys: number[];
+    /** Composite glyph parts (for composite glyphs) */
+    parts?: unknown[];
+    /** Advance width of the glyph */
+    advanceWidth: number;
+}
+/**
  * Handles SVG path generation for character glyphs.
  * This class is responsible for converting font glyph data into SVG path strings.
  */
@@ -45,6 +70,7 @@ export declare class SVGPathGenerator {
      * @param advanceWidth Character advance width
      * @returns SVG path data string or null if generation fails
      */
-    $generatePositionedCharacterPath(character: string, font: TextmodeFont, cellX: number, cellY: number, cellWidth: number, cellHeight: number, fontSize: number, advanceWidth: number): string | null;
+    $generatePositionedCharacterPath(character: string, font: TextmodeFont, cellX: number, cellY: number, cellWidth: number, cellHeight: number, fontSize: number, glyphData: GlyphData | null): string | null;
 }
+export {};
 //# sourceMappingURL=SVGPathGenerator.d.ts.map

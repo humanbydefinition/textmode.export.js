@@ -55,7 +55,7 @@ class Wt extends At {
 class qt {
   _createGlyphPath(t, e, r, a, i) {
     const n = i / t.head.unitsPerEm;
-    return { getBoundingBox: () => ({ x1: r + e.xMin * n, y1: a + -e.yMax * n, x2: r + e.xMax * n, y2: a + -e.yMin * n }), toSVG: () => this._glyphToSVGPath(e, r, a, n) };
+    return console.log("Scale factor:", n), { getBoundingBox: () => ({ x1: r + e.xMin * n, y1: a + -e.yMax * n, x2: r + e.xMax * n, y2: a + -e.yMin * n }), toSVG: () => this._glyphToSVGPath(e, r, a, n) };
   }
   _glyphToSVGPath(t, e, r, a) {
     if (!t || !t.xs) return "";
@@ -92,12 +92,13 @@ class qt {
     return p;
   }
   _generateCharacterPath(t, e, r, a, i) {
-    const n = t.codePointAt(0) ?? 0, c = e.getGlyphData(n);
-    return c ? this._createGlyphPath(e.font, c, r, a, i) : null;
+    const n = e.characterMap.get(t).glyphData;
+    return console.log("Glyph data for character", t, n), n ? this._createGlyphPath(e.font, n, r, a, i) : null;
   }
   $generatePositionedCharacterPath(t, e, r, a, i, n, c, l) {
-    const p = r + (i - l * (c / e.font.head.unitsPerEm)) / 2, o = a + (n + 0.7 * c) / 2, d = this._generateCharacterPath(t, e, p, o, c);
-    return d && d.toSVG() || null;
+    if (!l) return null;
+    const p = c / e.font.head.unitsPerEm, o = r + (i - l.advanceWidth * p) / 2, d = a + (n + 0.7 * c) / 2, u = this._generateCharacterPath(t, e, o, d, c);
+    return u && u.toSVG() || null;
   }
 }
 class Ht {
@@ -130,7 +131,7 @@ class Ht {
   _generateCharacterPath(t, e, r, a) {
     const i = r.characters[t.charIndex];
     if (!i) return "";
-    const n = this._pathGenerator.$generatePositionedCharacterPath(i.character, r, t.position.cellX, t.position.cellY, e.cellWidth, e.cellHeight, r.fontSize, i.advanceWidth);
+    const n = this._pathGenerator.$generatePositionedCharacterPath(i.character, r, t.position.cellX, t.position.cellY, e.cellWidth, e.cellHeight, r.fontSize, i.glyphData);
     if (!n) return "";
     const { r: c, g: l, b: p, a: o } = t.primaryColor, d = `rgba(${c},${l},${p},${o / 255})`;
     return a.drawMode === "stroke" ? `<path d="${n}" stroke="${d}" stroke-width="${a.strokeWidth}" fill="none"/>` : `<path d="${n}" fill="${d}"/>`;
@@ -336,9 +337,9 @@ function te(s, t, e, r, a, i, n, c) {
   i.fill(0), c.fill(0), L();
   let o = 0, d = 0, u = p + 1, m = u, x = !1, h = m, f = D(h), _ = 1 << u - 1, v = _ + 1, g = _ + 2, C = 0, S = e[0], E = 0;
   for (let k = l; k < 65536; k *= 2) ++E;
-  E = 8 - E, a.writeByte(p), T(_);
+  E = 8 - E, a.writeByte(p), O(_);
   for (let k = 1; k < e.length; k++) V(e[k]);
-  return T(S), T(v), a.writeByte(0), a.bytesView();
+  return O(S), O(v), a.writeByte(0), a.bytesView();
   function A(k) {
     i[C++] = k, C >= 254 && B();
   }
@@ -355,7 +356,7 @@ function te(s, t, e, r, a, i, n, c) {
           if (y -= w, y < 0 && (y += l), n[y] === R) return void (S = c[y]);
         while (n[y] >= 0);
       }
-      T(S), S = k, g < 1 << Z ? (c[y] = g++, n[y] = R) : (L(), g = _ + 2, x = !0, T(_));
+      O(S), S = k, g < 1 << Z ? (c[y] = g++, n[y] = R) : (L(), g = _ + 2, x = !0, O(_));
     }
   }
   function B() {
@@ -364,7 +365,7 @@ function te(s, t, e, r, a, i, n, c) {
   function D(k) {
     return (1 << k) - 1;
   }
-  function T(k) {
+  function O(k) {
     for (o &= Zt[d], d > 0 ? o |= k << d : o = k, d += h; d >= 8; ) A(255 & o), o >>= 8, d -= 8;
     if ((g > f || x) && (x ? (h = m, f = D(h), x = !1) : (++h, f = h == Z ? 1 << Z : D(h))), k == v) {
       for (; d > 0; ) A(255 & o), o >>= 8, d -= 8;
@@ -376,10 +377,10 @@ var ee = te;
 function Vt(s, t, e) {
   return s << 8 & 63488 | t << 2 & 992 | e >> 3 & 31;
 }
-function Ot(s, t, e, r) {
+function Tt(s, t, e, r) {
   return s >> 4 | 240 & t | (240 & e) << 4 | (240 & r) << 8;
 }
-function Tt(s, t, e) {
+function Ot(s, t, e) {
   return s >> 4 << 8 | t >> 4 << 4 | e >> 4;
 }
 function tt(s, t, e) {
@@ -404,11 +405,11 @@ function dt() {
 function re(s, t) {
   let e = new Array(t === "rgb444" ? 4096 : 65536), r = s.length;
   if (t === "rgba4444") for (let a = 0; a < r; ++a) {
-    let i = s[a], n = i >> 24 & 255, c = i >> 16 & 255, l = i >> 8 & 255, p = 255 & i, o = Ot(p, l, c, n), d = o in e ? e[o] : e[o] = dt();
+    let i = s[a], n = i >> 24 & 255, c = i >> 16 & 255, l = i >> 8 & 255, p = 255 & i, o = Tt(p, l, c, n), d = o in e ? e[o] : e[o] = dt();
     d.rc += p, d.gc += l, d.bc += c, d.ac += n, d.cnt++;
   }
   else if (t === "rgb444") for (let a = 0; a < r; ++a) {
-    let i = s[a], n = i >> 16 & 255, c = i >> 8 & 255, l = 255 & i, p = Tt(l, c, n), o = p in e ? e[p] : e[p] = dt();
+    let i = s[a], n = i >> 16 & 255, c = i >> 8 & 255, l = 255 & i, p = Ot(l, c, n), o = p in e ? e[p] : e[p] = dt();
     o.rc += l, o.gc += c, o.bc += n, o.cnt++;
   }
   else for (let a = 0; a < r; ++a) {
@@ -446,8 +447,8 @@ function ae(s, t, e) {
     f = 1 / (V + B), p && (E.ac = f * (V * E.ac + B * L.ac)), E.rc = f * (V * E.rc + B * L.rc), E.gc = f * (V * E.gc + B * L.gc), E.bc = f * (V * E.bc + B * L.bc), E.cnt += L.cnt, E.mtm = ++h, o[L.bk].fw = L.fw, o[L.fw].bk = L.bk, L.mtm = u;
   }
   let D = [];
-  var T = 0;
-  for (h = 0; ; ++T) {
+  var O = 0;
+  for (h = 0; ; ++O) {
     let k = tt(Math.round(o[h].rc), 0, 255), R = tt(Math.round(o[h].gc), 0, 255), y = tt(Math.round(o[h].bc), 0, 255), w = 255;
     p && (w = tt(Math.round(o[h].ac), 0, 255), c && (w = w <= (typeof c == "number" ? c : 127) ? 0 : 255), a && w <= n && (k = R = y = i, w = 0));
     let F = p ? [k, R, y, w] : [k, R, y];
@@ -465,11 +466,11 @@ function ie(s, t) {
 function oe(s, t, e) {
   let r = (e = e || "rgb565") === "rgb444" ? 4096 : 65536, a = new Uint8Array(s.length), i = new Array(r);
   if (e === "rgba4444") for (let n = 0; n < s.length; n++) {
-    let c, l = s[n], p = l >> 24 & 255, o = l >> 16 & 255, d = l >> 8 & 255, u = 255 & l, m = Ot(u, d, o, p);
+    let c, l = s[n], p = l >> 24 & 255, o = l >> 16 & 255, d = l >> 8 & 255, u = 255 & l, m = Tt(u, d, o, p);
     i[m] != null ? c = i[m] : (c = ne(u, d, o, p, t), i[m] = c), a[n] = c;
   }
   else for (let n = 0; n < s.length; n++) {
-    let c, l = s[n], p = l >> 16 & 255, o = l >> 8 & 255, d = 255 & l, u = e === "rgb444" ? Tt(d, o, p) : Vt(d, o, p);
+    let c, l = s[n], p = l >> 16 & 255, o = l >> 8 & 255, d = 255 & l, u = e === "rgb444" ? Ot(d, o, p) : Vt(d, o, p);
     i[u] != null ? c = i[u] : (c = se(d, o, p, t), i[u] = c), a[n] = c;
   }
   return a;
@@ -643,7 +644,7 @@ function ge() {
         function D(y) {
           return y - d.dataOffset;
         }
-        function T() {
+        function O() {
           u = (function() {
             let M = { id: 21420, size: 5, data: 0 }, U = { id: 290298740, data: [] };
             for (let I in A) {
@@ -682,7 +683,7 @@ function ge() {
           n(w, B.pos, F), B.write(w.getAsDataArray()), $ = 1, M = Math.round(C), U = F.offset, V.push({ id: 187, data: [{ id: 179, data: M }, { id: 183, data: [{ id: 247, data: $ }, { id: 241, data: D(U) }] }] }), g = [], C += S, S = 0;
         }
         this.addFrame = function(y, w, F) {
-          m || (x = y.width || 0, h = y.height || 0, T());
+          m || (x = y.width || 0, h = y.height || 0, O());
           let $, M = r(t(y, o.quality)), U = null;
           $ = F || (typeof w == "number" ? w : o.frameDuration), o.transparent && (w instanceof HTMLCanvasElement || typeof w == "string" ? U = w : M.hasAlpha && (U = (function(I) {
             f !== null && f.width === I.width && f.height === I.height || (f = document.createElement("canvas"), f.width = I.width, f.height = I.height, _ = f.getContext("2d"), v = _.createImageData(f.width, f.height));
@@ -696,7 +697,7 @@ function ge() {
             I.trackNumber = 1, I.timecode = Math.round(S), g.push(I), S += I.duration, S >= 5e3 && R();
           })({ frame: M.frame, duration: $, alpha: U ? r(t(U, o.alphaQuality)).frame : null });
         }, this.complete = function() {
-          return m || T(), R(), (function() {
+          return m || O(), R(), (function() {
             let y = { id: 475249515, data: V }, w = new l(16 + 32 * V.length);
             n(w, B.pos, y), B.write(w.getAsDataArray()), A.Cues.positionEBML.data = D(y.offset);
           })(), (function() {
@@ -949,7 +950,7 @@ class Ce {
   }
 }
 const b = { root: "textmode-export-overlay", stack: "textmode-export-overlay__stack", stackDense: "textmode-export-overlay__stack--dense", stackCompact: "textmode-export-overlay__stack--compact", section: "textmode-export-overlay__section", header: "textmode-export-overlay__header", headerTitleRow: "textmode-export-overlay__header-title-row", headerLinks: "textmode-export-overlay__header-links", row: "textmode-export-overlay__row", label: "textmode-export-overlay__label", field: "textmode-export-overlay__field", fieldCompact: "textmode-export-overlay__field--compact", fieldDense: "textmode-export-overlay__field--dense", fieldFull: "textmode-export-overlay__field--full", fieldChannel: "textmode-export-overlay__field--channel", input: "textmode-export-overlay__input", checkbox: "textmode-export-overlay__checkbox", muted: "textmode-export-overlay__muted", status: "textmode-export-overlay__status", statusGif: "textmode-export-overlay__status--gif", statusVideo: "textmode-export-overlay__status--video", statusTitle: "textmode-export-overlay__status-title", statusValue: "textmode-export-overlay__status-value", divider: "textmode-export-overlay__divider", title: "textmode-export-overlay__title", button: "textmode-export-overlay__button", buttonPrimary: "textmode-export-overlay__button--primary", buttonSecondary: "textmode-export-overlay__button--secondary", buttonFull: "textmode-export-overlay__button--full", supportLink: "textmode-export-overlay__support-link", supportIcon: "textmode-export-overlay__support-icon", linkIcon: "textmode-export-overlay__link-icon" };
-class O {
+class T {
   element;
   mounted = !1;
   destroyed = !1;
@@ -984,7 +985,7 @@ class O {
     return this.mounted;
   }
 }
-class H extends O {
+class H extends T {
   static _iconNamespace = "http://www.w3.org/2000/svg";
   render() {
     const t = document.createElement("div");
@@ -1015,7 +1016,7 @@ class H extends O {
     return r;
   }
 }
-class P extends O {
+class P extends T {
   props;
   constructor(t) {
     super(), this.props = t;
@@ -1062,7 +1063,7 @@ class P extends O {
     }
   }
 }
-class mt extends O {
+class mt extends T {
   props;
   select;
   handleChange = () => {
@@ -1103,7 +1104,7 @@ class mt extends O {
     }
   }
 }
-class Lt extends O {
+class Lt extends T {
   props;
   button;
   constructor(t) {
@@ -1218,7 +1219,7 @@ const X = "textmode-export-number-input", Ie = `${X}__field`, Se = `${X}__contro
   const t = document.createElement("button");
   return t.type = "button", t.className = Fe, t.textContent = s > 0 ? "▲" : "▼", t;
 };
-class G extends O {
+class G extends T {
   props;
   input;
   display;
@@ -1322,7 +1323,7 @@ class G extends O {
     this.holdTimeoutId !== void 0 && (window.clearTimeout(this.holdTimeoutId), this.holdTimeoutId = void 0), this.holdIntervalId !== void 0 && (window.clearInterval(this.holdIntervalId), this.holdIntervalId = void 0);
   }
 }
-class j extends O {
+class j extends T {
   variant;
   additionalClasses;
   constructor(t = "stack", e = []) {
@@ -1334,7 +1335,7 @@ class j extends O {
   }
 }
 const $t = { neutral: "textmode-export-overlay__status-value--neutral", active: "textmode-export-overlay__status-value--active", alert: "textmode-export-overlay__status-value--alert" };
-class Nt extends O {
+class Nt extends T {
   props;
   container;
   messageElement;
@@ -1356,7 +1357,7 @@ class Nt extends O {
     this.messageElement.classList.remove(...Object.values($t)), this.messageElement.classList.add($t[t]);
   }
 }
-class Y extends O {
+class Y extends T {
   _config;
   _managedComponents = /* @__PURE__ */ new Set();
   constructor(t) {
@@ -1455,7 +1456,7 @@ const it = "textmode-export-range-input", Me = `${it}__field`, $e = `${it}__tool
   const e = Number.parseFloat(s);
   return Number.isFinite(e) ? e : t;
 }, Ae = (s, t, e) => Math.min(e, Math.max(t, s));
-class Pe extends O {
+class Pe extends T {
   props;
   input;
   tooltip;
@@ -1640,8 +1641,8 @@ class pt extends Y {
     this.frameCountInput.value = String(e), this.frameRateInput.value = String(r), this.qualityInput.value = String(a), this.frameCountInput.refresh(), this.frameRateInput.refresh();
   }
 }
-const Oe = "@layer textmode-export-overlay{.textmode-export-overlay{--overlay-bg: rgba(20, 20, 20, .8);--overlay-surface: rgba(40, 40, 40, .9);--overlay-border: rgba(255, 255, 255, .14);--overlay-border-strong: rgba(255, 255, 255, .2);--overlay-border-focus: rgba(160, 160, 160, .6);--overlay-focus-shadow: 0 0 0 1px rgba(140, 140, 140, .28);--overlay-text: #ffffff;--overlay-muted: rgba(200, 200, 200, .74);--overlay-radius: .75rem;--overlay-stack-gap: .55rem;position:absolute;top:0;left:0;display:flex;flex-direction:column;gap:var(--overlay-stack-gap);min-width:236px;max-width:236px;padding:.65rem .8rem;background:var(--overlay-bg);color:var(--overlay-text);border-radius:var(--overlay-radius);border:1px solid var(--overlay-border);box-shadow:0 12px 28px #0000004d;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:.82rem;line-height:1.35;pointer-events:auto;z-index:2147483647}.textmode-export-overlay *{box-sizing:border-box}.textmode-export-overlay__header{display:flex;flex-direction:column;gap:.4rem}.textmode-export-overlay__header-title-row{display:flex;align-items:center;justify-content:space-between;gap:.4rem}.textmode-export-overlay__header-links{display:inline-flex;align-items:center;gap:.3rem}.textmode-export-overlay__support-link{display:inline-flex;align-items:center;justify-content:center;padding:.2rem;border-radius:.45rem;border:1px solid transparent;color:#d7d7d7d1;background:transparent;text-decoration:none;line-height:0;transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease}.textmode-export-overlay__support-link:hover{color:#fff;background:#5a5a5a4d;border-color:#c8c8c824}.textmode-export-overlay__support-link:focus-visible{outline:none;border-color:var(--overlay-border-focus);box-shadow:var(--overlay-focus-shadow)}.textmode-export-overlay__support-icon,.textmode-export-overlay__link-icon{display:block;width:1rem;height:1rem}.textmode-export-overlay__stack{display:flex;flex-direction:column;gap:var(--overlay-stack-gap)}.textmode-export-overlay__stack--dense{gap:.3rem}.textmode-export-overlay__stack--compact{gap:.45rem}.textmode-export-overlay__section{display:flex;flex-direction:column;gap:.4rem}.textmode-export-overlay__title{font-size:.92rem;font-weight:600}.textmode-export-overlay__divider{width:100%;height:1px;background:#ffffff29;margin-top:.25rem}.textmode-export-overlay__label{font-weight:500;opacity:.9}.textmode-export-overlay__checkbox{display:flex;align-items:center;gap:.5rem}.textmode-export-overlay__checkbox input[type=checkbox]{width:1rem;height:1rem;accent-color:rgba(100,100,100,.9)}.textmode-export-overlay__row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-start;width:100%}.textmode-export-overlay__field{display:flex;flex-direction:column;gap:.3rem;flex:1 1 120px;min-width:120px}.textmode-export-overlay__field--compact{flex:1 1 100px;min-width:100px}.textmode-export-overlay__field--dense{flex:1 1 90px;min-width:90px}.textmode-export-overlay__field--channel{flex:1 1 0;min-width:0}.textmode-export-overlay__field--full{width:100%;flex:1 1 100%}.textmode-export-overlay__input,.textmode-export-overlay select.textmode-export-overlay__input,.textmode-export-overlay input.textmode-export-overlay__input{width:100%;padding:.35rem .5rem;border-radius:.4rem;border:1px solid var(--overlay-border-strong);background:var(--overlay-surface);color:var(--overlay-text);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}.textmode-export-overlay__input:focus{outline:none;border-color:var(--overlay-border-focus);box-shadow:var(--overlay-focus-shadow);background:#2d2f42eb}.textmode-export-overlay__input::placeholder{color:var(--overlay-muted);opacity:.7}.textmode-export-overlay__muted{font-size:.75rem;opacity:.7;display:block}.textmode-export-overlay__button{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:.45rem;border:none;font-weight:600;padding:.45rem .7rem;cursor:pointer;transition:background .2s ease,transform .2s ease,box-shadow .2s ease}.textmode-export-overlay__button--primary{background:#505050;color:#fff}.textmode-export-overlay__button--secondary{background:#606060;color:#fff}.textmode-export-overlay__button--full{width:100%}.textmode-export-overlay__button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 7px 18px #00000073}.textmode-export-overlay__button--primary:hover:not(:disabled){background:#404040}.textmode-export-overlay__button--secondary:hover:not(:disabled){background:#4a4a4a}.textmode-export-overlay__button:disabled{cursor:default;opacity:.55;transform:none;box-shadow:none}.textmode-export-overlay__status{display:flex;flex-direction:column;gap:.25rem;padding:.45rem .55rem;border-radius:.45rem;border:1px solid rgba(110,110,110,.22);background:#4646462e}.textmode-export-overlay__status--gif{background:#5050501f;border-color:#78787840}.textmode-export-overlay__status--video{background:#4646461f;border-color:#6e6e6e40}.textmode-export-overlay__status-title{font-weight:600;font-size:.75rem;opacity:.85;text-transform:uppercase;letter-spacing:.04em}.textmode-export-overlay__status-value{font-size:.82rem;color:#dedede;transition:color .18s ease}.textmode-export-overlay__status-value--neutral{color:#cfcfcf}.textmode-export-overlay__status-value--active{color:#f5f5f5}.textmode-export-overlay__status-value--alert{color:#b8b8b8}.textmode-export-number-input,.textmode-export-overlay .textmode-export-number-input{display:flex;align-items:stretch;width:100%;background:var(--overlay-surface);border:1px solid var(--overlay-border-strong);border-radius:.4rem;overflow:hidden;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;position:relative}.textmode-export-number-input:focus-within{border-color:var(--overlay-border-focus);box-shadow:var(--overlay-focus-shadow)}.textmode-export-number-input.is-disabled{opacity:.55}.textmode-export-number-input__field{flex:1 1 auto;min-width:0;border:none;background:transparent;color:var(--overlay-text);font:inherit;padding:.35rem .5rem;appearance:textfield}.textmode-export-number-input__field::-webkit-outer-spin-button,.textmode-export-number-input__field::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.textmode-export-number-input__field:focus{outline:none}.textmode-export-number-input__controls{display:flex;flex-direction:column;border-left:1px solid rgba(255,255,255,.12);min-width:1.6rem}.textmode-export-number-input__control{display:flex;align-items:center;justify-content:center;width:100%;flex:1;border:none;background:#32323299;color:#d0d0d0;font-size:.68rem;line-height:1;cursor:pointer;transition:background .15s ease,color .15s ease;padding:0}.textmode-export-number-input__control:hover:not(:disabled){background:#5a5a5ad9;color:#fff}.textmode-export-number-input__control:disabled{cursor:default;opacity:.4;background:#28282880;color:#c8c8c866}.textmode-export-number-input:focus-within .textmode-export-number-input__control{background:#3c3c3cbf;color:#e8e8e8}.textmode-export-number-input__display{position:absolute;inset:0;display:flex;align-items:center;padding:.4rem .55rem;pointer-events:none;color:#f8fafc;opacity:0;transition:opacity .14s ease}.textmode-export-number-input__display--visible{opacity:1}.textmode-export-range-input{position:relative;width:100%}.textmode-export-range-input.is-disabled{opacity:.55}.textmode-export-range-input__field{width:100%;height:1.4rem;padding:0;margin:0;background:transparent;cursor:pointer;appearance:none;-webkit-appearance:none}.textmode-export-range-input__field::-webkit-slider-thumb{width:12px;height:12px;margin-top:-3.5px;-webkit-appearance:none;border-radius:50%;background:#a0a0a0;border:2px solid #303030;box-shadow:0 0 0 2px #00000059}.textmode-export-range-input__field::-webkit-slider-runnable-track{height:5px;border-radius:999px;background:linear-gradient(90deg,#8c8c8cd9,#646464a6)}.textmode-export-range-input__field::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#a0a0a0;border:2px solid #303030;margin-top:-3.5px}.textmode-export-range-input__field::-moz-range-track{height:5px;border-radius:999px;background:linear-gradient(90deg,#8c8c8cd9,#646464a6)}.textmode-export-range-input__tooltip{position:absolute;top:-1.5rem;left:0;transform:translate(-50%);padding:.2rem .35rem;border-radius:.35rem;background:#1e1e1ee0;color:#f8fafc;font-size:.68rem;line-height:1;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s ease}.textmode-export-range-input__tooltip--visible{opacity:1}}";
-class Te {
+const Te = `@layer textmode-export-overlay{.textmode-export-overlay{--overlay-bg: rgba(20, 20, 20, .8);--overlay-surface: rgba(40, 40, 40, .9);--overlay-border: rgba(255, 255, 255, .14);--overlay-border-strong: rgba(255, 255, 255, .2);--overlay-border-focus: rgba(160, 160, 160, .6);--overlay-focus-shadow: 0 0 0 1px rgba(140, 140, 140, .28);--overlay-text: #ffffff;--overlay-muted: rgba(200, 200, 200, .74);--overlay-radius: .75rem;--overlay-stack-gap: .55rem;position:absolute;top:0;left:0;display:flex;flex-direction:column;gap:var(--overlay-stack-gap);min-width:236px;max-width:236px;padding:.65rem .8rem;background:var(--overlay-bg);color:var(--overlay-text);border-radius:var(--overlay-radius);border:1px solid var(--overlay-border);box-shadow:0 12px 28px #0000004d;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:.82rem;line-height:1.35;pointer-events:auto;z-index:2147483647}.textmode-export-overlay *{box-sizing:border-box}.textmode-export-overlay__header{display:flex;flex-direction:column;gap:.4rem}.textmode-export-overlay__header-title-row{display:flex;align-items:center;justify-content:space-between;gap:.4rem}.textmode-export-overlay__header-links{display:inline-flex;align-items:center;gap:.3rem}.textmode-export-overlay__support-link{display:inline-flex;align-items:center;justify-content:center;padding:.2rem;border-radius:.45rem;border:1px solid transparent;color:#d7d7d7d1;background:transparent;text-decoration:none;line-height:0;transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease}.textmode-export-overlay__support-link:hover{color:#fff;background:#5a5a5a4d;border-color:#c8c8c824}.textmode-export-overlay__support-link:focus-visible{outline:none;border-color:var(--overlay-border-focus);box-shadow:var(--overlay-focus-shadow)}.textmode-export-overlay__support-icon,.textmode-export-overlay__link-icon{display:block;width:1rem;height:1rem}.textmode-export-overlay__stack{display:flex;flex-direction:column;gap:var(--overlay-stack-gap)}.textmode-export-overlay__stack--dense{gap:.3rem}.textmode-export-overlay__stack--compact{gap:.45rem}.textmode-export-overlay__section{display:flex;flex-direction:column;gap:.4rem}.textmode-export-overlay__title{font-size:.92rem;font-weight:600}.textmode-export-overlay__divider{width:100%;height:1px;background:#ffffff29;margin-top:.25rem}.textmode-export-overlay__label{font-weight:500;opacity:.9}.textmode-export-overlay__checkbox{display:flex;align-items:center;gap:.5rem}.textmode-export-overlay__checkbox input[type=checkbox]{width:1rem;height:1rem;accent-color:rgba(100,100,100,.9)}.textmode-export-overlay__row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-start;width:100%}.textmode-export-overlay__field{display:flex;flex-direction:column;gap:.3rem;flex:1 1 120px;min-width:120px}.textmode-export-overlay__field--compact{flex:1 1 100px;min-width:100px}.textmode-export-overlay__field--dense{flex:1 1 90px;min-width:90px}.textmode-export-overlay__field--channel{flex:1 1 0;min-width:0}.textmode-export-overlay__field--full{width:100%;flex:1 1 100%}.textmode-export-overlay__input,.textmode-export-overlay select.textmode-export-overlay__input,.textmode-export-overlay input.textmode-export-overlay__input{width:100%;padding:.35rem .5rem;border-radius:.4rem;border:1px solid var(--overlay-border-strong);background:var(--overlay-surface);color:var(--overlay-text);font:inherit;line-height:1.35;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}.textmode-export-overlay select.textmode-export-overlay__input{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(200, 200, 200, 0.74)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right .5rem center;background-size:1rem;padding-right:2rem}.textmode-export-overlay__input:focus{outline:none;border-color:var(--overlay-border-focus);box-shadow:var(--overlay-focus-shadow);background:#2d2f42eb}.textmode-export-overlay__input::placeholder{color:var(--overlay-muted);opacity:.7}.textmode-export-overlay__muted{font-size:.75rem;opacity:.7;display:block}.textmode-export-overlay__button{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:.45rem;border:none;font-weight:600;padding:.45rem .7rem;cursor:pointer;transition:background .2s ease,transform .2s ease,box-shadow .2s ease}.textmode-export-overlay__button--primary{background:#505050;color:#fff}.textmode-export-overlay__button--secondary{background:#606060;color:#fff}.textmode-export-overlay__button--full{width:100%}.textmode-export-overlay__button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 7px 18px #00000073}.textmode-export-overlay__button--primary:hover:not(:disabled){background:#404040}.textmode-export-overlay__button--secondary:hover:not(:disabled){background:#4a4a4a}.textmode-export-overlay__button:disabled{cursor:default;opacity:.55;transform:none;box-shadow:none}.textmode-export-overlay__status{display:flex;flex-direction:column;gap:.25rem;padding:.45rem .55rem;border-radius:.45rem;border:1px solid rgba(110,110,110,.22);background:#4646462e}.textmode-export-overlay__status--gif{background:#5050501f;border-color:#78787840}.textmode-export-overlay__status--video{background:#4646461f;border-color:#6e6e6e40}.textmode-export-overlay__status-title{font-weight:600;font-size:.75rem;opacity:.85;text-transform:uppercase;letter-spacing:.04em}.textmode-export-overlay__status-value{font-size:.82rem;color:#dedede;transition:color .18s ease}.textmode-export-overlay__status-value--neutral{color:#cfcfcf}.textmode-export-overlay__status-value--active{color:#f5f5f5}.textmode-export-overlay__status-value--alert{color:#b8b8b8}.textmode-export-number-input,.textmode-export-overlay .textmode-export-number-input{display:flex;align-items:stretch;width:100%;background:var(--overlay-surface);border:1px solid var(--overlay-border-strong);border-radius:.4rem;overflow:hidden;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;position:relative}.textmode-export-number-input:focus-within{border-color:var(--overlay-border-focus);box-shadow:var(--overlay-focus-shadow)}.textmode-export-number-input.is-disabled{opacity:.55}.textmode-export-number-input__field{flex:1 1 auto;min-width:0;border:none;background:transparent;color:var(--overlay-text);font:inherit;padding:.35rem .5rem;appearance:textfield}.textmode-export-number-input__field::-webkit-outer-spin-button,.textmode-export-number-input__field::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.textmode-export-number-input__field:focus{outline:none}.textmode-export-number-input__controls{display:flex;flex-direction:column;border-left:1px solid rgba(255,255,255,.12);min-width:1.6rem}.textmode-export-number-input__control{display:flex;align-items:center;justify-content:center;width:100%;flex:1;border:none;background:#32323299;color:#d0d0d0;font-size:.68rem;line-height:1;cursor:pointer;transition:background .15s ease,color .15s ease;padding:0}.textmode-export-number-input__control:hover:not(:disabled){background:#5a5a5ad9;color:#fff}.textmode-export-number-input__control:disabled{cursor:default;opacity:.4;background:#28282880;color:#c8c8c866}.textmode-export-number-input:focus-within .textmode-export-number-input__control{background:#3c3c3cbf;color:#e8e8e8}.textmode-export-number-input__display{position:absolute;inset:0;display:flex;align-items:center;padding:.4rem .55rem;pointer-events:none;color:#f8fafc;opacity:0;transition:opacity .14s ease}.textmode-export-number-input__display--visible{opacity:1}.textmode-export-range-input{position:relative;width:100%}.textmode-export-range-input.is-disabled{opacity:.55}.textmode-export-range-input__field{width:100%;height:1.4rem;padding:0;margin:0;background:transparent;cursor:pointer;appearance:none;-webkit-appearance:none}.textmode-export-range-input__field::-webkit-slider-thumb{width:12px;height:12px;margin-top:-3.5px;-webkit-appearance:none;border-radius:50%;background:#a0a0a0;border:2px solid #303030;box-shadow:0 0 0 2px #00000059}.textmode-export-range-input__field::-webkit-slider-runnable-track{height:5px;border-radius:999px;background:linear-gradient(90deg,#8c8c8cd9,#646464a6)}.textmode-export-range-input__field::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#a0a0a0;border:2px solid #303030;margin-top:-3.5px}.textmode-export-range-input__field::-moz-range-track{height:5px;border-radius:999px;background:linear-gradient(90deg,#8c8c8cd9,#646464a6)}.textmode-export-range-input__tooltip{position:absolute;top:-1.5rem;left:0;transform:translate(-50%);padding:.2rem .35rem;border-radius:.35rem;background:#1e1e1ee0;color:#f8fafc;font-size:.68rem;line-height:1;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s ease}.textmode-export-range-input__tooltip--visible{opacity:1}}`;
+class Oe {
   _textmodifier;
   _state;
   _events;
@@ -1698,7 +1699,7 @@ class Te {
   _createOverlay() {
     this._shadowHost = document.createElement("div"), this._shadowHost.dataset.plugin = "textmode-export-overlay-host", this._shadowHost.style.cssText = "position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2147483647;", this._shadowRoot = this._shadowHost.attachShadow({ mode: "open" });
     const t = document.createElement("style");
-    t.textContent = Oe, this._shadowRoot.appendChild(t), this._overlayElement = document.createElement("div"), this._overlayElement.dataset.plugin = "textmode-export-overlay", this._overlayElement.classList.add(b.root, b.stack), this._shadowRoot.appendChild(this._overlayElement), document.body.appendChild(this._shadowHost);
+    t.textContent = Te, this._shadowRoot.appendChild(t), this._overlayElement = document.createElement("div"), this._overlayElement.dataset.plugin = "textmode-export-overlay", this._overlayElement.classList.add(b.root, b.stack), this._shadowRoot.appendChild(this._overlayElement), document.body.appendChild(this._shadowHost);
   }
   _renderStaticContent() {
     this._header.mount(this._overlayElement);
@@ -1876,7 +1877,7 @@ class Ue {
   }
 }
 const Ne = (s) => ({ format: s, isBusy: !1 });
-class Gt extends O {
+class Gt extends T {
   props;
   checkbox;
   labelElement;
@@ -1907,7 +1908,7 @@ class Gt extends O {
     this.props = t, t.id && (this.checkbox.id = t.id, this.labelElement.htmlFor = t.id), this.checkbox.checked = !!t.defaultChecked, this.labelElement.lastElementChild && (this.labelElement.lastElementChild.textContent = t.label);
   }
 }
-class Ge extends O {
+class Ge extends T {
   props;
   input;
   handleInput = () => {
@@ -2039,7 +2040,7 @@ function je() {
   return He;
 }
 function Qe(s, t) {
-  const e = je(), r = e[0]?.format, a = new Ue(Ne(r)), i = new Re(), n = new Te(s, t, a, i, e);
+  const e = je(), r = e[0]?.format, a = new Ue(Ne(r)), i = new Re(), n = new Oe(s, t, a, i, e);
   return n.$mount(), n;
 }
 const Xe = (s = {}) => {
