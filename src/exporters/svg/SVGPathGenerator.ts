@@ -60,8 +60,6 @@ export class SVGPathGenerator {
     ): GlyphPath {
         const scale = fontSize / fontData.head.unitsPerEm;
 
-        console.log("Scale factor:", scale);
-
         return {
             getBoundingBox: () => {
                 return {
@@ -158,8 +156,6 @@ export class SVGPathGenerator {
         fontSize: number
     ): GlyphPath | null {
         const glyphData = font.characterMap.get(character).glyphData;
-
-        console.log('Glyph data for character', character, glyphData);
 
         if (!glyphData) {
             return null;
