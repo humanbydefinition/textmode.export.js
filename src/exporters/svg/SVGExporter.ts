@@ -41,7 +41,7 @@ export class SVGExporter {
 
         // Extract SVG cell data
         const cellDataArray = dataExtractor.$extractSVGCellData(
-            dataExtractor.$extractFramebufferData(textmodifier.drawFramebuffer),
+            dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer),
             textmodifier.grid,
         );
 
