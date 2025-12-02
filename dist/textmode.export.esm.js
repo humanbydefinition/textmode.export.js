@@ -55,7 +55,7 @@ class Wt extends At {
 class qt {
   _createGlyphPath(t, e, r, a, i) {
     const n = i / t.head.unitsPerEm;
-    return console.log("Scale factor:", n), { getBoundingBox: () => ({ x1: r + e.xMin * n, y1: a + -e.yMax * n, x2: r + e.xMax * n, y2: a + -e.yMin * n }), toSVG: () => this._glyphToSVGPath(e, r, a, n) };
+    return { getBoundingBox: () => ({ x1: r + e.xMin * n, y1: a + -e.yMax * n, x2: r + e.xMax * n, y2: a + -e.yMin * n }), toSVG: () => this._glyphToSVGPath(e, r, a, n) };
   }
   _glyphToSVGPath(t, e, r, a) {
     if (!t || !t.xs) return "";
@@ -93,7 +93,7 @@ class qt {
   }
   _generateCharacterPath(t, e, r, a, i) {
     const n = e.characterMap.get(t).glyphData;
-    return console.log("Glyph data for character", t, n), n ? this._createGlyphPath(e.font, n, r, a, i) : null;
+    return n ? this._createGlyphPath(e.font, n, r, a, i) : null;
   }
   $generatePositionedCharacterPath(t, e, r, a, i, n, c, l) {
     if (!l) return null;
@@ -160,7 +160,7 @@ class gt {
     return { includeBackgroundRectangles: t.includeBackgroundRectangles ?? !0, drawMode: t.drawMode ?? "fill", strokeWidth: t.strokeWidth ?? 1, filename: t.filename };
   }
   $generateSVG(t, e = {}) {
-    const r = new Wt(), a = new Ht(), i = r.$extractSVGCellData(r.$extractFramebufferData(t.drawFramebuffer), t.grid), n = a.$generateSVGContent(i, t.grid, t.font, this._applyDefaultOptions(e));
+    const r = new Wt(), a = new Ht(), i = r.$extractSVGCellData(r.$extractFramebufferData(t.layers.base.drawFramebuffer), t.grid), n = a.$generateSVGContent(i, t.grid, t.font, this._applyDefaultOptions(e));
     return a.$optimizeSVGContent(n);
   }
   $saveSVG(t, e = {}) {
@@ -203,7 +203,8 @@ class vt {
   }
   _createTXTContent(t, e) {
     const r = new At();
-    let a = r.$extractFramebufferData(t.drawFramebuffer);
+    console.log(t);
+    let a = r.$extractFramebufferData(t.layers.base.drawFramebuffer);
     const i = [];
     let n = 0;
     for (let l = 0; l < t.grid.rows; l++) {

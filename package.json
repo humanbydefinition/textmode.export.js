@@ -1,6 +1,6 @@
 {
   "name": "textmode.export.js",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, and plain text.",
   "type": "module",
   "types": "./dist/types/index.d.ts",
@@ -32,11 +32,11 @@
   },
   "dependencies": {
     "gifenc": "^1.0.1",
-    "textmode.js": "^0.6.0",
+    "textmode.js": "^0.7.0",
     "webm-writer": "^1.0.0"
   },
   "peerDependencies": {
-    "textmode.js": ">=0.6.0"
+    "textmode.js": "^0.7.0"
   },
   "repository": {
     "type": "git",

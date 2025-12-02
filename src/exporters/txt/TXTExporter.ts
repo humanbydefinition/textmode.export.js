@@ -30,7 +30,9 @@ export class TXTExporter {
     private _createTXTContent(textmodifier: Textmodifier, options: TXTGenerationOptions): string {
         const dataExtractor = new DataExtractor();
 
-        let framebufferData = dataExtractor.$extractFramebufferData(textmodifier.drawFramebuffer);
+        console.log(textmodifier);
+
+        let framebufferData = dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer);
 
         const characterGrid: string[][] = [];
         let idx = 0;

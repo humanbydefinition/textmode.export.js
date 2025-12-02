@@ -5,7 +5,7 @@
  * @link https://github.com/humanbydefinition/textmode.js
  */
 
-import { textmode } from './textmode.esm';
+import { textmode } from 'textmode.js';
 import { createTextmodeExportPlugin } from 'textmode.export.js';
 
 // Create textmode instance
@@ -15,6 +15,8 @@ const tm = textmode.create({
     fontSize: 32,
     plugins: [createTextmodeExportPlugin({ overlay: true })],
 });
+
+console.log(textmode.version);
 
 tm.draw(() => {
     tm.background(0);
