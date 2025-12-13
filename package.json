@@ -32,11 +32,10 @@
   },
   "dependencies": {
     "gifenc": "^1.0.1",
-    "textmode.js": "^0.7.0",
     "webm-writer": "^1.0.0"
   },
   "peerDependencies": {
-    "textmode.js": "^0.7.0"
+    "textmode.js": "^0.8.0"
   },
   "repository": {
     "type": "git",
