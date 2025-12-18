@@ -35,7 +35,7 @@
     "webm-writer": "^1.0.0"
   },
   "peerDependencies": {
-    "textmode.js": "^0.8.0"
+    "textmode.js": "^0.8.1"
   },
   "repository": {
     "type": "git",
