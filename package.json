@@ -33,7 +33,7 @@
   "dependencies": {
     "gifenc": "^1.0.1",
     "webm-writer": "^1.0.0",
-    "textmode.js": "^0.8.5"
+    "textmode.js": "^0.7.0"
   },
   "repository": {
     "type": "git",
