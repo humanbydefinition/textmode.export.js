@@ -12,6 +12,9 @@ export default defineConfig({
       'textmode.export.js': path.resolve(__dirname, 'src/index.ts'),
     }
   },
+  server: {
+    open: '/examples/esm/index.html',
+  },
   build: {
     minify: 'esbuild',
     lib: {
