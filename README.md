@@ -19,7 +19,7 @@ Besides exporting programatically, `textmode.export.js` also provides an overlay
 ## Installation
 
 ### Prerequisites
-- `textmode.export.js` requires `textmode.js` v0.4.0 or later.
+- The latest `textmode.export.js` version requires `textmode.js` v0.7.0 or later.
 
 ### UMD
 
