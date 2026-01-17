@@ -30,13 +30,19 @@ export class TXTExporter {
     private _createTXTContent(textmodifier: Textmodifier, options: TXTGenerationOptions): string {
         const dataExtractor = new DataExtractor();
 
-        let framebufferData = dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer);
+        const drawFramebuffer = textmodifier.layers.base.drawFramebuffer;
 
-        const characterGrid: string[][] = [];
+        if (!drawFramebuffer) {
+            throw new Error('Draw framebuffer is required for TXT export');
+        }
+
+        const framebufferData = dataExtractor.$extractFramebufferData(drawFramebuffer);
+
+        const lines: string[] = [];
         let idx = 0;
 
         for (let y = 0; y < textmodifier.grid.rows; y++) {
-            const row: string[] = [];
+            let line = '';
 
             for (let x = 0; x < textmodifier.grid.cols; x++) {
                 const pixelIdx = idx * 4;
@@ -47,21 +53,13 @@ export class TXTExporter {
                 );
 
                 const character = textmodifier.font.characters[charIndex]?.character || options.emptyCharacter;
-                row.push(character);
+                line += character;
 
                 idx++;
             }
 
-            characterGrid.push(row);
-        }
-
-        const lines: string[] = [];
-
-        for (const row of characterGrid) {
-            let line = row.join('');
-
             if (!options.preserveTrailingSpaces) {
-                line = line.replace(/\s+$/, '');
+                line = line.trimEnd();
             }
 
             lines.push(line);
