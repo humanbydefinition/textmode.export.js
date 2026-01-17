@@ -30,21 +30,17 @@ export class TXTExporter {
     private _createTXTContent(textmodifier: Textmodifier, options: TXTGenerationOptions): string {
         const dataExtractor = new DataExtractor();
 
-        const drawFramebuffer = textmodifier.layers.base.drawFramebuffer;
-
-        if (!drawFramebuffer) {
-            throw new Error('Draw framebuffer is required for TXT export');
-        }
+        const drawFramebuffer = textmodifier.layers.base.drawFramebuffer!;
 
         const framebufferData = dataExtractor.$extractFramebufferData(drawFramebuffer);
 
         const lines: string[] = [];
         let idx = 0;
 
-        for (let y = 0; y < textmodifier.grid.rows; y++) {
+        for (let y = 0; y < textmodifier.grid!.rows; y++) {
             let line = '';
 
-            for (let x = 0; x < textmodifier.grid.cols; x++) {
+            for (let x = 0; x < textmodifier.grid!.cols; x++) {
                 const pixelIdx = idx * 4;
 
                 const charIndex = dataExtractor.$getCharacterIndex(
