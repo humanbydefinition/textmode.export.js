@@ -190,7 +190,6 @@ export class SVGContentGenerator {
      */
     public $optimizeSVGContent(svgContent: string): string {
         return svgContent
-            .replace(/<path[^>]*d=""[^>]*\/>/g, '') // Remove empty paths
             .replace(/\s+/g, ' ') // Collapse whitespace
             .replace(/> </g, '><'); // Remove spaces between tags
     }
