@@ -143,12 +143,12 @@ export class GIFBlade extends Blade<GIFExportOptions> {
   }
 
   isRecording(): boolean {
-    return this.recordingState === 'recording';
+    return this.recordingState === 'recording' || this.recordingState === 'encoding';
   }
 
   setRecordingState(state: GIFRecordingState, progress?: GIFExportProgress): void {
     this.recordingState = state;
-    const disabled = state === 'recording';
+    const disabled = state === 'recording' || state === 'encoding';
     this.frameCountInput.inputElement.disabled = disabled;
     this.frameRateInput.inputElement.disabled = disabled;
     this.scaleInput.inputElement.disabled = disabled;
@@ -161,6 +161,15 @@ export class GIFBlade extends Blade<GIFExportOptions> {
           this.status.setMessage(`recording ${current}/${progress.totalFrames}`, 'active');
         } else {
           this.status.setMessage('recording…', 'active');
+        }
+        break;
+      }
+      case 'encoding': {
+        if (progress?.totalFrames) {
+          const current = progress.frameIndex ?? 0;
+          this.status.setMessage(`encoding ${current}/${progress.totalFrames}`, 'active');
+        } else {
+          this.status.setMessage('encoding…', 'active');
         }
         break;
       }
@@ -180,8 +189,9 @@ export class GIFBlade extends Blade<GIFExportOptions> {
   }
 
   handleProgress(progress: GIFExportProgress): void {
-    if (progress.state === 'recording' && progress.totalFrames) {
-      this.status.setMessage(`recording ${progress.frameIndex ?? 0}/${progress.totalFrames}`, 'active');
+    if ((progress.state === 'recording' || progress.state === 'encoding') && progress.totalFrames) {
+      const action = progress.state === 'recording' ? 'recording' : 'encoding';
+      this.status.setMessage(`${action} ${progress.frameIndex ?? 0}/${progress.totalFrames}`, 'active');
     } else if (progress.state === 'completed') {
       this.status.setMessage('GIF saved successfully', 'active');
     } else if (progress.state === 'error') {

@@ -1,4 +1,4 @@
-export type GIFRecordingState = 'idle' | 'recording' | 'completed' | 'error';
+export type GIFRecordingState = 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 /**
  * Progress information emitted during the GIF export process.
  */
@@ -6,7 +6,7 @@ export type GIFExportProgress = {
     /**
      * Current state of the recording process.
      */
-    state: 'idle' | 'recording' | 'completed' | 'error';
+    state: 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
     /**
      * Number of frames that have been recorded so far.
      */
