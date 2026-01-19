@@ -39,7 +39,7 @@ export class VideoExporter {
         this._registerPostDrawHook,
         options.onProgress,
       );
-      new FileHandler().$downloadFile(blob, generationOptions.filename, '.webm');
+      new FileHandler().$downloadFile(blob, generationOptions.filename);
 
     } catch (error) {
       options.onProgress?.({

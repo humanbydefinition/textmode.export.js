@@ -1,4 +1,4 @@
-import { IMAGE_EXTENSIONS, IMAGE_MIME_TYPES, type ImageExportOptions, type ImageGenerationOptions } from './types';
+import { IMAGE_MIME_TYPES, type ImageExportOptions, type ImageGenerationOptions } from './types';
 import { FileHandler } from '../base';
 
 /**
@@ -87,7 +87,7 @@ export class ImageExporter {
 
         const imageBlob = await this.$generateImageBlob(canvas, _options);
 
-        new FileHandler().$downloadFile(imageBlob, _options.filename, IMAGE_EXTENSIONS[_options.format]);
+        new FileHandler().$downloadFile(imageBlob, _options.filename);
     }
 
     /**

@@ -39,9 +39,14 @@ export class SVGExporter {
         const dataExtractor = new SVGDataExtractor();
         const contentGenerator = new SVGContentGenerator();
 
+        const drawFramebuffer = textmodifier.layers.base.drawFramebuffer;
+        if (!drawFramebuffer) {
+            throw new Error('No draw framebuffer available for SVG export');
+        }
+
         // Extract SVG cell data
         const cellDataArray = dataExtractor.$extractSVGCellData(
-            dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer),
+            dataExtractor.$extractFramebufferData(drawFramebuffer),
             textmodifier.grid,
         );
 
@@ -64,8 +69,7 @@ export class SVGExporter {
     public $saveSVG(textmodifier: Textmodifier, options: SVGExportOptions = {}): void {
         new FileHandler().$downloadFile(
             new Blob([this.$generateSVG(textmodifier, options)], { type: 'image/svg+xml;charset=utf-8' }),
-            options.filename,
-            '.svg'
+            options.filename
         );
     }
 }

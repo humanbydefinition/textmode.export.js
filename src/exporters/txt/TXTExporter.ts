@@ -84,6 +84,6 @@ export class TXTExporter {
         const txtContent = this._createTXTContent(textmodifier, generationOptions);
 
         const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
-        new FileHandler().$downloadFile(blob, generationOptions.filename, '.txt');
+        new FileHandler().$downloadFile(blob, generationOptions.filename);
     }
 }

@@ -1,5 +1,5 @@
 import type { SVGCellData, SVGGenerationOptions } from './types';
-import type { TextmodeFont, TextmodeGrid } from 'textmode.js';
+import type { loadables, TextmodeGrid } from 'textmode.js';
 /**
  * Generates SVG content and markup from processed cell data.
  * This class handles the creation of SVG elements, groups, and styling.
@@ -50,7 +50,7 @@ export declare class SVGContentGenerator {
      * @param options SVG generation options
      * @returns Complete cell SVG content
      */
-    $generateCellContent(cellData: SVGCellData, gridInfo: TextmodeGrid, fontInfo: TextmodeFont, options: SVGGenerationOptions): string;
+    $generateCellContent(cellData: SVGCellData, gridInfo: TextmodeGrid, fontInfo: loadables.TextmodeFont, options: SVGGenerationOptions): string;
     /**
      * Generates the complete SVG content from cell data
      * @param cellDataArray Array of cell data
@@ -59,7 +59,7 @@ export declare class SVGContentGenerator {
      * @param options SVG generation options
      * @returns Complete SVG string
      */
-    $generateSVGContent(cellDataArray: SVGCellData[], grid: TextmodeGrid, fontInfo: TextmodeFont, options: SVGGenerationOptions): string;
+    $generateSVGContent(cellDataArray: SVGCellData[], grid: TextmodeGrid, fontInfo: loadables.TextmodeFont, options: SVGGenerationOptions): string;
     /**
      * Optimizes SVG content by removing empty elements and unnecessary whitespace
      * @param svgContent Raw SVG content

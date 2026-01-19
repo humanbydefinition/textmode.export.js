@@ -1,5 +1,5 @@
 import type { GlyphPath } from './types';
-import type { TextmodeFont } from 'textmode.js';
+import type { loadables } from 'textmode.js';
 
 /**
  * Glyph data structure for parsed glyphs.
@@ -150,13 +150,17 @@ export class SVGPathGenerator {
      */
     private _generateCharacterPath(
         character: string,
-        font: TextmodeFont,
+        font: loadables.TextmodeFont,
         x: number,
         y: number,
         fontSize: number
     ): GlyphPath | null {
-        const glyphData = font.characterMap.get(character).glyphData;
+        const charData = font.characterMap.get(character);
+        if (!charData) {
+            return null;
+        }
 
+        const glyphData = charData.glyphData;
         if (!glyphData) {
             return null;
         }
@@ -178,7 +182,7 @@ export class SVGPathGenerator {
      */
     public $generatePositionedCharacterPath(
         character: string,
-        font: TextmodeFont,
+        font: loadables.TextmodeFont,
         cellX: number,
         cellY: number,
         cellWidth: number,
