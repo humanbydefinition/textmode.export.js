@@ -64,7 +64,8 @@ export class SVGExporter {
     public $saveSVG(textmodifier: Textmodifier, options: SVGExportOptions = {}): void {
         new FileHandler().$downloadFile(
             new Blob([this.$generateSVG(textmodifier, options)], { type: 'image/svg+xml;charset=utf-8' }),
-            options.filename
+            options.filename,
+            '.svg'
         );
     }
 }

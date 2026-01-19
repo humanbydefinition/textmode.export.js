@@ -8,10 +8,11 @@ export class FileHandler {
      * Downloads content as a file
      * @param blob The content to download
      * @param filename The filename to use for the downloaded file
+     * @param extension The file extension to append if missing (e.g. '.png')
      */
-    public $downloadFile(blob: Blob, filename: string | undefined): void {
+    public $downloadFile(blob: Blob, filename: string | undefined, extension?: string): void {
         try {
-            const sanitizedFilename = this._sanitizeFilename(filename);
+            const sanitizedFilename = this._sanitizeFilename(filename, extension);
 
             const url = URL.createObjectURL(blob);
 
@@ -37,19 +38,17 @@ export class FileHandler {
     /**
      * Validates and sanitizes filename for safety and compatibility
      * @param filename The filename to validate
+     * @param extension Optional extension to ensure is present
      * @returns Sanitized filename
      */
-    private _sanitizeFilename(filename: string | undefined): string {
-        if (!filename) {
-            return this._generateDefaultFilename();
+    private _sanitizeFilename(filename: string | undefined, extension?: string): string {
+        let baseName = filename;
+
+        if (!baseName || !baseName.trim()) {
+            baseName = this._generateDefaultFilename();
         }
 
-        const trimmed = filename.trim();
-        if (!trimmed) {
-            return this._generateDefaultFilename();
-        }
-
-        const normalized = trimmed
+        const normalized = baseName.trim()
             .replace(/[<>:"/\\|?*]/g, '_')
             .replace(/\s+/g, '_');
 
@@ -57,9 +56,15 @@ export class FileHandler {
             .replace(/_{2,}/g, '_')
             .replace(/^_+|_+$/g, '');
 
-        const sanitized = collapsed.substring(0, 255);
+        let sanitized = collapsed.substring(0, 255) || this._generateDefaultFilename();
 
-        return sanitized || this._generateDefaultFilename();
+        if (extension) {
+            if (!sanitized.toLowerCase().endsWith(extension.toLowerCase())) {
+                sanitized += extension;
+            }
+        }
+
+        return sanitized;
     }
 
     /**

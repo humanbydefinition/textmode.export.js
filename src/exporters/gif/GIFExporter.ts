@@ -79,7 +79,8 @@ export class GIFExporter {
 
       new FileHandler().$downloadFile(
         new Blob([buffer], { type: 'image/gif' }),
-        generationOptions.filename
+        generationOptions.filename,
+        '.gif'
       );
 
       progress?.({

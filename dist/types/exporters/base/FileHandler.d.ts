@@ -7,11 +7,13 @@ export declare class FileHandler {
      * Downloads content as a file
      * @param blob The content to download
      * @param filename The filename to use for the downloaded file
+     * @param extension The file extension to append if missing (e.g. '.png')
      */
-    $downloadFile(blob: Blob, filename: string | undefined): void;
+    $downloadFile(blob: Blob, filename: string | undefined, extension?: string): void;
     /**
      * Validates and sanitizes filename for safety and compatibility
      * @param filename The filename to validate
+     * @param extension Optional extension to ensure is present
      * @returns Sanitized filename
      */
     private _sanitizeFilename;
