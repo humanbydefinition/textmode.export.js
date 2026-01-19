@@ -384,9 +384,11 @@ export class OverlayController {
         this._exportButton.setDisabled(true);
         if (progress?.totalFrames) {
           const current = progress.frameIndex ?? 0;
-          this._exportButton.setLabel(`recording ${current}/${progress.totalFrames}`);
+          const action = progress.state === 'encoding' ? 'encoding' : 'recording';
+          this._exportButton.setLabel(`${action} ${current}/${progress.totalFrames}`);
         } else {
-          this._exportButton.setLabel('recording…');
+          const action = progress?.state === 'encoding' ? 'encoding' : 'recording';
+          this._exportButton.setLabel(`${action}…`);
         }
       } else {
         this._exportButton.setDisabled(false);

@@ -45,7 +45,8 @@ export class GIFExporter {
       const encoder = GIFEncoder();
       const { repeat } = options;
 
-      frames.forEach((frame, index) => {
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
         const { width, height, imageData, delayMs } = frame;
         const rgbaBuffer = new Uint32Array(imageData.data.buffer.slice(0));
 
@@ -56,9 +57,18 @@ export class GIFExporter {
         encoder.writeFrame(indexedPixels, width, height, {
           palette,
           delay: delayMs,
-          repeat: index === 0 ? repeat : -1,
+          repeat: i === 0 ? repeat : -1,
         });
-      });
+
+        if (i % 2 === 0 || i === frames.length - 1) {
+          progress?.({
+            state: 'encoding',
+            frameIndex: i + 1,
+            totalFrames: frames.length,
+          });
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
 
       encoder.finish();
       const bytes = encoder.bytes();
