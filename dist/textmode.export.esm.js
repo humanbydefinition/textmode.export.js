@@ -92,8 +92,8 @@ class qe {
     return p;
   }
   _generateCharacterPath(e, t, r, a, i) {
-    const n = t.characterMap.get(e).glyphData;
-    return n ? this._createGlyphPath(t.font, n, r, a, i) : null;
+    const n = t.characterMap.get(e), c = n?.glyphData;
+    return c ? this._createGlyphPath(t.font, c, r, a, i) : null;
   }
   $generatePositionedCharacterPath(e, t, r, a, i, n, c, l) {
     if (!l) return null;
@@ -152,7 +152,7 @@ class He {
     return i.push(this.$generateSVGFooter()), i.join("");
   }
   $optimizeSVGContent(e) {
-    return e.replace(/<path[^>]*d=""[^>]*\/>/g, "").replace(/\s+/g, " ").replace(/> </g, "><");
+    return e.replace(/\s+/g, " ").replace(/> </g, "><");
   }
 }
 class ge {
@@ -202,24 +202,17 @@ class ve {
     return { preserveTrailingSpaces: e.preserveTrailingSpaces ?? !1, emptyCharacter: e.emptyCharacter ?? " ", filename: e.filename };
   }
   _createTXTContent(e, t) {
-    const r = new Ae();
-    let a = r.$extractFramebufferData(e.layers.base.drawFramebuffer);
-    const i = [];
-    let n = 0;
+    const r = new Ae(), a = e.layers.base.drawFramebuffer, i = r.$extractFramebufferData(a), n = [];
+    let c = 0;
     for (let l = 0; l < e.grid.rows; l++) {
-      const p = [];
+      let p = "";
       for (let o = 0; o < e.grid.cols; o++) {
-        const d = 4 * n, u = r.$getCharacterIndex(a.characterPixels, d), m = e.font.characters[u]?.character || t.emptyCharacter;
-        p.push(m), n++;
+        const d = 4 * c, u = r.$getCharacterIndex(i.characterPixels, d);
+        p += e.font.characters[u]?.character || t.emptyCharacter, c++;
       }
-      i.push(p);
+      t.preserveTrailingSpaces || (p = p.trimEnd()), n.push(p);
     }
-    const c = [];
-    for (const l of i) {
-      let p = l.join("");
-      t.preserveTrailingSpaces || (p = p.replace(/\s+$/, "")), c.push(p);
-    }
-    return c.join(`
+    return n.join(`
 `);
   }
   $generateTXT(e, t = {}) {

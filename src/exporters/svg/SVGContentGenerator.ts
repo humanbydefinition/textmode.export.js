@@ -3,7 +3,7 @@ import type {
     SVGGenerationOptions
 } from './types';
 import { SVGPathGenerator } from './SVGPathGenerator';
-import type { TextmodeFont, TextmodeGrid } from 'textmode.js';
+import type { TextmodeGrid, loadables } from 'textmode.js';
 
 /**
  * Generates SVG content and markup from processed cell data.
@@ -98,7 +98,7 @@ export class SVGContentGenerator {
     private _generateCharacterPath(
         cellData: SVGCellData,
         gridInfo: TextmodeGrid,
-        fontInfo: TextmodeFont,
+        fontInfo: loadables.TextmodeFont,
         options: SVGGenerationOptions
     ): string {
         const character = fontInfo.characters[cellData.charIndex];
@@ -136,7 +136,7 @@ export class SVGContentGenerator {
     public $generateCellContent(
         cellData: SVGCellData,
         gridInfo: TextmodeGrid,
-        fontInfo: TextmodeFont,
+        fontInfo: loadables.TextmodeFont,
         options: SVGGenerationOptions
     ): string {
         const parts: string[] = [];
@@ -166,7 +166,7 @@ export class SVGContentGenerator {
     public $generateSVGContent(
         cellDataArray: SVGCellData[],
         grid: TextmodeGrid,
-        fontInfo: TextmodeFont,
+        fontInfo: loadables.TextmodeFont,
         options: SVGGenerationOptions
     ): string {
         const parts = [
