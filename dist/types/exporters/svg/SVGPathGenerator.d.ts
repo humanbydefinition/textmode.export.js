@@ -1,4 +1,4 @@
-import type { TextmodeFont } from 'textmode.js';
+import type { loadables } from 'textmode.js';
 /**
  * Glyph data structure for parsed glyphs.
  * Mirrors the shape used by textmode.js internally for Typr glyph data.
@@ -70,7 +70,7 @@ export declare class SVGPathGenerator {
      * @param advanceWidth Character advance width
      * @returns SVG path data string or null if generation fails
      */
-    $generatePositionedCharacterPath(character: string, font: TextmodeFont, cellX: number, cellY: number, cellWidth: number, cellHeight: number, fontSize: number, glyphData: GlyphData | null): string | null;
+    $generatePositionedCharacterPath(character: string, font: loadables.TextmodeFont, cellX: number, cellY: number, cellWidth: number, cellHeight: number, fontSize: number, glyphData: GlyphData | null): string | null;
 }
 export {};
 //# sourceMappingURL=SVGPathGenerator.d.ts.map
