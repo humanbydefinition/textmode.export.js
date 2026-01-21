@@ -48,7 +48,7 @@ export class GIFExporter {
       for (let i = 0; i < frames.length; i++) {
         const frame = frames[i];
         const { width, height, imageData, delayMs } = frame;
-        const rgbaBuffer = new Uint32Array(imageData.data.buffer.slice(0));
+        const rgbaBuffer = new Uint32Array(imageData.data.buffer);
 
         const palette: GIFPalette = quantize(rgbaBuffer, 256, {});
 
