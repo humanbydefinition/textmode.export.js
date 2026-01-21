@@ -1,4 +1,4 @@
-import type { TextmodePluginAPI } from 'textmode.js';
+import type { TextmodePluginAPI } from 'textmode.js/plugins';
 import type { GIFExportProgress, GIFFrame, GIFGenerationOptions } from './types';
 
 /**

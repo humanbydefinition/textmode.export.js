@@ -41,14 +41,14 @@ export class SVGExporter {
 
         // Extract SVG cell data
         const cellDataArray = dataExtractor.$extractSVGCellData(
-            dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer),
-            textmodifier.grid,
+            dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer!),
+            textmodifier.grid!,
         );
 
         // Generate SVG content
         const svgContent = contentGenerator.$generateSVGContent(
             cellDataArray,
-            textmodifier.grid,
+            textmodifier.grid!,
             textmodifier.font,
             this._applyDefaultOptions(options)
         );

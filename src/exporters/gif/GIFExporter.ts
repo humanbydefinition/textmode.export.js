@@ -1,4 +1,5 @@
-import type { TextmodePluginAPI, Textmodifier } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
+import type { TextmodePluginAPI } from 'textmode.js/plugins';
 import { GIFRecorder } from './GIFRecorder';
 import type { GIFExportOptions, GIFGenerationOptions } from './types';
 import { FileHandler } from '../base';

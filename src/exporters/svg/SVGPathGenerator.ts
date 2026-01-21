@@ -1,5 +1,5 @@
 import type { GlyphPath } from './types';
-import type { TextmodeFont } from 'textmode.js';
+import type { TextmodeFont } from 'textmode.js/loadables';
 
 /**
  * Glyph data structure for parsed glyphs.
@@ -155,7 +155,7 @@ export class SVGPathGenerator {
         y: number,
         fontSize: number
     ): GlyphPath | null {
-        const glyphData = font.characterMap.get(character).glyphData;
+        const glyphData = font.characterMap.get(character)?.glyphData;
 
         if (!glyphData) {
             return null;

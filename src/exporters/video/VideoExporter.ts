@@ -1,4 +1,5 @@
-import type { TextmodePluginAPI, Textmodifier } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
+import type { TextmodePluginAPI } from 'textmode.js/plugins';
 import { VideoRecorder } from './VideoRecorder';
 import type { VideoExportOptions, VideoGenerationOptions } from './types';
 import { FileHandler } from '../base';

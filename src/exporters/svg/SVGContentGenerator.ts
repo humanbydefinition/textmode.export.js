@@ -3,7 +3,8 @@ import type {
     SVGGenerationOptions
 } from './types';
 import { SVGPathGenerator } from './SVGPathGenerator';
-import type { TextmodeFont, TextmodeGrid } from 'textmode.js';
+import type { TextmodeGrid } from 'textmode.js';
+import type { TextmodeFont } from 'textmode.js/loadables';
 
 /**
  * Generates SVG content and markup from processed cell data.

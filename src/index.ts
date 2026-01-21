@@ -1,4 +1,5 @@
-import type { TextmodePlugin, TextmodePluginAPI, Textmodifier } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
+import type { TextmodePlugin, TextmodePluginAPI } from 'textmode.js/plugins';
 import { SVGExporter, type SVGExportOptions } from './exporters/svg';
 import { ImageExporter, type ImageExportOptions } from './exporters/image';
 import { TXTExporter, type TXTExportOptions } from './exporters/txt';
