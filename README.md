@@ -52,9 +52,7 @@ const t = textmode.create({
     fontSize: 16,
     frameRate: 60,
     plugins: [
-        createTextmodeExportPlugin({
-            overlay: false
-        })
+        ExportPlugin
     ]
 });
 
@@ -111,7 +109,7 @@ Then, you can import it in your JavaScript or TypeScript files:
 ```javascript
 // sketch.js
 import { textmode } from 'textmode.js';
-import { createTextmodeExportPlugin } from 'textmode.export.js';
+import { ExportPlugin } from 'textmode.export.js';
 
 const t = textmode.create({
     width: window.innerWidth,
@@ -119,9 +117,7 @@ const t = textmode.create({
     fontSize: 16,
     frameRate: 60,
     plugins: [
-        createTextmodeExportPlugin({
-            overlay: false
-        })
+        ExportPlugin
     ]
 });
 
