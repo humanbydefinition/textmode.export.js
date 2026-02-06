@@ -1,6 +1,6 @@
 {
   "name": "textmode.export.js",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, and plain text.",
   "type": "module",
   "types": "./dist/types/index.d.ts",
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "dev": "vite --port 5174",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc",
     "preview": "vite preview",
     "build:docs": "typedoc",
     "dev:docs": "typedoc --watch"
@@ -25,7 +25,9 @@
     "@types/node": "^24.5.2",
     "terser": "^5.44.0",
     "typedoc": "^0.28.13",
+    "typedoc-plugin-frontmatter": "^1.3.1",
     "typedoc-plugin-markdown": "^4.9.0",
+    "typedoc-vitepress-theme": "^1.1.2",
     "typescript": "~5.8.3",
     "vite": "^7.1.7",
     "vite-plugin-css-injected-by-js": "^3.5.2"
@@ -33,7 +35,7 @@
   "dependencies": {
     "gifenc": "^1.0.1",
     "webm-writer": "^1.0.0",
-    "textmode.js": "^0.7.0"
+    "textmode.js": ">=0.10.0"
   },
   "repository": {
     "type": "git",

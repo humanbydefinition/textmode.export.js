@@ -52,9 +52,7 @@ const t = textmode.create({
     fontSize: 16,
     frameRate: 60,
     plugins: [
-        createTextmodeExportPlugin({
-            overlay: false
-        })
+        ExportPlugin
     ]
 });
 
@@ -78,6 +76,11 @@ t.draw(() => {
         });
     }
 });
+
+// Control the export overlay UI at runtime
+// t.exportOverlay.hide();  // Hide the overlay
+// t.exportOverlay.show();  // Show the overlay
+// t.exportOverlay.toggle(); // Toggle visibility
 
 t.windowResized(() => {
     t.resizeCanvas(window.innerWidth, window.innerHeight);
@@ -111,7 +114,7 @@ Then, you can import it in your JavaScript or TypeScript files:
 ```javascript
 // sketch.js
 import { textmode } from 'textmode.js';
-import { createTextmodeExportPlugin } from 'textmode.export.js';
+import { ExportPlugin } from 'textmode.export.js';
 
 const t = textmode.create({
     width: window.innerWidth,
@@ -119,9 +122,7 @@ const t = textmode.create({
     fontSize: 16,
     frameRate: 60,
     plugins: [
-        createTextmodeExportPlugin({
-            overlay: false
-        })
+        ExportPlugin
     ]
 });
 
@@ -145,6 +146,11 @@ t.draw(() => {
         });
     }
 });
+
+// Control the export overlay UI at runtime
+// t.exportOverlay.hide();  // Hide the overlay
+// t.exportOverlay.show();  // Show the overlay
+// t.exportOverlay.toggle(); // Toggle visibility
 
 t.windowResized(() => {
     t.resizeCanvas(window.innerWidth, window.innerHeight);

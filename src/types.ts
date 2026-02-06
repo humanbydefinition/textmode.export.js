@@ -5,9 +5,39 @@ import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
 
 /**
+ * Controller for managing the export overlay UI visibility at runtime.
+ */
+export interface ExportOverlayController {
+  /**
+   * Shows the export overlay UI.
+   */
+  show(): void;
+
+  /**
+   * Hides the export overlay UI.
+   */
+  hide(): void;
+
+  /**
+   * Toggles the export overlay UI visibility.
+   */
+  toggle(): void;
+
+  /**
+   * Checks if the export overlay is currently visible.
+   */
+  isVisible(): boolean;
+}
+
+/**
  * Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
  */
 export interface TextmodeExportAPI {
+  /**
+   * Controller for managing the export overlay UI visibility at runtime.
+   */
+  exportOverlay: ExportOverlayController;
+
   /**
    * Saves the current canvas content to an image file *(`'png'` by default)*.
    * @param options Export options.
@@ -61,11 +91,17 @@ export interface TextmodeExportAPI {
 
 /**
  * Options for configuring the export plugin.
+ * 
+ * @deprecated This interface is only used by the deprecated `createTextmodeExportPlugin` function.
+ * Use {@link ExportPlugin} directly instead, and control overlay visibility at runtime via
+ * {@link ExportOverlayController}.
  */
 export interface TextmodeExportPluginOptions {
   /**
    * Controls whether the export overlay UI should be created.
    * Defaults to `true`.
+   * 
+   * @deprecated Use runtime overlay controls instead: `textmodifier.exportOverlay.show()` / `.hide()`
    */
   overlay?: boolean;
 }

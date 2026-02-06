@@ -2,24 +2,33 @@
     "entryPoints": [
         "src/index.ts",
     ],
-    "out": "docs",
-    "name": "textmode.export.js",
+    "out": "api/textmode.synth.js",
     "readme": "none",
     "excludePrivate": true,
     "excludeProtected": true,
     "excludeExternals": false,
-    "includeVersion": true,
-    "disableSources": false,
+    "includeVersion": false,
+    "disableSources": true,
+    "useCodeBlocks": true,
     "tsconfig": "tsconfig.json",
     "exclude": [
         "**/node_modules/**"
     ],
+    "sort": [
+        "source-order"
+    ],
     "logLevel": "Verbose",
-    "plugin": ["typedoc-plugin-markdown"],
+    "plugin": [
+        "typedoc-plugin-markdown",
+        "typedoc-plugin-frontmatter",
+        "typedoc-vitepress-theme",
+        "./typedoc-plugins/custom-frontmatter.js"
+    ],
+    "preserveFrontmatterCommentTags": false,
+    "frontmatterNamingConvention": "camelCase",
     "indexFormat": "table",
     "parametersFormat": "table",
     "interfacePropertiesFormat": "table",
-    "classPropertiesFormat": "table",
     "enumMembersFormat": "table",
     "propertyMembersFormat": "table",
     "typeDeclarationFormat": "table",
