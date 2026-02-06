@@ -33,7 +33,6 @@ import { TXTExporter, type TXTExportOptions } from './exporters/txt';
 import { GIFExporter, type GIFExportOptions } from './exporters/gif';
 import { VideoExporter, type VideoExportOptions } from './exporters/video';
 import { createExportOverlay } from './overlay';
-import type { OverlayController } from './overlay/core/OverlayController';
 import type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayController } from './types';
 
 // Re-export all export option types for consumers
