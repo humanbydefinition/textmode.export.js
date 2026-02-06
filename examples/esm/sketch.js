@@ -6,14 +6,14 @@
  */
 
 import { textmode } from 'textmode.js';
-import { createTextmodeExportPlugin } from 'textmode.export.js';
+import { ExportPlugin } from 'textmode.export.js';
 
 // Create textmode instance
 const tm = textmode.create({
     width: window.innerWidth,
     height: window.innerHeight,
     fontSize: 32,
-    plugins: [createTextmodeExportPlugin({ overlay: true })],
+    plugins: [ExportPlugin],
 });
 
 console.log(textmode.version);

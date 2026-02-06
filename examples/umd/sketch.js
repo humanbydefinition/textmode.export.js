@@ -10,7 +10,7 @@ const tm = textmode.create({
     width: window.innerWidth,
     height: window.innerHeight,
     fontSize: 32,
-    plugins: [createTextmodeExportPlugin({ overlay: true })],
+    plugins: [ExportPlugin],
 });
 
 tm.draw(() => {
