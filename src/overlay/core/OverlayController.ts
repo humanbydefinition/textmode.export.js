@@ -98,6 +98,30 @@ export class OverlayController {
     this._switchFormat(this._currentFormat);
   }
 
+  public show(): void {
+    if (this._shadowHost) {
+      this._shadowHost.style.display = '';
+    }
+  }
+
+  public hide(): void {
+    if (this._shadowHost) {
+      this._shadowHost.style.display = 'none';
+    }
+  }
+
+  public toggle(): void {
+    if (this.isVisible()) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  public isVisible(): boolean {
+    return this._shadowHost ? this._shadowHost.style.display !== 'none' : false;
+  }
+
   public $dispose(): void {
     if (this._formatSelect.isMounted()) {
       this._formatSelect.selectElement.removeEventListener('change', this._handleFormatSelectChange);
