@@ -51,7 +51,7 @@ export type { VideoExportOptions, VideoExportProgress } from './exporters/video'
  * access to all export options, which can be controlled at runtime.
  *
  * @example
- * ```javascript
+ * ```js
  * import { textmode } from 'textmode.js';
  * import { ExportPlugin } from 'textmode.export.js';
  *
@@ -61,7 +61,9 @@ export type { VideoExportOptions, VideoExportProgress } from './exporters/video'
  *
  * t.draw(() => {
  *     t.background(0);
- *     t.text('Hello World', 10, 10);
+ *     t.char('A');
+ *     t.rotateZ(t.frameCount);
+ *     t.rect(16, 16);
  * });
  *
  * // Export methods are now available
