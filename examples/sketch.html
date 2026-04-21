@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>textmode.export.js - sketch</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="./style.css" />
+	</head>
+	<body>
+		<script type="module">
+			import * as textmodeModule from 'textmode.js';
+			import * as exportModule from 'textmode.export.js';
+
+			const params = new URLSearchParams(window.location.search);
+			const examplePath = params.get('path');
+			const isEmbeddedPreview = window.self !== window.top;
+			const validSegment = /^[A-Za-z0-9_.-]+$/;
+
+			const EXAMPLES = {
+				'ExportPlugin/init': {
+					title: 'ExportPlugin.init',
+					subtitle:
+						'Installs ExportPlugin on a live textmode sketch and exposes the export overlay plus runtime helpers.',
+				},
+			};
+
+			function isValidPath(path) {
+				const segments = path.split('/');
+				return (
+					segments.length > 0 &&
+					segments.every(
+						(segment) =>
+							segment.length > 0 && segment !== '.' && segment !== '..' && validSegment.test(segment)
+					)
+				);
+			}
+
+			function showError(message) {
+				document.body.innerHTML = `
+					<div class="sketch-error">
+						<div class="sketch-error-card">
+							<p>${message}</p>
+						</div>
+					</div>
+				`;
+			}
+
+			if (!examplePath || !isValidPath(examplePath) || !(examplePath in EXAMPLES)) {
+				showError('Invalid example path.');
+			} else {
+				const example = EXAMPLES[examplePath];
+				document.title = `textmode.export.js - ${example.title}`;
+
+				document.body.innerHTML = `
+					${
+						isEmbeddedPreview
+							? ''
+							: `
+					<div class="nav-overlay">
+						<a href="./index.html" class="back-link">back to examples</a>
+					</div>
+					`
+					}
+					<div class="sketch-shell${isEmbeddedPreview ? ' is-embedded' : ''}">
+						<div class="sketch-layout sketch-layout--single">
+							<section class="canvas-panel">
+								<div class="canvas-panel-header">
+									<h1 class="canvas-panel-title">${example.title}</h1>
+									<p class="canvas-panel-subtitle">${example.subtitle}</p>
+								</div>
+								<div class="canvas-frame">
+									<canvas id="textmode-canvas" width="800" height="600"></canvas>
+								</div>
+							</section>
+						</div>
+					</div>
+				`;
+
+				window.textmode = textmodeModule.textmode;
+				window.TextmodeErrorLevel = textmodeModule.TextmodeErrorLevel;
+				window.ExportPlugin = exportModule.ExportPlugin;
+				window.createTextmodeExportPlugin = exportModule.createTextmodeExportPlugin;
+
+				const script = document.createElement('script');
+				script.src = `./${examplePath}/sketch.js`;
+				script.onerror = () => showError(`Unable to load ${examplePath}.`);
+				document.body.appendChild(script);
+			}
+		</script>
+	</body>
+</html>

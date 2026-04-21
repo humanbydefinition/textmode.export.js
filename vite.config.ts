@@ -11,7 +11,7 @@ export default defineConfig({
 		},
 	},
 	server: {
-		open: '/examples/esm/index.html',
+		open: '/examples/index.html',
 	},
 	build: {
 		minify: 'esbuild',

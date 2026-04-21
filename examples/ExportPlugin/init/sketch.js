@@ -1,17 +1,16 @@
 /**
- * @name [textmode.js] Animated Wave Pattern
- * @description A sine wave interference pattern using character-based graphics.
+ * @title ExportPlugin.init
  * @author humanbydefinition
- * @link https://github.com/humanbydefinition/textmode.js
  */
-
-// Create textmode instance
 const tm = textmode.create({
+	canvas: document.getElementById('textmode-canvas'),
 	width: window.innerWidth,
 	height: window.innerHeight,
 	fontSize: 32,
 	plugins: [ExportPlugin],
 });
+
+console.log(textmode.version);
 
 tm.draw(() => {
 	tm.background(0);
