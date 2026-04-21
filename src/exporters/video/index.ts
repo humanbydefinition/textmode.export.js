@@ -1,8 +1,3 @@
 export { VideoExporter } from './VideoExporter';
 export { VideoRecorder } from './VideoRecorder';
-export type {
-  VideoExportOptions,
-  VideoExportProgress,
-  VideoGenerationOptions,
-  VideoRecordingState,
-} from './types';
+export type { VideoExportOptions, VideoExportProgress, VideoGenerationOptions, VideoRecordingState } from './types';

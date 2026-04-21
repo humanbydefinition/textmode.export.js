@@ -137,9 +137,7 @@ function isLikelyGithubHandle(value) {
 }
 
 function parseExampleMetadataBlock(block) {
-	const lines = block
-		.split('\n')
-		.map((line) => line.replace(/^\s*\*\s?/, '').trimEnd());
+	const lines = block.split('\n').map((line) => line.replace(/^\s*\*\s?/, '').trimEnd());
 
 	/** @type {Record<string, string>} */
 	const metadata = {};

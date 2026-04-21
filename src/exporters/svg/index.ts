@@ -6,13 +6,13 @@ export { SVGPathGenerator } from './SVGPathGenerator';
 
 // Export types
 export type {
-    SVGExportOptions,
-    SVGGenerationOptions,
-    SVGCellData,
-    FramebufferData,
-    RGBA,
-    Position,
-    CellPosition,
-    CellTransform,
-    GlyphPath
+	SVGExportOptions,
+	SVGGenerationOptions,
+	SVGCellData,
+	FramebufferData,
+	RGBA,
+	Position,
+	CellPosition,
+	CellTransform,
+	GlyphPath,
 } from './types';

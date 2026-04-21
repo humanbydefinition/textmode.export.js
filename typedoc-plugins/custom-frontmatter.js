@@ -32,17 +32,13 @@ import { fileURLToPath } from 'url';
  * @type {Partial<Record<import('typedoc').ReflectionKind, string>>}
  */
 const DESCRIPTION_TEMPLATES = {
-	[ReflectionKind.Class]:
-		'API documentation for the {name} class in {library}.',
-	[ReflectionKind.Interface]:
-		'API documentation for the {name} interface in {library}.',
+	[ReflectionKind.Class]: 'API documentation for the {name} class in {library}.',
+	[ReflectionKind.Interface]: 'API documentation for the {name} interface in {library}.',
 	[ReflectionKind.Enum]: '{name} enumeration values and usage in {library}.',
 	[ReflectionKind.Function]: '{name} function API reference for {library}.',
-	[ReflectionKind.TypeAlias]:
-		'{name} type definition and usage in {library}.',
+	[ReflectionKind.TypeAlias]: '{name} type definition and usage in {library}.',
 	[ReflectionKind.Variable]: '{name} variable reference in {library}.',
-	[ReflectionKind.Namespace]:
-		'{name} namespace - types and utilities in {library}.',
+	[ReflectionKind.Namespace]: '{name} namespace - types and utilities in {library}.',
 	[ReflectionKind.Project]: 'Complete API reference for {library}.',
 	[ReflectionKind.Module]: 'API reference documentation for {name}.',
 };
@@ -179,16 +175,18 @@ function getNamespacePath(model) {
  * @returns {string}
  */
 function sanitizeForYaml(text) {
-	return text
-		// Convert markdown links [text](url) to just text
-		.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-		// Remove any remaining raw URLs that could cause YAML issues
-		.replace(/https?:\/\/[^\s]+/g, '')
-		// Remove backticks (inline code) but keep content
-		.replace(/`([^`]+)`/g, '$1')
-		// Collapse multiple spaces
-		.replace(/\s+/g, ' ')
-		.trim();
+	return (
+		text
+			// Convert markdown links [text](url) to just text
+			.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+			// Remove any remaining raw URLs that could cause YAML issues
+			.replace(/https?:\/\/[^\s]+/g, '')
+			// Remove backticks (inline code) but keep content
+			.replace(/`([^`]+)`/g, '$1')
+			// Collapse multiple spaces
+			.replace(/\s+/g, ' ')
+			.trim()
+	);
 }
 
 /**
@@ -242,8 +240,7 @@ function generateFallbackDescription(model, library) {
 	}
 
 	// Get template for this kind
-	const template =
-		DESCRIPTION_TEMPLATES[kind] ?? 'API reference for {name} in {library}.';
+	const template = DESCRIPTION_TEMPLATES[kind] ?? 'API reference for {name} in {library}.';
 
 	// Interpolate template
 	return template.replace('{name}', name).replace('{library}', library.name);
@@ -260,9 +257,7 @@ function generateFallbackDescription(model, library) {
  * @param {import('typedoc-plugin-markdown').MarkdownApplication} app
  */
 export function load(app) {
-	app.logger.verbose(
-		'[frontmatter] Registered textmode.js ecosystem frontmatter plugin'
-	);
+	app.logger.verbose('[frontmatter] Registered textmode.js ecosystem frontmatter plugin');
 
 	// Library context is lazily initialized on first page event
 	/** @type {LibraryContext | null} */
@@ -276,9 +271,7 @@ export function load(app) {
 				return;
 			}
 
-			const model = /** @type {import('typedoc').Reflection} */ (
-				page.model
-			);
+			const model = /** @type {import('typedoc').Reflection} */ (page.model);
 
 			// Initialize library context from project reflection (once)
 			if (!libraryContext) {
@@ -308,21 +301,15 @@ export function load(app) {
 				api: true,
 				namespace: isNamespaceMember ? getNamespacePath(model) : undefined,
 				kind: ReflectionKind[kind],
-				ecosystem:
-					libraryContext.ecosystem !== libraryContext.name
-						? libraryContext.ecosystem
-						: undefined,
+				ecosystem: libraryContext.ecosystem !== libraryContext.name ? libraryContext.ecosystem : undefined,
 				lastModified: new Date().toISOString().split('T')[0],
 			};
 
 			// Add class-specific metadata
 			if (kind === ReflectionKind.Class) {
-				const hasConstructor =
-					/** @type {import('typedoc').DeclarationReflection} */ (
-						model
-					).children?.some(
-						(child) => child.kind === ReflectionKind.Constructor
-					);
+				const hasConstructor = /** @type {import('typedoc').DeclarationReflection} */ (model).children?.some(
+					(child) => child.kind === ReflectionKind.Constructor
+				);
 				page.frontmatter.hasConstructor = hasConstructor;
 			}
 
