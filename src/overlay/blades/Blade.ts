@@ -1,6 +1,11 @@
 import type { ExportFormat } from '../types';
 import { Component } from '../components/base/Component';
 
+interface ManagedComponent {
+	unmount(): void;
+	destroy(): void;
+}
+
 export interface BladeConfig<TOptions> {
 	label: string;
 	supportsClipboard: boolean;
@@ -10,7 +15,7 @@ export interface BladeConfig<TOptions> {
 
 export abstract class Blade<TOptions> extends Component<void> {
 	protected readonly _config: BladeConfig<TOptions>;
-	private readonly _managedComponents = new Set<Component<any>>();
+	private readonly _managedComponents = new Set<ManagedComponent>();
 
 	constructor(config: BladeConfig<TOptions>) {
 		super();
@@ -21,7 +26,7 @@ export abstract class Blade<TOptions> extends Component<void> {
 	abstract reset(): void;
 	abstract validate(): boolean;
 
-	protected _manageComponent<TComponent extends Component<any>>(component: TComponent): TComponent {
+	protected _manageComponent<TComponent extends ManagedComponent>(component: TComponent): TComponent {
 		this._managedComponents.add(component);
 		return component;
 	}

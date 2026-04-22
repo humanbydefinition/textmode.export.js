@@ -43,6 +43,11 @@ export type { TXTExportOptions } from './exporters/txt';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
 
+type TextmodifierWithExportInternals = Textmodifier &
+	Partial<TextmodeExportAPI> & {
+		_exportOverlayController?: ReturnType<typeof createExportOverlay>;
+	};
+
 /**
  * Export plugin for textmode.js.
  *
@@ -188,16 +193,18 @@ export const ExportPlugin: TextmodePlugin = {
 			exportOverlay: exportOverlayAPI,
 		};
 
-		Object.assign(textmodifier, exportAPI);
+		const exportTarget = textmodifier as TextmodifierWithExportInternals;
+		Object.assign(exportTarget, exportAPI);
 
 		// Store controller reference for cleanup
-		(textmodifier as any)._exportOverlayController = overlayController;
+		exportTarget._exportOverlayController = overlayController;
 	},
 
 	async uninstall(textmodifier: Textmodifier) {
-		const overlayController = (textmodifier as any)._exportOverlayController;
+		const exportTarget = textmodifier as TextmodifierWithExportInternals;
+		const overlayController = exportTarget._exportOverlayController;
 		overlayController?.$dispose();
-		delete (textmodifier as any)._exportOverlayController;
+		delete exportTarget._exportOverlayController;
 
 		const exportApiKeys: Array<keyof TextmodeExportAPI> = [
 			'exportOverlay',
@@ -212,7 +219,7 @@ export const ExportPlugin: TextmodePlugin = {
 		];
 
 		for (const key of exportApiKeys) {
-			delete (textmodifier as Partial<TextmodeExportAPI>)[key];
+			delete exportTarget[key];
 		}
 	},
 };
@@ -241,25 +248,32 @@ export const createTextmodeExportPlugin = (options: TextmodeExportPluginOptions 
 	const overlayEnabled = options.overlay ?? true;
 
 	// Return modified plugin that respects overlay option
-	const plugin = { ...ExportPlugin };
+	const plugin: TextmodePlugin = { ...ExportPlugin };
 	const originalInstall = plugin.install;
 
 	plugin.install = async (textmodifier: Textmodifier, api: TextmodePluginContext) => {
-		await originalInstall.call(plugin, textmodifier, api);
+		const exportTarget = textmodifier as TextmodifierWithExportInternals;
+		await originalInstall.call(plugin, exportTarget, api);
 
 		// If overlay should be disabled, hide it after installation
 		if (!overlayEnabled) {
-			const exportAPI = textmodifier as any as TextmodeExportAPI;
-			exportAPI.exportOverlay.hide();
+			exportTarget.exportOverlay?.hide();
 		}
 	};
 
 	return plugin;
 };
 
+declare global {
+	interface Window {
+		ExportPlugin?: TextmodePlugin;
+		createTextmodeExportPlugin?: typeof createTextmodeExportPlugin;
+	}
+}
+
 // UMD global export
 if (typeof window !== 'undefined') {
-	(window as any).ExportPlugin = ExportPlugin;
+	window.ExportPlugin = ExportPlugin;
 	// Keep backwards compatibility
-	(window as any).createTextmodeExportPlugin = createTextmodeExportPlugin;
+	window.createTextmodeExportPlugin = createTextmodeExportPlugin;
 }

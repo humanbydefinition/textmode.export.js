@@ -1,9 +1,9 @@
-import type { ExportFormat } from '../types';
+import type { ExportFormat, ExportOptionsMap } from '../types';
 import type { Blade } from '../blades';
 
-export interface FormatDefinition<TFormat extends ExportFormat = ExportFormat, TBlade extends Blade<any> = Blade<any>> {
+export interface FormatDefinition<TFormat extends ExportFormat = ExportFormat> {
 	readonly format: TFormat;
 	readonly label: string;
 	readonly supportsClipboard: boolean;
-	createBlade(): TBlade;
+	createBlade(): Blade<ExportOptionsMap[TFormat]>;
 }

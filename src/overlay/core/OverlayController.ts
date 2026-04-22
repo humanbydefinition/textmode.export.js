@@ -1,6 +1,6 @@
 import type { Textmodifier } from 'textmode.js';
 import type { TextmodeExportAPI } from '../../types';
-import type { ExportFormat } from '../types';
+import type { ExportFormat, ExportOptionsMap } from '../types';
 import { overlayClasses } from '../utils/classes';
 import { Header } from '../components/display/Header';
 import { Field } from '../components/base/Field';
@@ -22,8 +22,8 @@ import type { VideoExportProgress } from '../../exporters/video';
 import overlayStyles from '../style.css?inline';
 
 interface FormatContext {
-	definition: FormatDefinition;
-	blade: Blade<any>;
+	definition: FormatDefinition<ExportFormat>;
+	blade: Blade<ExportOptionsMap[ExportFormat]>;
 	initialized: boolean;
 }
 
@@ -383,7 +383,19 @@ export class OverlayController {
 		this._copyButton.setDisabled(true);
 		this._copyButton.setLabel('copying…');
 		try {
-			await this._clipboardService.$copy(format, options);
+			switch (format) {
+				case 'txt':
+					await this._clipboardService.$copy('txt', options as ExportOptionsMap['txt']);
+					break;
+				case 'svg':
+					await this._clipboardService.$copy('svg', options as ExportOptionsMap['svg']);
+					break;
+				case 'image':
+					await this._clipboardService.$copy('image', options as ExportOptionsMap['image']);
+					break;
+				default:
+					return;
+			}
 			this._copyButton.setLabel('copied!');
 		} catch (error) {
 			console.error('[textmode-export] Failed to copy to clipboard', error);
