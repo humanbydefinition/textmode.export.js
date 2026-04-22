@@ -16,6 +16,7 @@ export class VideoExporter {
 
 	/**
 	 * Creates an instance of VideoExporter.
+	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param registerPostDrawHook The function to register post-draw hooks
 	 */
@@ -27,6 +28,7 @@ export class VideoExporter {
 
 	/**
 	 * Captures frames and saves them as a WEBM file
+	 *
 	 * @param options Export options
 	 */
 	public async $saveWEBM(options: VideoExportOptions = {}): Promise<void> {
@@ -52,6 +54,7 @@ export class VideoExporter {
 
 	/**
 	 * Applies default values to video export options
+	 *
 	 * @param options User-provided options
 	 * @returns Complete options with defaults applied
 	 */

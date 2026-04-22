@@ -60,6 +60,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Saves the current canvas content to an image file *(`'png'` by default)*.
+	 *
 	 * @param options Export options.
 	 *
 	 * @example
@@ -71,6 +72,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Copies the current canvas to the user's clipboard as an image.
+	 *
 	 * @param options Export options.
 	 *
 	 * @example
@@ -82,6 +84,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Downloads the current frame as an SVG file.
+	 *
 	 * @param options Export options.
 	 *
 	 * @example
@@ -93,6 +96,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Downloads the current text content as a plain-text file.
+	 *
 	 * @param options Export options.
 	 *
 	 * @example
@@ -104,6 +108,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Generates the SVG markup for the current frame.
+	 *
 	 * @param options Export options.
 	 * @returns The SVG content representing the artwork.
 	 *
@@ -116,6 +121,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Produces the current text content as a string.
+	 *
 	 * @param options Export options.
 	 * @returns The textual representation of the artwork.
 	 *
@@ -128,6 +134,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Records an animated GIF and saves it to disk.
+	 *
 	 * @param options Export options.
 	 *
 	 * @example
@@ -139,6 +146,7 @@ export interface TextmodeExportAPI {
 
 	/**
 	 * Captures a WEBM video and saves it to disk.
+	 *
 	 * @param options Export options.
 	 *
 	 * @example

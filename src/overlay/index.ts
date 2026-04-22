@@ -11,6 +11,7 @@ export type { ExportFormat } from './types';
 
 /**
  * Creates an export overlay controller.
+ *
  * @param textmodifier - The text modifier instance.
  * @param exportAPI - The export API instance.
  * @returns The overlay controller instance.

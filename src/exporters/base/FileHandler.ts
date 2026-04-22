@@ -5,6 +5,7 @@
 export class FileHandler {
 	/**
 	 * Downloads content as a file
+	 *
 	 * @param blob The content to download
 	 * @param filename The filename to use for the downloaded file
 	 */
@@ -35,6 +36,7 @@ export class FileHandler {
 
 	/**
 	 * Validates and sanitizes filename for safety and compatibility
+	 *
 	 * @param filename The filename to validate
 	 * @returns Sanitized filename
 	 */
@@ -59,6 +61,7 @@ export class FileHandler {
 
 	/**
 	 * Generates a default filename with timestamp
+	 *
 	 * @returns Generated filename
 	 */
 	private _generateDefaultFilename(): string {

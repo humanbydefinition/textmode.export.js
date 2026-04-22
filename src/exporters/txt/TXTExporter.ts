@@ -10,6 +10,7 @@ import { DataExtractor, FileHandler } from '../base';
 export class TXTExporter {
 	/**
 	 * Applies default values to TXT export options
+	 *
 	 * @param options User-provided options
 	 * @returns Complete options with defaults applied
 	 */
@@ -23,6 +24,7 @@ export class TXTExporter {
 
 	/**
 	 * Generates TXT content from textmode rendering data
+	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options with defaults applied
 	 * @returns TXT content as string
@@ -63,6 +65,7 @@ export class TXTExporter {
 
 	/**
 	 * Generates TXT content from textmode rendering data without saving to file
+	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options
 	 * @returns TXT content as string
@@ -73,6 +76,7 @@ export class TXTExporter {
 
 	/**
 	 * Exports TXT content to a downloadable file
+	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options
 	 */

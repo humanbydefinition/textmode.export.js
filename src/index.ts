@@ -83,6 +83,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 	/**
 	 * Installs the export plugin into a Textmodifier instance
+	 *
 	 * @param textmodifier The Textmodifier instance
 	 * @param api The plugin API
 	 * @returns Promise that resolves when installation is complete
@@ -92,6 +93,7 @@ export const ExportPlugin: TextmodePlugin = {
 		const exportMethods = {
 			/**
 			 * Saves the current canvas as an image file
+			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the file is saved
 			 */
@@ -101,6 +103,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Copies the current canvas image to the clipboard
+			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the image is copied
 			 * @throws Error if the Clipboard API is not supported or if copying fails
@@ -111,6 +114,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Saves the current canvas as an SVG file
+			 *
 			 * @param options Export options
 			 */
 			saveSVG: (options: SVGExportOptions = {}) => {
@@ -119,6 +123,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Saves the current text content as a TXT file
+			 *
 			 * @param options Export options
 			 */
 			saveStrings: (options: TXTExportOptions = {}) => {
@@ -127,6 +132,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Generates SVG content as a string
+			 *
 			 * @param options Export options
 			 * @returns String containing the SVG content
 			 */
@@ -136,6 +142,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Generates TXT content as a string
+			 *
 			 * @param options Export options
 			 * @returns String containing the TXT content
 			 */
@@ -145,6 +152,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Saves the current canvas as an animated GIF file
+			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the file is saved
 			 */
@@ -154,6 +162,7 @@ export const ExportPlugin: TextmodePlugin = {
 
 			/**
 			 * Saves the current canvas as a WEBM video file
+			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the file is saved
 			 */

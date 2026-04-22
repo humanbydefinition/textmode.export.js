@@ -8,6 +8,7 @@ import type { FramebufferData } from '../svg/types';
 export class DataExtractor {
 	/**
 	 * Extracts pixel data from all framebuffers needed for export
+	 *
 	 * @param framebuffer The conversion pipeline containing framebuffers
 	 * @returns Object containing all pixel data arrays
 	 */
@@ -21,6 +22,7 @@ export class DataExtractor {
 
 	/**
 	 * Gets character index from character framebuffer pixels
+	 *
 	 * @param characterPixels Character framebuffer pixel data
 	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
 	 * @returns Character index

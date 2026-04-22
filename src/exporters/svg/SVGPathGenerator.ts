@@ -44,6 +44,7 @@ interface TyprFont {
 export class SVGPathGenerator {
 	/**
 	 * Creates a path object for a glyph
+	 *
 	 * @param fontData Font data object
 	 * @param glyphData Glyph data from font
 	 * @param x X position
@@ -77,6 +78,7 @@ export class SVGPathGenerator {
 
 	/**
 	 * Converts glyph data to SVG path string
+	 *
 	 * @param glyphData Glyph data from font
 	 * @param x X position
 	 * @param y Y position
@@ -141,6 +143,7 @@ export class SVGPathGenerator {
 
 	/**
 	 * Generates an SVG path for a character glyph
+	 *
 	 * @param character The character to generate a path for
 	 * @param font The font data object
 	 * @param x X position
@@ -166,6 +169,7 @@ export class SVGPathGenerator {
 
 	/**
 	 * Generates SVG path data for a character with positioning calculations
+	 *
 	 * @param character The character to render
 	 * @param font The font data
 	 * @param cellX Cell X position

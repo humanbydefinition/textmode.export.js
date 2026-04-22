@@ -10,6 +10,7 @@ import { pixelsToRGBA } from '../../utils/pixels';
 export class SVGDataExtractor extends DataExtractor {
 	/**
 	 * Extracts transform data from character pixels
+	 *
 	 * @param characterPixels Character framebuffer pixels
 	 * @param pixelIndex Pixel index in the array
 	 * @returns Transform data object
@@ -36,6 +37,7 @@ export class SVGDataExtractor extends DataExtractor {
 
 	/**
 	 * Calculates cell position information
+	 *
 	 * @param x Grid X coordinate
 	 * @param y Grid Y coordinate
 	 * @param gridInfo Grid information
@@ -52,6 +54,7 @@ export class SVGDataExtractor extends DataExtractor {
 
 	/**
 	 * Processes all grid cells and extracts SVG cell data
+	 *
 	 * @param framebufferData Raw pixel data from framebuffers
 	 * @param grid Grid information
 	 * @returns Array of SVG cell data objects

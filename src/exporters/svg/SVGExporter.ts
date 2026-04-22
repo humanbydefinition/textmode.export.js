@@ -13,6 +13,7 @@ import { TextmodeFont } from 'textmode.js/fonts';
 export class SVGExporter {
 	/**
 	 * Applies default values to SVG export options
+	 *
 	 * @param options User-provided options
 	 * @returns Complete options with defaults applied
 	 */
@@ -27,6 +28,7 @@ export class SVGExporter {
 
 	/**
 	 * Generates SVG content from textmode rendering data without saving to file
+	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options
 	 * @returns SVG content as string
@@ -54,6 +56,7 @@ export class SVGExporter {
 
 	/**
 	 * Exports SVG content to a downloadable file
+	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options
 	 */

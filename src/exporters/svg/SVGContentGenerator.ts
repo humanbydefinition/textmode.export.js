@@ -16,6 +16,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates the SVG header with metadata
+	 *
 	 * @param gridInfo Grid dimensions
 	 * @returns SVG header string
 	 */
@@ -26,6 +27,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates the SVG footer
+	 *
 	 * @returns SVG footer string
 	 */
 	public $generateSVGFooter(): string {
@@ -34,6 +36,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates SVG transform attribute string
+	 *
 	 * @param cellData Cell data with transform information
 	 * @param gridInfo Grid information for center calculations
 	 * @returns Transform attribute string or empty string
@@ -64,6 +67,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates background rectangle for a cell
+	 *
 	 * @param cellData Cell data
 	 * @param gridInfo Grid information
 	 * @param options SVG generation options
@@ -87,6 +91,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates character path element for a cell
+	 *
 	 * @param cellData Cell data
 	 * @param gridInfo Grid information
 	 * @param fontInfo Font information
@@ -125,6 +130,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates complete SVG content for a single cell
+	 *
 	 * @param cellData Cell data
 	 * @param gridInfo Grid information
 	 * @param fontInfo Font information
@@ -155,6 +161,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Generates the complete SVG content from cell data
+	 *
 	 * @param cellDataArray Array of cell data
 	 * @param grid Grid information
 	 * @param fontInfo Font information
@@ -180,6 +187,7 @@ export class SVGContentGenerator {
 
 	/**
 	 * Optimizes SVG content by removing empty elements and unnecessary whitespace
+	 *
 	 * @param svgContent Raw SVG content
 	 * @returns Optimized SVG content
 	 */

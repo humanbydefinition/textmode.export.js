@@ -9,6 +9,7 @@ import { FileHandler } from '../base';
 export class ImageExporter {
 	/**
 	 * Applies default values to image export options
+	 *
 	 * @param options User-provided options
 	 * @returns Complete options with defaults applied
 	 */
@@ -22,6 +23,7 @@ export class ImageExporter {
 
 	/**
 	 * Validates export options and browser support
+	 *
 	 * @param options The options to validate
 	 * @throws Error if options are invalid or format is not supported
 	 */
@@ -33,6 +35,7 @@ export class ImageExporter {
 
 	/**
 	 * Generates image blob from textmode rendering without saving to file
+	 *
 	 * @param canvas The canvas data containing the rendered textmode graphics
 	 * @param options Export options
 	 * @returns Promise that resolves to a Blob containing the image data
@@ -70,6 +73,7 @@ export class ImageExporter {
 
 	/**
 	 * Exports image to a downloadable file
+	 *
 	 * @param canvas The canvas data containing the rendered textmode graphics
 	 * @param options Export options
 	 */
@@ -84,6 +88,7 @@ export class ImageExporter {
 
 	/**
 	 * Copies the generated image to the clipboard using the modern Clipboard API
+	 *
 	 * @param canvas The source canvas element
 	 * @param options Export options
 	 */

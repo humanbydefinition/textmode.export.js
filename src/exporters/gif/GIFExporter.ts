@@ -17,6 +17,7 @@ export class GIFExporter {
 
 	/**
 	 * Creates an instance of GIFExporter.
+	 *
 	 * @param textmodifier The Textmodifier instance to capture frames from
 	 * @param registerPostDrawHook Function to register post-draw hooks
 	 */
@@ -28,6 +29,7 @@ export class GIFExporter {
 
 	/**
 	 * Captures frames and saves them as a GIF file
+	 *
 	 * @param options Export options
 	 */
 	public async $saveGIF(options: GIFExportOptions = {}): Promise<void> {
@@ -92,6 +94,7 @@ export class GIFExporter {
 
 	/**
 	 * Applies default values to the provided export options
+	 *
 	 * @param options User-provided options
 	 * @returns Complete options with defaults applied
 	 */
