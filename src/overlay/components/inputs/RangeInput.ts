@@ -94,7 +94,7 @@ export class RangeInput extends Component<RangeInputProps> {
 			let allowFocusTooltip = false;
 			try {
 				allowFocusTooltip = this.input.matches(':focus-visible');
-			} catch (error) {
+			} catch {
 				allowFocusTooltip = !this.suppressFocusFromPointer;
 			}
 
@@ -120,7 +120,7 @@ export class RangeInput extends Component<RangeInputProps> {
 			try {
 				this.input.setPointerCapture(event.pointerId);
 				this.activePointerId = event.pointerId;
-			} catch (error) {
+			} catch {
 				this.activePointerId = undefined;
 			}
 		});
@@ -197,7 +197,7 @@ export class RangeInput extends Component<RangeInputProps> {
 		}
 		try {
 			this.input.releasePointerCapture(this.activePointerId);
-		} catch (error) {
+		} catch {
 			// Ignore
 		}
 		this.activePointerId = undefined;

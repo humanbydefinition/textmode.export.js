@@ -157,7 +157,7 @@ export class NumberInput extends Component<NumberInputProps> {
 				this.activePointerId = event.pointerId;
 				try {
 					button.setPointerCapture(event.pointerId);
-				} catch (error) {
+				} catch {
 					// Ignore capture errors
 				}
 				performStep();
@@ -170,7 +170,7 @@ export class NumberInput extends Component<NumberInputProps> {
 				if (this.activePointerId !== undefined) {
 					try {
 						button.releasePointerCapture(this.activePointerId);
-					} catch (error) {
+					} catch {
 						// Ignore
 					}
 					this.activePointerId = undefined;
