@@ -33,7 +33,7 @@ export class Header extends Component<void> {
 		);
 
 		const supportLink = this._createLink(
-			'https://code.textmode.art/support.html',
+			'https://code.textmode.art/docs/support',
 			'Support textmode.export.js',
 			overlayClasses.supportIcon,
 			[
