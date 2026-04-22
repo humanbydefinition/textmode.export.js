@@ -25,7 +25,7 @@ export class ImageExporter {
 	 * Validates export options and browser support
 	 *
 	 * @param options The options to validate
-	 * @throws Error if options are invalid or format is not supported
+	 * @throws {Error} If options are invalid or the format is not supported
 	 */
 	private _validateOptions(options: ImageGenerationOptions): void {
 		if (!(options.format in IMAGE_MIME_TYPES)) {

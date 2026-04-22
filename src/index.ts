@@ -106,7 +106,7 @@ export const ExportPlugin: TextmodePlugin = {
 			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the image is copied
-			 * @throws Error if the Clipboard API is not supported or if copying fails
+			 * @throws {Error} If the Clipboard API is not supported or copying fails
 			 */
 			copyCanvas: async (options: ImageExportOptions = {}) => {
 				return new ImageExporter().$copyImageToClipboard(textmodifier.canvas, options);

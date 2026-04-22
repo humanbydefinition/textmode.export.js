@@ -16,7 +16,7 @@ export class VideoRecorder {
 	 * @param registerPostDrawHook - Hook registration function from textmode.js API
 	 * @param onProgress - Optional callback for recording progress updates
 	 * @returns Promise resolving to a Blob containing the encoded WEBM video
-	 * @throws Error if frame capture or encoding fails
+	 * @throws {Error} If frame capture or encoding fails
 	 */
 	public async $record(
 		canvas: HTMLCanvasElement,

@@ -20,7 +20,7 @@ export class GIFRecorder {
 	 * @param registerPostDrawHook - Hook registration function from textmode.js API
 	 * @param onProgress - Optional callback for recording progress updates
 	 * @returns Promise resolving to array of captured frames
-	 * @throws Error if frame capture fails
+	 * @throws {Error} If frame capture fails
 	 */
 	public async $record(
 		canvas: HTMLCanvasElement,
