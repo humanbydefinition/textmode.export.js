@@ -1,5 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePluginAPI } from 'textmode.js/plugins';
+import type { TextmodePluginContext } from 'textmode.js/plugins';
 import { VideoRecorder } from './VideoRecorder';
 import type { VideoExportOptions, VideoGenerationOptions } from './types';
 import { FileHandler } from '../base';
@@ -12,14 +12,14 @@ import { FileHandler } from '../base';
 export class VideoExporter {
 	private readonly _recorder: VideoRecorder;
 	private readonly _textmodifier: Textmodifier;
-	private readonly _registerPostDrawHook: TextmodePluginAPI['registerPostDrawHook'];
+	private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'];
 
 	/**
 	 * Creates an instance of VideoExporter.
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param registerPostDrawHook The function to register post-draw hooks
 	 */
-	constructor(textmodifier: Textmodifier, registerPostDrawHook: TextmodePluginAPI['registerPostDrawHook']) {
+	constructor(textmodifier: Textmodifier, registerPostDrawHook: TextmodePluginContext['registerPostDrawHook']) {
 		this._recorder = new VideoRecorder();
 		this._textmodifier = textmodifier;
 		this._registerPostDrawHook = registerPostDrawHook;

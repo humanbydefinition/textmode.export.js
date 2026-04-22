@@ -1,4 +1,4 @@
-import type { TextmodePluginAPI } from 'textmode.js/plugins';
+import type { TextmodePluginContext } from 'textmode.js/plugins';
 import type { VideoExportProgress, VideoGenerationOptions } from './types';
 import WebMWriter from 'webm-writer';
 
@@ -21,7 +21,7 @@ export class VideoRecorder {
 	public async $record(
 		canvas: HTMLCanvasElement,
 		options: VideoGenerationOptions,
-		registerPostDrawHook: TextmodePluginAPI['registerPostDrawHook'],
+		registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'],
 		onProgress?: (progress: VideoExportProgress) => void
 	): Promise<Blob> {
 		// Calculate frame parameters

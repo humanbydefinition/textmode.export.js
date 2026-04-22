@@ -26,7 +26,7 @@
  */
 
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePlugin, TextmodePluginAPI } from 'textmode.js/plugins';
+import type { TextmodePlugin, TextmodePluginContext } from 'textmode.js/plugins';
 import { SVGExporter, type SVGExportOptions } from './exporters/svg';
 import { ImageExporter, type ImageExportOptions } from './exporters/image';
 import { TXTExporter, type TXTExportOptions } from './exporters/txt';
@@ -87,7 +87,7 @@ export const ExportPlugin: TextmodePlugin = {
 	 * @param api The plugin API
 	 * @returns Promise that resolves when installation is complete
 	 */
-	async install(textmodifier: Textmodifier, api: TextmodePluginAPI) {
+	async install(textmodifier: Textmodifier, api: TextmodePluginContext) {
 		// Create export API methods first
 		const exportMethods = {
 			/**
@@ -235,7 +235,7 @@ export const createTextmodeExportPlugin = (options: TextmodeExportPluginOptions 
 	const plugin = { ...ExportPlugin };
 	const originalInstall = plugin.install;
 
-	plugin.install = async (textmodifier: Textmodifier, api: TextmodePluginAPI) => {
+	plugin.install = async (textmodifier: Textmodifier, api: TextmodePluginContext) => {
 		await originalInstall.call(plugin, textmodifier, api);
 
 		// If overlay should be disabled, hide it after installation

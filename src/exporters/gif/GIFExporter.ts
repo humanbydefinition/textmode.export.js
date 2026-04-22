@@ -1,5 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePluginAPI } from 'textmode.js/plugins';
+import type { TextmodePluginContext } from 'textmode.js/plugins';
 import { GIFRecorder } from './GIFRecorder';
 import type { GIFExportOptions, GIFGenerationOptions } from './types';
 import { FileHandler } from '../base';
@@ -13,14 +13,14 @@ import { applyPalette, GIFEncoder, quantize, type GIFPalette } from 'gifenc';
 export class GIFExporter {
 	private readonly _recorder: GIFRecorder;
 	private readonly _textmodifier: Textmodifier;
-	private readonly _registerPostDrawHook: TextmodePluginAPI['registerPostDrawHook'];
+	private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'];
 
 	/**
 	 * Creates an instance of GIFExporter.
 	 * @param textmodifier The Textmodifier instance to capture frames from
 	 * @param registerPostDrawHook Function to register post-draw hooks
 	 */
-	constructor(textmodifier: Textmodifier, registerPostDrawHook: TextmodePluginAPI['registerPostDrawHook']) {
+	constructor(textmodifier: Textmodifier, registerPostDrawHook: TextmodePluginContext['registerPostDrawHook']) {
 		this._recorder = new GIFRecorder();
 		this._textmodifier = textmodifier;
 		this._registerPostDrawHook = registerPostDrawHook;

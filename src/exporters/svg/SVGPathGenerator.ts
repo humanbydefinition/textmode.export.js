@@ -1,5 +1,5 @@
 import type { GlyphPath } from './types';
-import type { TextmodeFont } from 'textmode.js/loadables';
+import type { TextmodeFont } from 'textmode.js/fonts';
 
 /**
  * Glyph data structure for parsed glyphs.
