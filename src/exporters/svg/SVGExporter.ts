@@ -3,6 +3,7 @@ import { SVGDataExtractor } from './SVGDataExtractor';
 import { SVGContentGenerator } from './SVGContentGenerator';
 import type { Textmodifier } from 'textmode.js';
 import { FileHandler } from '../base';
+import { TextmodeFont } from 'textmode.js/fonts';
 
 /**
  * Main SVG exporter for the textmode.js library.
@@ -44,7 +45,7 @@ export class SVGExporter {
 		const svgContent = contentGenerator.$generateSVGContent(
 			cellDataArray,
 			textmodifier.grid!,
-			textmodifier.font,
+			textmodifier.font as TextmodeFont,
 			this._applyDefaultOptions(options)
 		);
 
