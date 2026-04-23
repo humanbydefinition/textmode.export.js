@@ -1,197 +1,199 @@
-import type { 
-    SVGCellData, 
-    SVGGenerationOptions
-} from './types';
+import type { SVGCellData, SVGGenerationOptions } from './types';
 import { SVGPathGenerator } from './SVGPathGenerator';
 import type { TextmodeGrid } from 'textmode.js';
-import type { TextmodeFont } from 'textmode.js/loadables';
+import type { GlyphData, TextmodeFont } from 'textmode.js/fonts';
 
 /**
  * Generates SVG content and markup from processed cell data.
  * This class handles the creation of SVG elements, groups, and styling.
  */
 export class SVGContentGenerator {
-    private _pathGenerator: SVGPathGenerator;
+	private _pathGenerator: SVGPathGenerator;
 
-    constructor() {
-        this._pathGenerator = new SVGPathGenerator();
-    }
+	constructor() {
+		this._pathGenerator = new SVGPathGenerator();
+	}
 
-    /**
-     * Generates the SVG header with metadata
-     * @param gridInfo Grid dimensions
-     * @returns SVG header string
-     */
-    public $generateSVGHeader(gridInfo: TextmodeGrid): string {
-        const { width, height } = gridInfo;
-        return `<?xml version="1.0" encoding="UTF-8"?><svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><title>textmode.js sketch</title>`;
-    }
+	/**
+	 * Generates the SVG header with metadata
+	 *
+	 * @param gridInfo Grid dimensions
+	 * @returns SVG header string
+	 */
+	public $generateSVGHeader(gridInfo: TextmodeGrid): string {
+		const { width, height } = gridInfo;
+		return `<?xml version="1.0" encoding="UTF-8"?><svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><title>textmode.js sketch</title>`;
+	}
 
-    /**
-     * Generates the SVG footer
-     * @returns SVG footer string
-     */
-    public $generateSVGFooter(): string {
-        return '</g></svg>';
-    }
+	/**
+	 * Generates the SVG footer
+	 *
+	 * @returns SVG footer string
+	 */
+	public $generateSVGFooter(): string {
+		return '</g></svg>';
+	}
 
-    /**
-     * Generates SVG transform attribute string
-     * @param cellData Cell data with transform information
-     * @param gridInfo Grid information for center calculations
-     * @returns Transform attribute string or empty string
-     */
-    private _generateTransformAttribute(cellData: SVGCellData, gridInfo: TextmodeGrid): string {
-        const { transform, position } = cellData;
-        
-        if (!transform.flipHorizontal && !transform.flipVertical && !transform.rotation) {
-            return '';
-        }
+	/**
+	 * Generates SVG transform attribute string
+	 *
+	 * @param cellData Cell data with transform information
+	 * @param gridInfo Grid information for center calculations
+	 * @returns Transform attribute string or empty string
+	 */
+	private _generateTransformAttribute(cellData: SVGCellData, gridInfo: TextmodeGrid): string {
+		const { transform, position } = cellData;
 
-        const centerX = position.cellX + gridInfo.cellWidth / 2;
-        const centerY = position.cellY + gridInfo.cellHeight / 2;
-        const transforms: string[] = [];
+		if (!transform.flipHorizontal && !transform.flipVertical && !transform.rotation) {
+			return '';
+		}
 
-        if (transform.flipHorizontal || transform.flipVertical) {
-            const sx = transform.flipHorizontal ? -1 : 1;
-            const sy = transform.flipVertical ? -1 : 1;
-            transforms.push(`translate(${centerX} ${centerY})scale(${sx} ${sy})translate(${-centerX} ${-centerY})`);
-        }
+		const centerX = position.cellX + gridInfo.cellWidth / 2;
+		const centerY = position.cellY + gridInfo.cellHeight / 2;
+		const transforms: string[] = [];
 
-        if (transform.rotation) {
-            transforms.push(`rotate(${transform.rotation} ${centerX} ${centerY})`);
-        }
+		if (transform.flipHorizontal || transform.flipVertical) {
+			const sx = transform.flipHorizontal ? -1 : 1;
+			const sy = transform.flipVertical ? -1 : 1;
+			transforms.push(`translate(${centerX} ${centerY})scale(${sx} ${sy})translate(${-centerX} ${-centerY})`);
+		}
 
-        return ` transform="${transforms.join(' ')}"`;
-    }
+		if (transform.rotation) {
+			transforms.push(`rotate(${transform.rotation} ${centerX} ${centerY})`);
+		}
 
-    /**
-     * Generates background rectangle for a cell
-     * @param cellData Cell data
-     * @param gridInfo Grid information
-     * @param options SVG generation options
-     * @returns Background rectangle SVG string or empty string
-     */
-    private _generateCellBackground(
-        cellData: SVGCellData,
-        gridInfo: TextmodeGrid,
-        options: SVGGenerationOptions
-    ): string {
-        if (!options.includeBackgroundRectangles || cellData.secondaryColor.a === 0) return '';
+		return ` transform="${transforms.join(' ')}"`;
+	}
 
-        const { position } = cellData;
-        const { r, g, b, a } = cellData.secondaryColor;
-        const color = `rgba(${r},${g},${b},${a / 255})`;
+	/**
+	 * Generates background rectangle for a cell
+	 *
+	 * @param cellData Cell data
+	 * @param gridInfo Grid information
+	 * @param options SVG generation options
+	 * @returns Background rectangle SVG string or empty string
+	 */
+	private _generateCellBackground(
+		cellData: SVGCellData,
+		gridInfo: TextmodeGrid,
+		options: SVGGenerationOptions
+	): string {
+		if (!options.includeBackgroundRectangles || cellData.secondaryColor.a === 0) return '';
 
-        return options.drawMode === 'stroke' 
-            ? `<rect x="${position.cellX}" y="${position.cellY}" width="${gridInfo.cellWidth}" height="${gridInfo.cellHeight}" stroke="${color}" fill="none" stroke-width="${options.strokeWidth}"/>`
-            : `<rect x="${position.cellX}" y="${position.cellY}" width="${gridInfo.cellWidth}" height="${gridInfo.cellHeight}" fill="${color}"/>`;
-    }
+		const { position } = cellData;
+		const { r, g, b, a } = cellData.secondaryColor;
+		const color = `rgba(${r},${g},${b},${a / 255})`;
 
-    /**
-     * Generates character path element for a cell
-     * @param cellData Cell data
-     * @param gridInfo Grid information
-     * @param fontInfo Font information
-     * @param options SVG generation options
-     * @returns Character path SVG string
-     */
-    private _generateCharacterPath(
-        cellData: SVGCellData,
-        gridInfo: TextmodeGrid,
-        fontInfo: TextmodeFont,
-        options: SVGGenerationOptions
-    ): string {
-        const character = fontInfo.characters[cellData.charIndex];
-        if (!character) return '';
+		return options.drawMode === 'stroke'
+			? `<rect x="${position.cellX}" y="${position.cellY}" width="${gridInfo.cellWidth}" height="${gridInfo.cellHeight}" stroke="${color}" fill="none" stroke-width="${options.strokeWidth}"/>`
+			: `<rect x="${position.cellX}" y="${position.cellY}" width="${gridInfo.cellWidth}" height="${gridInfo.cellHeight}" fill="${color}"/>`;
+	}
 
-        const pathData = this._pathGenerator.$generatePositionedCharacterPath(
-            character.character,
-            fontInfo,
-            cellData.position.cellX,
-            cellData.position.cellY,
-            gridInfo.cellWidth,
-            gridInfo.cellHeight,
-            fontInfo.fontSize,
-            character.glyphData
-        );
+	/**
+	 * Generates character path element for a cell
+	 *
+	 * @param cellData Cell data
+	 * @param gridInfo Grid information
+	 * @param fontInfo Font information
+	 * @param options SVG generation options
+	 * @returns Character path SVG string
+	 */
+	private _generateCharacterPath(
+		cellData: SVGCellData,
+		gridInfo: TextmodeGrid,
+		fontInfo: TextmodeFont,
+		options: SVGGenerationOptions
+	): string {
+		const character = fontInfo.characters[cellData.charIndex];
+		if (!character) return '';
 
-        if (!pathData) return '';
+		const pathData = this._pathGenerator.$generatePositionedCharacterPath(
+			character.character,
+			fontInfo,
+			cellData.position.cellX,
+			cellData.position.cellY,
+			gridInfo.cellWidth,
+			gridInfo.cellHeight,
+			fontInfo.fontSize,
+			character.glyphData as GlyphData
+		);
 
-        const { r, g, b, a } = cellData.primaryColor;
-        const color = `rgba(${r},${g},${b},${a / 255})`;
+		if (!pathData) return '';
 
-        return options.drawMode === 'stroke'
-            ? `<path d="${pathData}" stroke="${color}" stroke-width="${options.strokeWidth}" fill="none"/>`
-            : `<path d="${pathData}" fill="${color}"/>`;
-    }
+		const { r, g, b, a } = cellData.primaryColor;
+		const color = `rgba(${r},${g},${b},${a / 255})`;
 
-    /**
-     * Generates complete SVG content for a single cell
-     * @param cellData Cell data
-     * @param gridInfo Grid information
-     * @param fontInfo Font information
-     * @param options SVG generation options
-     * @returns Complete cell SVG content
-     */
-    public $generateCellContent(
-        cellData: SVGCellData,
-        gridInfo: TextmodeGrid,
-        fontInfo: TextmodeFont,
-        options: SVGGenerationOptions
-    ): string {
-        const parts: string[] = [];
+		return options.drawMode === 'stroke'
+			? `<path d="${pathData}" stroke="${color}" stroke-width="${options.strokeWidth}" fill="none"/>`
+			: `<path d="${pathData}" fill="${color}"/>`;
+	}
 
-        // Add background rectangle
-        const background = this._generateCellBackground(cellData, gridInfo, options);
-        if (background) parts.push(background);
+	/**
+	 * Generates complete SVG content for a single cell
+	 *
+	 * @param cellData Cell data
+	 * @param gridInfo Grid information
+	 * @param fontInfo Font information
+	 * @param options SVG generation options
+	 * @returns Complete cell SVG content
+	 */
+	public $generateCellContent(
+		cellData: SVGCellData,
+		gridInfo: TextmodeGrid,
+		fontInfo: TextmodeFont,
+		options: SVGGenerationOptions
+	): string {
+		const parts: string[] = [];
 
-        // Add character path with optional transform
-        const path = this._generateCharacterPath(cellData, gridInfo, fontInfo, options);
-        if (path) {
-            const transformAttr = this._generateTransformAttribute(cellData, gridInfo);
-            parts.push(transformAttr ? `<g${transformAttr}>${path}</g>` : path);
-        }
+		// Add background rectangle
+		const background = this._generateCellBackground(cellData, gridInfo, options);
+		if (background) parts.push(background);
 
-        return parts.join('');
-    }
+		// Add character path with optional transform
+		const path = this._generateCharacterPath(cellData, gridInfo, fontInfo, options);
+		if (path) {
+			const transformAttr = this._generateTransformAttribute(cellData, gridInfo);
+			parts.push(transformAttr ? `<g${transformAttr}>${path}</g>` : path);
+		}
 
-    /**
-     * Generates the complete SVG content from cell data
-     * @param cellDataArray Array of cell data
-     * @param grid Grid information
-     * @param fontInfo Font information
-     * @param options SVG generation options
-     * @returns Complete SVG string
-     */
-    public $generateSVGContent(
-        cellDataArray: SVGCellData[],
-        grid: TextmodeGrid,
-        fontInfo: TextmodeFont,
-        options: SVGGenerationOptions
-    ): string {
-        const parts = [
-            this.$generateSVGHeader(grid),
-            '<g id="ascii-cells">'
-        ];
+		return parts.join('');
+	}
 
-        // Add each cell
-        for (const cellData of cellDataArray) {
-            parts.push(this.$generateCellContent(cellData, grid, fontInfo, options));
-        }
+	/**
+	 * Generates the complete SVG content from cell data
+	 *
+	 * @param cellDataArray Array of cell data
+	 * @param grid Grid information
+	 * @param fontInfo Font information
+	 * @param options SVG generation options
+	 * @returns Complete SVG string
+	 */
+	public $generateSVGContent(
+		cellDataArray: SVGCellData[],
+		grid: TextmodeGrid,
+		fontInfo: TextmodeFont,
+		options: SVGGenerationOptions
+	): string {
+		const parts = [this.$generateSVGHeader(grid), '<g id="ascii-cells">'];
 
-        parts.push(this.$generateSVGFooter());
-        return parts.join('');
-    }
+		// Add each cell
+		for (const cellData of cellDataArray) {
+			parts.push(this.$generateCellContent(cellData, grid, fontInfo, options));
+		}
 
-    /**
-     * Optimizes SVG content by removing empty elements and unnecessary whitespace
-     * @param svgContent Raw SVG content
-     * @returns Optimized SVG content
-     */
-    public $optimizeSVGContent(svgContent: string): string {
-        return svgContent
-            .replace(/\s+/g, ' ') // Collapse whitespace
-            .replace(/> </g, '><'); // Remove spaces between tags
-    }
+		parts.push(this.$generateSVGFooter());
+		return parts.join('');
+	}
+
+	/**
+	 * Optimizes SVG content by removing empty elements and unnecessary whitespace
+	 *
+	 * @param svgContent Raw SVG content
+	 * @returns Optimized SVG content
+	 */
+	public $optimizeSVGContent(svgContent: string): string {
+		return svgContent
+			.replace(/\s+/g, ' ') // Collapse whitespace
+			.replace(/> </g, '><'); // Remove spaces between tags
+	}
 }

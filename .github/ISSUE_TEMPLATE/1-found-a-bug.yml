@@ -1,0 +1,105 @@
+name: Bug Report
+description: Report broken or incorrect behavior in textmode.export.js.
+title: "[Bug]: "
+labels: [Bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for issues in the `textmode.export.js` add-on library.
+
+        This repository is the right place for export behavior, export overlay UI, packaging, or plugin integration issues.
+        If the problem is in the core `textmode.js` engine, rendering pipeline, font loading, or unrelated editor behavior, please open it in the core repository instead.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues and did not find an obvious duplicate.
+          required: true
+        - label: I reproduced this with a minimal `textmode.js` sketch using `ExportPlugin` or the relevant export API.
+          required: true
+  - type: checkboxes
+    id: area
+    attributes:
+      label: Most relevant area
+      description: You may select more than one.
+      options:
+        - label: Plugin installation / lifecycle
+        - label: Export overlay UI / controls
+        - label: Image export (`saveCanvas()` / `copyCanvas()`)
+        - label: SVG export (`saveSVG()` / `toSVG()`)
+        - label: Plain text export (`saveStrings()` / `toString()`)
+        - label: GIF export (`saveGIF()`)
+        - label: WEBM export (`saveWEBM()`)
+        - label: Clipboard / download / browser permissions
+        - label: textmode.js integration
+        - label: Build / types / packaging
+        - label: Documentation / examples
+        - label: Other
+  - type: input
+    id: export-version
+    attributes:
+      label: textmode.export.js version
+      description: Example: 1.2.1
+      placeholder: 1.2.1
+    validations:
+      required: true
+  - type: input
+    id: textmode-version
+    attributes:
+      label: textmode.js version
+      description: Include the installed peer dependency version too when the issue involves plugin installation or runtime integration.
+      placeholder: 0.10.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser/runtime, import mode, and OS
+      description: Include browser/version or runtime, OS, and how you load the library. Add package manager or bundler if relevant.
+      placeholder: Chrome 135, macOS 15.4, npm + Vite, ESM import
+    validations:
+      required: true
+  - type: input
+    id: affected-export
+    attributes:
+      label: Affected API, overlay action, or export format
+      description: Name the relevant method, overlay interaction, or format if known.
+      placeholder: saveGIF(), copyCanvas(), toSVG(), export overlay, image (.png), video (.webm)
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal repro. A reduced code snippet or small repo using `textmode.js` plus `ExportPlugin` is ideal. Add console errors, permission prompts, or browser-specific failures if present.
+      value: |
+        1.
+        2.
+        3.
+
+        Minimal repro:
+
+        ```js
+        // Paste the smallest example that still reproduces the issue.
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Screenshots, recordings, exported output samples, stack traces, browser permission details, related issues, or links to a repro.
+    validations:
+      required: false

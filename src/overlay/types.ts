@@ -7,9 +7,9 @@ import type { VideoExportOptions } from '../exporters/video';
 export type ExportFormat = 'txt' | 'image' | 'gif' | 'video' | 'svg';
 
 export type ExportOptionsMap = {
-  txt: TXTExportOptions;
-  image: ImageExportOptions;
-  gif: GIFExportOptions;
-  video: VideoExportOptions;
-  svg: SVGExportOptions;
+	txt: TXTExportOptions;
+	image: ImageExportOptions;
+	gif: GIFExportOptions;
+	video: VideoExportOptions;
+	svg: SVGExportOptions;
 };

@@ -2,8 +2,4 @@
 export { TXTExporter } from './TXTExporter';
 
 // Export types
-export type {
-    TXTExportOptions,
-    TXTGenerationOptions,
-    FramebufferData
-} from './types';
+export type { TXTExportOptions, TXTGenerationOptions, FramebufferData } from './types';
