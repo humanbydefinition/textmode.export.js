@@ -21,17 +21,29 @@ export class DataExtractor {
 	}
 
 	/**
-	 * Gets character index from character framebuffer pixels
+	 * Gets the raw encoded character value from character framebuffer pixels.
 	 *
 	 * @param characterPixels Character framebuffer pixel data
 	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
-	 * @returns Character index
+	 * @returns Raw encoded character value
 	 */
-	public $getCharacterIndex(characterPixels: Uint8Array, pixelIndex: number): number {
-		// Get character index from red and green channels
+	public $getEncodedCharacterValue(characterPixels: Uint8Array, pixelIndex: number): number {
+		// Get the raw encoded character value from red and green channels.
+		// Consumers must resolve this value according to their output format.
 		const r = characterPixels[pixelIndex];
 		const g = characterPixels[pixelIndex + 1];
 		return r + (g << 8);
+	}
+
+	/**
+	 * Gets character index from character framebuffer pixels.
+	 *
+	 * @param characterPixels Character framebuffer pixel data
+	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
+	 * @returns Raw encoded character value
+	 */
+	public $getCharacterIndex(characterPixels: Uint8Array, pixelIndex: number): number {
+		return this.$getEncodedCharacterValue(characterPixels, pixelIndex);
 	}
 
 	/**
