@@ -9,33 +9,6 @@ import { pixelsToRGBA } from '../../utils/pixels';
  */
 export class SVGDataExtractor extends DataExtractor {
 	/**
-	 * Extracts transform data from character pixels
-	 *
-	 * @param characterPixels Character framebuffer pixels
-	 * @param pixelIndex Pixel index in the array
-	 * @returns Transform data object
-	 */
-	private _extractTransformData(characterPixels: Uint8Array, pixelIndex: number): CellTransform {
-		// Extract packed flags from blue channel (bits 0-2: invert, flipX, flipY)
-		const packedFlags = characterPixels[pixelIndex + 2];
-
-		const isInverted = (packedFlags & 1) !== 0; // bit 0
-		const flipHorizontal = (packedFlags & 2) !== 0; // bit 1
-		const flipVertical = (packedFlags & 4) !== 0; // bit 2
-
-		// Extract rotation from alpha channel (0-1 range normalized to 0-360 degrees)
-		const rotationNormalized = characterPixels[pixelIndex + 3] / 255;
-		const rotation = Math.round(rotationNormalized * 360 * 100) / 100;
-
-		return {
-			isInverted,
-			flipHorizontal,
-			flipVertical,
-			rotation,
-		};
-	}
-
-	/**
 	 * Calculates cell position information
 	 *
 	 * @param x Grid X coordinate
@@ -75,7 +48,10 @@ export class SVGDataExtractor extends DataExtractor {
 				let secondaryColor = pixelsToRGBA(framebufferData.secondaryColorPixels, pixelIdx);
 
 				// Extract transform data
-				const transform = this._extractTransformData(framebufferData.characterPixels, pixelIdx);
+				const transform = this.$extractCellTransform(
+					framebufferData.characterPixels,
+					pixelIdx
+				) as CellTransform;
 
 				// If inverted, swap primary and secondary colors
 				if (transform.isInverted) {

@@ -33,4 +33,26 @@ export class DataExtractor {
 		const g = characterPixels[pixelIndex + 1];
 		return r + (g << 8);
 	}
+
+	/**
+	 * Extracts per-cell transform flags from the character framebuffer.
+	 *
+	 * @param characterPixels Character framebuffer pixel data
+	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
+	 * @returns Decoded transform flags and rotation
+	 */
+	public $extractCellTransform(
+		characterPixels: Uint8Array,
+		pixelIndex: number
+	): { isInverted: boolean; flipHorizontal: boolean; flipVertical: boolean; rotation: number } {
+		const packedFlags = characterPixels[pixelIndex + 2];
+		const rotationNormalized = characterPixels[pixelIndex + 3] / 255;
+
+		return {
+			isInverted: (packedFlags & 1) !== 0,
+			flipHorizontal: (packedFlags & 2) !== 0,
+			flipVertical: (packedFlags & 4) !== 0,
+			rotation: Math.round(rotationNormalized * 360 * 100) / 100,
+		};
+	}
 }

@@ -1,7 +1,7 @@
 {
 	"name": "textmode.export.js",
 	"version": "1.2.1",
-	"description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, and plain text.",
+	"description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, JSON, and plain text.",
 	"type": "module",
 	"main": "./dist/textmode.export.umd.js",
 	"module": "./dist/textmode.export.esm.js",
@@ -94,6 +94,7 @@
 		"video",
 		"webm",
 		"svg",
+		"json",
 		"image",
 		"png",
 		"jpg",
