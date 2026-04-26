@@ -40,8 +40,8 @@ export class SVGDataExtractor extends DataExtractor {
 			for (let x = 0; x < grid.cols; x++) {
 				const pixelIdx = idx * 4;
 
-				// Use shared method to get character index
-				const charIndex = this.$getCharacterIndex(framebufferData.characterPixels, pixelIdx);
+				// Use shared method to get the raw atlas slot encoded in the framebuffer.
+				const encodedGlyphSlot = this.$getEncodedCharacterValue(framebufferData.characterPixels, pixelIdx);
 
 				// Extract colors using shared method
 				let primaryColor = pixelsToRGBA(framebufferData.primaryColorPixels, pixelIdx);
@@ -64,7 +64,7 @@ export class SVGDataExtractor extends DataExtractor {
 				const position = this._calculateCellPosition(x, y, grid);
 
 				cellData.push({
-					charIndex,
+					encodedGlyphSlot,
 					primaryColor,
 					secondaryColor,
 					transform,

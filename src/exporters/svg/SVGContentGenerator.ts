@@ -2,6 +2,7 @@ import type { SVGCellData, SVGGenerationOptions } from './types';
 import { SVGPathGenerator } from './SVGPathGenerator';
 import type { TextmodeGrid } from 'textmode.js';
 import type { GlyphData, TextmodeFont } from 'textmode.js/fonts';
+import { resolveGlyphByEncodedValue } from '../base';
 
 /**
  * Generates SVG content and markup from processed cell data.
@@ -104,18 +105,18 @@ export class SVGContentGenerator {
 		fontInfo: TextmodeFont,
 		options: SVGGenerationOptions
 	): string {
-		const character = fontInfo.characters[cellData.charIndex];
-		if (!character) return '';
+		const glyph = resolveGlyphByEncodedValue(fontInfo, cellData.encodedGlyphSlot);
+		if (!glyph) return '';
 
 		const pathData = this._pathGenerator.$generatePositionedCharacterPath(
-			character.character,
+			glyph.character,
 			fontInfo,
 			cellData.position.cellX,
 			cellData.position.cellY,
 			gridInfo.cellWidth,
 			gridInfo.cellHeight,
 			fontInfo.fontSize,
-			character.glyphData as GlyphData
+			glyph.glyphData as GlyphData
 		);
 
 		if (!pathData) return '';
