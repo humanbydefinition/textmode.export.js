@@ -40,7 +40,7 @@ export interface CellTransform {
  * Complete data for a single SVG cell.
  */
 export interface SVGCellData {
-	charIndex: number;
+	encodedGlyphSlot: number;
 	primaryColor: RGBA;
 	secondaryColor: RGBA;
 	transform: CellTransform;
