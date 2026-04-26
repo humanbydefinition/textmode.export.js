@@ -1,5 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
-import { DataExtractor } from '../base';
+import { DataExtractor, resolveGlyphByEncodedValue } from '../base';
 import { pixelsToRGBA } from '../../utils/pixels';
 import type { JSONCellData } from './types';
 
@@ -22,9 +22,10 @@ export class JSONDataExtractor extends DataExtractor {
 		for (let y = 0; y < textmodifier.grid!.rows; y++) {
 			for (let x = 0; x < textmodifier.grid!.cols; x++) {
 				const pixelIdx = idx * 4;
-				const charIndex = this.$getCharacterIndex(framebufferData.characterPixels, pixelIdx);
+				const encodedCharacterValue = this.$getEncodedCharacterValue(framebufferData.characterPixels, pixelIdx);
 				const transform = this.$extractCellTransform(framebufferData.characterPixels, pixelIdx);
-				const character = textmodifier.font.characters[charIndex]?.character ?? ' ';
+				const character =
+					resolveGlyphByEncodedValue(textmodifier.font, encodedCharacterValue)?.character ?? ' ';
 
 				cells.push({
 					x,

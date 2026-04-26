@@ -18,9 +18,10 @@ function createTextmodifierMock(): Textmodifier {
 	const primaryColorPixels = Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255]);
 	const secondaryColorPixels = Uint8Array.from([0, 0, 0, 255, 0, 0, 255, 128]);
 
-	const characters: Array<{ character: string } | undefined> = [];
-	characters[65] = { character: 'A' };
-	characters[66] = { character: 'B' };
+	const characters = [
+		{ character: 'A', color: [65 / 255, 0, 0] },
+		{ character: 'B', color: [66 / 255, 0, 0] },
+	];
 
 	return {
 		grid: {
