@@ -1,6 +1,6 @@
 import type { TXTExportOptions, TXTGenerationOptions } from './types';
 import type { Textmodifier } from 'textmode.js';
-import { DataExtractor, FileHandler } from '../base';
+import { DataExtractor, FileHandler, resolveGlyphByEncodedValue } from '../base';
 
 /**
  * TXT exporter for the textmode.js library.
@@ -45,9 +45,14 @@ export class TXTExporter {
 			for (let x = 0; x < textmodifier.grid!.cols; x++) {
 				const pixelIdx = idx * 4;
 
-				const charIndex = dataExtractor.$getCharacterIndex(framebufferData.characterPixels, pixelIdx);
+				const encodedCharacterValue = dataExtractor.$getEncodedCharacterValue(
+					framebufferData.characterPixels,
+					pixelIdx
+				);
 
-				const character = textmodifier.font.characters[charIndex]?.character || options.emptyCharacter;
+				const character =
+					resolveGlyphByEncodedValue(textmodifier.font, encodedCharacterValue)?.character ||
+					options.emptyCharacter;
 				line += character;
 
 				idx++;

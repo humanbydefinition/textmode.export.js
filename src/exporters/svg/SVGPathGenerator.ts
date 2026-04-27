@@ -35,6 +35,9 @@ interface TyprFont {
 	head: {
 		unitsPerEm: number;
 	};
+	hhea: {
+		ascender: number;
+	};
 }
 
 /**
@@ -142,51 +145,28 @@ export class SVGPathGenerator {
 	}
 
 	/**
-	 * Generates an SVG path for a character glyph
+	 * Generates SVG path data for a character with positioning calculations.
 	 *
-	 * @param character The character to generate a path for
-	 * @param font The font data object
-	 * @param x X position
-	 * @param y Y position
-	 * @param fontSize Font size
-	 * @returns Path object with SVG generation methods
-	 */
-	private _generateCharacterPath(
-		character: string,
-		font: TextmodeFont,
-		x: number,
-		y: number,
-		fontSize: number
-	): GlyphPath | null {
-		const glyphData = font.characterMap.get(character)?.glyphData;
-
-		if (!glyphData) {
-			return null;
-		}
-
-		return this._createGlyphPath(font.font, glyphData, x, y, fontSize);
-	}
-
-	/**
-	 * Generates SVG path data for a character with positioning calculations
+	 * Uses the same baseline math as the canvas texture atlas renderer
+	 * (TextureAtlas._renderCharacters) for consistent vertical placement.
 	 *
-	 * @param character The character to render
+	 * @param _character The character to render
 	 * @param font The font data
 	 * @param cellX Cell X position
 	 * @param cellY Cell Y position
 	 * @param cellWidth Cell width
-	 * @param cellHeight Cell height
+	 * @param _cellHeight Cell height
 	 * @param fontSize Font size
 	 * @param glyphData Character glyph data
 	 * @returns SVG path data string or null if generation fails
 	 */
 	public $generatePositionedCharacterPath(
-		character: string,
+		_character: string,
 		font: TextmodeFont,
 		cellX: number,
 		cellY: number,
 		cellWidth: number,
-		cellHeight: number,
+		_cellHeight: number,
 		fontSize: number,
 		glyphData: GlyphData | null
 	): string | null {
@@ -195,19 +175,20 @@ export class SVGPathGenerator {
 		}
 
 		const fontData = font.font;
-		// Center the glyph in the cell
 		const scale = fontSize / fontData.head.unitsPerEm;
+
+		// Horizontal centering (same as before)
 		const scaledGlyphWidth = glyphData.advanceWidth * scale;
 		const xOffset = cellX + (cellWidth - scaledGlyphWidth) / 2;
-		const yOffset = cellY + (cellHeight + fontSize * 0.7) / 2;
 
-		// Generate the character path
-		const glyphPath = this._generateCharacterPath(character, font, xOffset, yOffset, fontSize);
-		if (!glyphPath) {
-			return null;
-		}
+		// Vertical positioning: match the canvas atlas renderer exactly.
+		// The atlas starts at the cell top-left, then adds the font ascender
+		// to reach the baseline — same as textBaseline: 'top' in Canvas 2D.
+		const fontAscender = fontData.hhea.ascender * scale;
+		const yOffset = cellY + fontAscender;
 
-		// Get the SVG path data
+		// Build the path directly from the passed glyphData (no redundant Map lookup)
+		const glyphPath = this._createGlyphPath(fontData, glyphData, xOffset, yOffset, fontSize);
 		const pathData = glyphPath.toSVG();
 
 		return pathData || null;

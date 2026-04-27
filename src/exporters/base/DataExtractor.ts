@@ -21,16 +21,50 @@ export class DataExtractor {
 	}
 
 	/**
-	 * Gets character index from character framebuffer pixels
+	 * Gets the raw encoded character value from character framebuffer pixels.
 	 *
 	 * @param characterPixels Character framebuffer pixel data
 	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
-	 * @returns Character index
+	 * @returns Raw encoded character value
 	 */
-	public $getCharacterIndex(characterPixels: Uint8Array, pixelIndex: number): number {
-		// Get character index from red and green channels
+	public $getEncodedCharacterValue(characterPixels: Uint8Array, pixelIndex: number): number {
+		// Get the raw encoded character value from red and green channels.
+		// Consumers must resolve this value according to their output format.
 		const r = characterPixels[pixelIndex];
 		const g = characterPixels[pixelIndex + 1];
 		return r + (g << 8);
+	}
+
+	/**
+	 * Gets character index from character framebuffer pixels.
+	 *
+	 * @param characterPixels Character framebuffer pixel data
+	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
+	 * @returns Raw encoded character value
+	 */
+	public $getCharacterIndex(characterPixels: Uint8Array, pixelIndex: number): number {
+		return this.$getEncodedCharacterValue(characterPixels, pixelIndex);
+	}
+
+	/**
+	 * Extracts per-cell transform flags from the character framebuffer.
+	 *
+	 * @param characterPixels Character framebuffer pixel data
+	 * @param pixelIndex Index in the pixel array (already multiplied by 4 for RGBA)
+	 * @returns Decoded transform flags and rotation
+	 */
+	public $extractCellTransform(
+		characterPixels: Uint8Array,
+		pixelIndex: number
+	): { isInverted: boolean; flipHorizontal: boolean; flipVertical: boolean; rotation: number } {
+		const packedFlags = characterPixels[pixelIndex + 2];
+		const rotationNormalized = characterPixels[pixelIndex + 3] / 255;
+
+		return {
+			isInverted: (packedFlags & 1) !== 0,
+			flipHorizontal: (packedFlags & 2) !== 0,
+			flipVertical: (packedFlags & 4) !== 0,
+			rotation: Math.round(rotationNormalized * 360 * 100) / 100,
+		};
 	}
 }

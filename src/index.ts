@@ -1,7 +1,7 @@
 /**
  * @packageDocumentation
  *
- * Export plugin for textmode.js - save artworks as images, videos, SVG, and text.
+ * Export plugin for textmode.js - save artworks as images, videos, SVG, JSON, and text.
  *
  * This plugin adds comprehensive export capabilities to textmode.js instances,
  * allowing you to save your generative artworks in multiple formats with a
@@ -17,6 +17,7 @@
  *
  * ### Text formats
  * - {@link TXTExportOptions | TXT} - Save text content as plain text
+ * - {@link JSONExportOptions | JSON} - Save base-layer data as structured JSON
  *
  * ### Animation formats
  * - {@link GIFExportOptions | GIF} - Save as animated GIF
@@ -32,14 +33,17 @@ import { ImageExporter, type ImageExportOptions } from './exporters/image';
 import { TXTExporter, type TXTExportOptions } from './exporters/txt';
 import { GIFExporter, type GIFExportOptions } from './exporters/gif';
 import { VideoExporter, type VideoExportOptions } from './exporters/video';
+import { JSONExporter, type JSONExportOptions } from './exporters/json';
 import { createExportOverlay } from './overlay';
 import type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayController } from './types';
+import { TEXTMODE_EXPORT_VERSION } from './version';
 
 // Re-export all export option types for consumers
 export type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
+export type { JSONExportOptions, TextmodeLayerJSON } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
 
@@ -52,7 +56,7 @@ type TextmodifierWithExportInternals = Textmodifier &
  * Export plugin for textmode.js.
  *
  * Add this plugin to your textmode.js instance to enable exporting artworks
- * as images, videos, SVG, and text files. Includes an overlay UI for quick
+ * as images, videos, SVG, JSON, and text files. Includes an overlay UI for quick
  * access to all export options, which can be controlled at runtime.
  *
  * @example
@@ -84,7 +88,7 @@ type TextmodifierWithExportInternals = Textmodifier &
  */
 export const ExportPlugin: TextmodePlugin = {
 	name: 'textmode.export',
-	version: '1.2.1',
+	version: TEXTMODE_EXPORT_VERSION,
 
 	/**
 	 * Installs the export plugin into a Textmodifier instance
@@ -156,6 +160,35 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 
 			/**
+			 * Generates structured JSON data for the current base layer.
+			 *
+			 * @param options Export options
+			 * @returns Object containing the exported base-layer data
+			 */
+			toJSON: (options: JSONExportOptions = {}) => {
+				return new JSONExporter().$generateJSONData(textmodifier, options);
+			},
+
+			/**
+			 * Generates serialized JSON for the current base layer.
+			 *
+			 * @param options Export options
+			 * @returns String containing the JSON content
+			 */
+			toJSONString: (options: JSONExportOptions = {}) => {
+				return new JSONExporter().$generateJSONString(textmodifier, options);
+			},
+
+			/**
+			 * Saves the current base layer as a JSON file.
+			 *
+			 * @param options Export options
+			 */
+			saveJSON: (options: JSONExportOptions = {}) => {
+				new JSONExporter().$saveJSON(textmodifier, options);
+			},
+
+			/**
 			 * Saves the current canvas as an animated GIF file
 			 *
 			 * @param options Export options
@@ -214,6 +247,9 @@ export const ExportPlugin: TextmodePlugin = {
 			'saveStrings',
 			'toSVG',
 			'toString',
+			'toJSON',
+			'toJSONString',
+			'saveJSON',
 			'saveGIF',
 			'saveWEBM',
 		];

@@ -1,7 +1,7 @@
 import type { ExportFormat, ExportOptionsMap } from '../types';
 import type { TextmodeExportAPI } from '../../types';
 
-type ClipboardExportFormat = Extract<ExportFormat, 'txt' | 'svg' | 'image'>;
+type ClipboardExportFormat = Extract<ExportFormat, 'txt' | 'json' | 'svg' | 'image'>;
 
 export class ClipboardService {
 	private readonly api: TextmodeExportAPI;
@@ -11,6 +11,7 @@ export class ClipboardService {
 	}
 
 	async $copy(format: 'txt', options: ExportOptionsMap['txt']): Promise<void>;
+	async $copy(format: 'json', options: ExportOptionsMap['json']): Promise<void>;
 	async $copy(format: 'svg', options: ExportOptionsMap['svg']): Promise<void>;
 	async $copy(format: 'image', options: ExportOptionsMap['image']): Promise<void>;
 	async $copy(format: ClipboardExportFormat, options: ExportOptionsMap[ClipboardExportFormat]): Promise<void>;
@@ -18,6 +19,11 @@ export class ClipboardService {
 		switch (format) {
 			case 'txt': {
 				const content = this.api.toString(options as ExportOptionsMap['txt']);
+				await navigator.clipboard.writeText(content);
+				break;
+			}
+			case 'json': {
+				const content = this.api.toJSONString(options as ExportOptionsMap['json']);
 				await navigator.clipboard.writeText(content);
 				break;
 			}

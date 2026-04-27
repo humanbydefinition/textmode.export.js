@@ -3,6 +3,7 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
+import type { JSONExportOptions, TextmodeLayerJSON } from './exporters/json';
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
@@ -131,6 +132,44 @@ export interface TextmodeExportAPI {
 	 * ```
 	 */
 	toString(options?: TXTExportOptions): string;
+
+	/**
+	 * Produces the current base layer as structured JSON data.
+	 *
+	 * @param options Export options.
+	 * @returns The JSON document representing the current base layer.
+	 *
+	 * @example
+	 * ```ts
+	 * const layer = t.toJSON({ colorMode: 'hex', includeMetadata: true });
+	 * ```
+	 */
+	toJSON(options?: JSONExportOptions): TextmodeLayerJSON;
+
+	/**
+	 * Produces the current base layer as a JSON string.
+	 *
+	 * @param options Export options.
+	 * @returns Serialized JSON string for the current base layer.
+	 *
+	 * @example
+	 * ```ts
+	 * const json = t.toJSONString({ pretty: false, colorMode: 'hex' });
+	 * ```
+	 */
+	toJSONString(options?: JSONExportOptions): string;
+
+	/**
+	 * Downloads the current base layer as a JSON file.
+	 *
+	 * @param options Export options.
+	 *
+	 * @example
+	 * ```ts
+	 * t.saveJSON({ filename: 'frame', pretty: true });
+	 * ```
+	 */
+	saveJSON(options?: JSONExportOptions): void;
 
 	/**
 	 * Records an animated GIF and saves it to disk.

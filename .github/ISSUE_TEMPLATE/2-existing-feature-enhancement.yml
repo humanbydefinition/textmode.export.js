@@ -1,71 +1,71 @@
 name: Existing Feature Enhancement
 description: Suggest an improvement to an existing textmode.export.js feature.
-title: "[Enhancement]: "
+title: '[Enhancement]: '
 labels: [Enhancement]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Use this form when an existing `textmode.export.js` API, overlay workflow, export format, docs page, or packaging behavior should work better.
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Pre-flight checks
-      options:
-        - label: I searched existing issues and did not find an obvious duplicate.
+    - type: markdown
+      attributes:
+          value: |
+              Use this form when an existing `textmode.export.js` API, overlay workflow, export format, docs page, or packaging behavior should work better.
+    - type: checkboxes
+      id: checks
+      attributes:
+          label: Pre-flight checks
+          options:
+              - label: I searched existing issues and did not find an obvious duplicate.
+                required: true
+              - label: This is about improving an existing feature, not requesting a brand-new capability.
+                required: true
+    - type: checkboxes
+      id: area
+      attributes:
+          label: Most relevant area
+          description: You may select more than one.
+          options:
+              - label: Plugin installation / lifecycle
+              - label: Export overlay UI / controls
+              - label: Image export (`saveCanvas()` / `copyCanvas()`)
+              - label: SVG export (`saveSVG()` / `toSVG()`)
+              - label: Plain text export (`saveStrings()` / `toString()`)
+              - label: GIF export (`saveGIF()`)
+              - label: WEBM export (`saveWEBM()`)
+              - label: Clipboard / download / browser permissions
+              - label: textmode.js integration
+              - label: Build / types / packaging
+              - label: Documentation / examples
+              - label: Other
+    - type: input
+      id: target
+      attributes:
+          label: Existing feature, API, or workflow
+          description: Name the method, format, overlay interaction, or docs/example area you want improved.
+          placeholder: saveGIF(), exportOverlay.toggle(), toSVG(), image export scale, ESM packaging, README examples
+      validations:
           required: true
-        - label: This is about improving an existing feature, not requesting a brand-new capability.
+    - type: textarea
+      id: current
+      attributes:
+          label: Current behavior
+          description: Describe the current feature and what is limiting about it today.
+      validations:
           required: true
-  - type: checkboxes
-    id: area
-    attributes:
-      label: Most relevant area
-      description: You may select more than one.
-      options:
-        - label: Plugin installation / lifecycle
-        - label: Export overlay UI / controls
-        - label: Image export (`saveCanvas()` / `copyCanvas()`)
-        - label: SVG export (`saveSVG()` / `toSVG()`)
-        - label: Plain text export (`saveStrings()` / `toString()`)
-        - label: GIF export (`saveGIF()`)
-        - label: WEBM export (`saveWEBM()`)
-        - label: Clipboard / download / browser permissions
-        - label: textmode.js integration
-        - label: Build / types / packaging
-        - label: Documentation / examples
-        - label: Other
-  - type: input
-    id: target
-    attributes:
-      label: Existing feature, API, or workflow
-      description: Name the method, format, overlay interaction, or docs/example area you want improved.
-      placeholder: saveGIF(), exportOverlay.toggle(), toSVG(), image export scale, ESM packaging, README examples
-    validations:
-      required: true
-  - type: textarea
-    id: current
-    attributes:
-      label: Current behavior
-      description: Describe the current feature and what is limiting about it today.
-    validations:
-      required: true
-  - type: textarea
-    id: proposal
-    attributes:
-      label: Proposed enhancement
-    validations:
-      required: true
-  - type: textarea
-    id: impact
-    attributes:
-      label: Creative, ergonomic, or maintenance impact
-      description: Explain how this would improve export workflows, browser compatibility, integration, contributor ergonomics, or docs clarity.
-    validations:
-      required: true
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives, compatibility, or implementation concerns
-      description: Include workarounds, competing API shapes, browser constraints, packaging concerns, or reasons to avoid the change.
-    validations:
-      required: false
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposed enhancement
+      validations:
+          required: true
+    - type: textarea
+      id: impact
+      attributes:
+          label: Creative, ergonomic, or maintenance impact
+          description: Explain how this would improve export workflows, browser compatibility, integration, contributor ergonomics, or docs clarity.
+      validations:
+          required: true
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives, compatibility, or implementation concerns
+          description: Include workarounds, competing API shapes, browser constraints, packaging concerns, or reasons to avoid the change.
+      validations:
+          required: false

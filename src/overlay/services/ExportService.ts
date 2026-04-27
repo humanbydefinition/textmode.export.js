@@ -6,6 +6,7 @@ import type { VideoExportOptions, VideoExportProgress } from '../../exporters/vi
 import type { ImageExportOptions } from '../../exporters/image';
 import type { SVGExportOptions } from '../../exporters/svg';
 import type { TXTExportOptions } from '../../exporters/txt';
+import type { JSONExportOptions } from '../../exporters/json';
 import { EventBus } from '../core/EventBus';
 
 export interface ExportHooks {
@@ -56,6 +57,8 @@ export class ExportService {
 		switch (format) {
 			case 'txt':
 				return Promise.resolve(this.api.saveStrings(options as TXTExportOptions));
+			case 'json':
+				return Promise.resolve(this.api.saveJSON(options as JSONExportOptions));
 			case 'image':
 				return this.api.saveCanvas(options as ImageExportOptions);
 			case 'svg':

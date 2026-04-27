@@ -1,4 +1,4 @@
-import { GIFBlade, ImageBlade, SVGBlade, TextBlade, VideoBlade } from './blades';
+import { GIFBlade, ImageBlade, JSONBlade, SVGBlade, TextBlade, VideoBlade } from './blades';
 import type { ExportFormat } from './types';
 import type { FormatDefinition } from './models/FormatDefinition';
 
@@ -13,6 +13,22 @@ const DEFINITIONS: ReadonlyArray<FormatDefinition<ExportFormat>> = [
 				label: 'plain text (.txt)',
 				supportsClipboard: true,
 				defaultOptions: { preserveTrailingSpaces: false, emptyCharacter: ' ' },
+			}),
+	},
+	{
+		format: 'json',
+		label: 'layer data (.json)',
+		supportsClipboard: true,
+		createBlade: () =>
+			new JSONBlade({
+				format: 'json',
+				label: 'layer data (.json)',
+				supportsClipboard: true,
+				defaultOptions: {
+					pretty: true,
+					includeMetadata: true,
+					colorMode: 'hex',
+				},
 			}),
 	},
 	{

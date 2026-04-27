@@ -387,6 +387,9 @@ export class OverlayController {
 				case 'txt':
 					await this._clipboardService.$copy('txt', options as ExportOptionsMap['txt']);
 					break;
+				case 'json':
+					await this._clipboardService.$copy('json', options as ExportOptionsMap['json']);
+					break;
 				case 'svg':
 					await this._clipboardService.$copy('svg', options as ExportOptionsMap['svg']);
 					break;
