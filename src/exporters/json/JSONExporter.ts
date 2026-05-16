@@ -10,17 +10,19 @@ import { JSONDataExtractor } from './JSONDataExtractor';
 import { TEXTMODE_EXPORT_VERSION } from '../../version';
 import type {
 	JSONCellData,
+	JSONCellCollection,
 	JSONColorValue,
+	JSONExportMetadata,
 	JSONExportOptions,
 	JSONGenerationOptions,
 	JSONLayerGrid,
 	JSONObjectRowCell,
-	TextmodeLayerJSON,
-	TextmodeLayersJSON,
-	TextmodeLayersJSONLayer,
+	TextmodeDocumentJSON,
+	TextmodeDocumentLayer,
 } from './types';
 
-const TEXTMODE_LAYER_SCHEMA = 'https://textmode.art/schemas/textmode-layer-1.0.schema.json';
+const TEXTMODE_DOCUMENT_FORMAT = 'textmode.document' as const;
+const TEXTMODE_DOCUMENT_FORMAT_VERSION = '2.0.0' as const;
 
 /**
  * Main JSON exporter for the textmode.js library.
@@ -44,7 +46,7 @@ export class JSONExporter {
 		};
 	}
 
-	private _createMetadata(generationOptions: JSONGenerationOptions): TextmodeLayerJSON['metadata'] {
+	private _createMetadata(generationOptions: JSONGenerationOptions): JSONExportMetadata | undefined {
 		return generationOptions.includeMetadata
 			? {
 					createdAt: new Date().toISOString(),
@@ -91,7 +93,7 @@ export class JSONExporter {
 		cols: number,
 		rows: number,
 		colorMode: JSONGenerationOptions['colorMode']
-	): TextmodeLayerJSON['layer']['cells'] {
+	): JSONCellCollection {
 		const rowCollections: JSONObjectRowCell[][] = [];
 
 		for (let y = 0; y < rows; y++) {
@@ -126,7 +128,7 @@ export class JSONExporter {
 	private _createLayerCells(
 		target: ResolvedLayerExportTarget,
 		generationOptions: JSONGenerationOptions
-	): TextmodeLayerJSON['layer']['cells'] {
+	): JSONCellCollection {
 		const cells = new JSONDataExtractor().$extractCellData(target);
 		return this._createObjectRowsCells(cells, target.grid.cols, target.grid.rows, generationOptions.colorMode);
 	}
@@ -134,7 +136,7 @@ export class JSONExporter {
 	private _createStackLayer(
 		target: ResolvedLayerStackExportTarget,
 		generationOptions: JSONGenerationOptions
-	): TextmodeLayersJSONLayer {
+	): TextmodeDocumentLayer {
 		return {
 			id: target.id,
 			visible: target.visible,
@@ -149,16 +151,13 @@ export class JSONExporter {
 	}
 
 	/**
-	 * Generates structured JSON layer data without serializing it.
+	 * Generates structured JSON document data without serializing it.
 	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options
 	 * @returns Structured JSON document for the selected layer or layer stack
 	 */
-	public $generateJSONData(
-		textmodifier: Textmodifier,
-		options: JSONExportOptions = {}
-	): TextmodeLayerJSON | TextmodeLayersJSON {
+	public $generateJSONData(textmodifier: Textmodifier, options: JSONExportOptions = {}): TextmodeDocumentJSON {
 		const generationOptions = this._applyDefaultOptions(options);
 		const metadata = this._createMetadata(generationOptions);
 
@@ -167,9 +166,9 @@ export class JSONExporter {
 			const canvasGrid = targets[0].grid;
 
 			return {
-				$schema: TEXTMODE_LAYER_SCHEMA,
-				format: 'textmode.layer',
-				formatVersion: '1.1.0',
+				format: TEXTMODE_DOCUMENT_FORMAT,
+				formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
+				target: 'all',
 				...(metadata ? { metadata } : {}),
 				canvas: {
 					width: canvasGrid.width,
@@ -182,9 +181,9 @@ export class JSONExporter {
 		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
 
 		return {
-			$schema: TEXTMODE_LAYER_SCHEMA,
-			format: 'textmode.layer',
-			formatVersion: '1.0.0',
+			format: TEXTMODE_DOCUMENT_FORMAT,
+			formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
+			target: 'selected',
 			...(metadata ? { metadata } : {}),
 			canvas: {
 				width: target.grid.width,

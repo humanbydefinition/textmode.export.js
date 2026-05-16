@@ -10,7 +10,7 @@
 `textmode.export.js` is an add-on library for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that adds various export options to your `Textmodifier` instance, including:
 
 - Plain text (`.txt`)
-- JSON layer data (`.json`)
+- JSON document data (`.json`)
 - Image files (`.png`, `.jpg`, `.webp`)
 - Animated image files (`.gif`)
 - Video files (`.webm`)

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Textmodifier } from 'textmode.js';
 import type { TextmodeLayer } from 'textmode.js';
 import { JSONExporter } from './JSONExporter';
-import type { TextmodeLayerJSON, TextmodeLayersJSON } from './types';
+import type { TextmodeAllDocumentJSON, TextmodeDocumentJSON, TextmodeSelectedDocumentJSON } from './types';
 
 type LayerMockOptions = {
 	visible?: boolean;
@@ -15,16 +15,16 @@ type LayerMockOptions = {
 	rotationZ?: number;
 };
 
-function expectSingleLayerDocument(document: TextmodeLayerJSON | TextmodeLayersJSON): TextmodeLayerJSON {
-	if (!('layer' in document)) {
+function expectSingleLayerDocument(document: TextmodeDocumentJSON): TextmodeSelectedDocumentJSON {
+	if (document.target !== 'selected') {
 		throw new Error('Expected a single-layer JSON document');
 	}
 
 	return document;
 }
 
-function expectLayerStackDocument(document: TextmodeLayerJSON | TextmodeLayersJSON): TextmodeLayersJSON {
-	if (!('layers' in document)) {
+function expectLayerStackDocument(document: TextmodeDocumentJSON): TextmodeAllDocumentJSON {
+	if (document.target !== 'all') {
 		throw new Error('Expected an all-layers JSON document');
 	}
 
@@ -123,12 +123,14 @@ describe('JSONExporter', () => {
 		vi.unstubAllGlobals();
 	});
 
-	it('generates a textmode.layer document with row-based cells by default', () => {
+	it('generates a textmode.document selected-layer document with row-based cells by default', () => {
 		const exporter = new JSONExporter();
 		const document = expectSingleLayerDocument(exporter.$generateJSONData(createTextmodifierMock()));
 
-		expect(document.format).toBe('textmode.layer');
-		expect(document.formatVersion).toBe('1.0.0');
+		expect(document).not.toHaveProperty('$schema');
+		expect(document.format).toBe('textmode.document');
+		expect(document.formatVersion).toBe('2.0.0');
+		expect(document.target).toBe('selected');
 		expect(document.grid).toEqual({
 			cols: 2,
 			rows: 1,
@@ -240,8 +242,10 @@ describe('JSONExporter', () => {
 			})
 		);
 
-		expect(document.format).toBe('textmode.layer');
-		expect(document.formatVersion).toBe('1.1.0');
+		expect(document).not.toHaveProperty('$schema');
+		expect(document.format).toBe('textmode.document');
+		expect(document.formatVersion).toBe('2.0.0');
+		expect(document.target).toBe('all');
 		expect(document.metadata).toBeUndefined();
 		expect(document.canvas).toEqual({ width: 16, height: 16 });
 		expect(document.layers.map((layer) => layer.id)).toEqual(['base', 'layer-1']);
@@ -371,6 +375,11 @@ describe('JSONExporter', () => {
 			throw new Error('Expected Blob to be captured');
 		}
 		expect(blob.type).toBe('application/json;charset=utf-8');
-		await expect(readBlobAsText(blob)).resolves.toContain('"format":"textmode.layer"');
+		const text = await readBlobAsText(blob);
+		expect(text).toContain('"format":"textmode.document"');
+		expect(text).toContain('"formatVersion":"2.0.0"');
+		expect(text).toContain('"target":"selected"');
+		expect(text).not.toContain('$schema');
+		expect(text).not.toContain('schemas');
 	});
 });

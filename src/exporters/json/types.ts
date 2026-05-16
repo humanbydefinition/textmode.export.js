@@ -6,6 +6,16 @@ import type { LayerExportOptions } from '../base';
 export type JSONExportTarget = 'selected' | 'all';
 
 /**
+ * Canonical JSON document format identifier.
+ */
+export type JSONDocumentFormat = 'textmode.document';
+
+/**
+ * Canonical JSON document format version.
+ */
+export type JSONDocumentVersion = '2.0.0';
+
+/**
  * Supported JSON color output modes.
  */
 export type JSONExportColorMode = 'hex' | 'rgba';
@@ -82,28 +92,33 @@ export interface JSONExportMetadata {
 }
 
 /**
- * Layer document exported by the JSON exporter.
+ * Selected-layer entry in a JSON document export.
  */
-export interface TextmodeLayerJSON {
-	$schema: string;
-	format: 'textmode.layer';
-	formatVersion: '1.0.0';
+export interface TextmodeSelectedDocumentLayer {
+	id: string;
+	cells: JSONCellCollection;
+}
+
+/**
+ * Selected-layer document exported by the JSON exporter.
+ */
+export interface TextmodeSelectedDocumentJSON {
+	format: JSONDocumentFormat;
+	formatVersion: JSONDocumentVersion;
+	target: 'selected';
 	metadata?: JSONExportMetadata;
 	canvas: {
 		width: number;
 		height: number;
 	};
 	grid: JSONLayerGrid;
-	layer: {
-		id: string;
-		cells: JSONCellCollection;
-	};
+	layer: TextmodeSelectedDocumentLayer;
 }
 
 /**
  * Single layer entry in an all-layers JSON export.
  */
-export interface TextmodeLayersJSONLayer {
+export interface TextmodeDocumentLayer {
 	id: string;
 	visible: boolean;
 	opacity: number;
@@ -118,17 +133,22 @@ export interface TextmodeLayersJSONLayer {
 /**
  * Layer stack document exported by the JSON exporter.
  */
-export interface TextmodeLayersJSON {
-	$schema: string;
-	format: 'textmode.layer';
-	formatVersion: '1.1.0';
+export interface TextmodeAllDocumentJSON {
+	format: JSONDocumentFormat;
+	formatVersion: JSONDocumentVersion;
+	target: 'all';
 	metadata?: JSONExportMetadata;
 	canvas: {
 		width: number;
 		height: number;
 	};
-	layers: TextmodeLayersJSONLayer[];
+	layers: TextmodeDocumentLayer[];
 }
+
+/**
+ * JSON document exported by the JSON exporter.
+ */
+export type TextmodeDocumentJSON = TextmodeSelectedDocumentJSON | TextmodeAllDocumentJSON;
 
 /**
  * Options for exporting the textmode content to JSON format.

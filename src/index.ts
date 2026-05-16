@@ -17,7 +17,7 @@
  *
  * ### Text formats
  * - {@link TXTExportOptions | TXT} - Save text content as plain text
- * - {@link JSONExportOptions | JSON} - Save layer data as structured JSON
+ * - {@link JSONExportOptions | JSON} - Save document data as structured JSON
  *
  * ### Animation formats
  * - {@link GIFExportOptions | GIF} - Save as animated GIF
@@ -48,6 +48,8 @@ export type {
 	JSONCellCollection,
 	JSONCellTransform,
 	JSONColorValue,
+	JSONDocumentFormat,
+	JSONDocumentVersion,
 	JSONExportColorMode,
 	JSONExportMetadata,
 	JSONExportOptions,
@@ -56,9 +58,11 @@ export type {
 	JSONObjectRowCell,
 	JSONObjectRowsCellCollection,
 	JSONRGBAColor,
-	TextmodeLayerJSON,
-	TextmodeLayersJSON,
-	TextmodeLayersJSONLayer,
+	TextmodeAllDocumentJSON,
+	TextmodeDocumentJSON,
+	TextmodeDocumentLayer,
+	TextmodeSelectedDocumentJSON,
+	TextmodeSelectedDocumentLayer,
 } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
@@ -177,10 +181,10 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 
 			/**
-			 * Generates structured JSON data for the selected layer.
+			 * Generates structured JSON document data for the selected layer or layer stack.
 			 *
 			 * @param options Export options
-			 * @returns Object containing the exported layer data
+			 * @returns Object containing the exported document data
 			 */
 			toJSON: (options: JSONExportOptions = {}) => {
 				return new JSONExporter().$generateJSONData(textmodifier, options);

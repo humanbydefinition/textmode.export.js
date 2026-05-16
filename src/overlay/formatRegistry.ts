@@ -22,12 +22,12 @@ export function getExportFormatDefinitions(
 		},
 		{
 			format: 'json',
-			label: 'layer data (.json)',
+			label: 'document data (.json)',
 			supportsClipboard: true,
 			createBlade: () =>
 				new JSONBlade({
 					format: 'json',
-					label: 'layer data (.json)',
+					label: 'document data (.json)',
 					supportsClipboard: true,
 					defaultOptions: {
 						target: 'selected',

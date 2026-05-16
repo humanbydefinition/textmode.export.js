@@ -3,7 +3,7 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
-import type { JSONExportOptions, TextmodeLayerJSON, TextmodeLayersJSON } from './exporters/json';
+import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
@@ -145,7 +145,7 @@ export interface TextmodeExportAPI {
 	 * const stack = t.toJSON({ target: 'all' });
 	 * ```
 	 */
-	toJSON(options?: JSONExportOptions): TextmodeLayerJSON | TextmodeLayersJSON;
+	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
 	/**
 	 * Produces the selected layer or layer stack as a JSON string.
