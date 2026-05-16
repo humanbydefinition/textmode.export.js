@@ -5,10 +5,13 @@ import { SelectInput } from '../components/inputs/SelectInput';
 import { NumberInput } from '../components/inputs/NumberInput';
 import { Field } from '../components/base/Field';
 import { Container } from '../components/base/Container';
+import { LayerTargetSelect } from '../components/inputs/LayerTargetSelect';
 import type { BladeConfig } from './Blade';
 import { Blade } from './Blade';
 
 export class SVGBlade extends Blade<SVGExportOptions> {
+	private readonly layerTarget?: LayerTargetSelect;
+
 	private includeBackground = this._manageComponent(
 		new CheckboxInput({
 			id: 'textmode-export-svg-include-backgrounds',
@@ -37,12 +40,21 @@ export class SVGBlade extends Blade<SVGExportOptions> {
 
 	constructor(config: BladeConfig<SVGExportOptions>) {
 		super(config);
+		if (config.layerTargetProvider) {
+			this.layerTarget = this._manageComponent(
+				new LayerTargetSelect({
+					id: 'textmode-export-svg-layer',
+					provider: config.layerTargetProvider,
+				})
+			);
+		}
 	}
 
 	render(): HTMLElement {
 		const container = document.createElement('div');
 		container.classList.add(overlayClasses.stack);
 
+		this.layerTarget?.mount(container);
 		this.includeBackground.mount(container);
 
 		const row = new Container('row');
@@ -73,6 +85,7 @@ export class SVGBlade extends Blade<SVGExportOptions> {
 
 	getOptions(): SVGExportOptions {
 		return {
+			layer: this.layerTarget?.layer,
 			includeBackgroundRectangles: this.includeBackground.checked,
 			drawMode: this.drawMode.value,
 			strokeWidth: Number.parseFloat(this.strokeWidth.value),
@@ -90,6 +103,10 @@ export class SVGBlade extends Blade<SVGExportOptions> {
 			return Number.isFinite(value) && value >= 0;
 		}
 		return true;
+	}
+
+	refreshLayerTargets(): void {
+		this.layerTarget?.refresh();
 	}
 
 	private updateStrokeControls(): void {

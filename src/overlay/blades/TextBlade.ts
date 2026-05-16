@@ -3,10 +3,13 @@ import { overlayClasses } from '../utils/classes';
 import { CheckboxInput } from '../components/inputs/CheckboxInput';
 import { TextInput } from '../components/inputs/TextInput';
 import { Field } from '../components/base/Field';
+import { LayerTargetSelect } from '../components/inputs/LayerTargetSelect';
 import type { BladeConfig } from './Blade';
 import { Blade } from './Blade';
 
 export class TextBlade extends Blade<TXTExportOptions> {
+	private readonly layerTarget?: LayerTargetSelect;
+
 	private trailingSpaces = this._manageComponent(
 		new CheckboxInput({
 			label: 'preserve trailing spaces',
@@ -24,12 +27,21 @@ export class TextBlade extends Blade<TXTExportOptions> {
 
 	constructor(config: BladeConfig<TXTExportOptions>) {
 		super(config);
+		if (config.layerTargetProvider) {
+			this.layerTarget = this._manageComponent(
+				new LayerTargetSelect({
+					id: 'textmode-export-txt-layer',
+					provider: config.layerTargetProvider,
+				})
+			);
+		}
 	}
 
 	render(): HTMLElement {
 		const container = document.createElement('div');
 		container.classList.add(overlayClasses.stack);
 
+		this.layerTarget?.mount(container);
 		this.trailingSpaces.mount(container);
 
 		const emptyField = new Field({
@@ -47,6 +59,7 @@ export class TextBlade extends Blade<TXTExportOptions> {
 		const defaults = this._config.defaultOptions ?? {};
 		const value = this.emptyCharacter.value || defaults.emptyCharacter || ' ';
 		return {
+			layer: this.layerTarget?.layer,
 			preserveTrailingSpaces: this.trailingSpaces.checked,
 			emptyCharacter: value,
 		};
@@ -59,6 +72,10 @@ export class TextBlade extends Blade<TXTExportOptions> {
 	validate(): boolean {
 		const value = this.emptyCharacter.value;
 		return value.length <= 1;
+	}
+
+	refreshLayerTargets(): void {
+		this.layerTarget?.refresh();
 	}
 
 	private applyDefaults(): void {

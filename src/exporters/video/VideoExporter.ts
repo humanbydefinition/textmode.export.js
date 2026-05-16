@@ -1,5 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePluginContext } from 'textmode.js/plugins';
+import type { TextmodePluginContext } from 'textmode.js';
 import { VideoRecorder } from './VideoRecorder';
 import type { VideoExportOptions, VideoGenerationOptions } from './types';
 import { FileHandler } from '../base';

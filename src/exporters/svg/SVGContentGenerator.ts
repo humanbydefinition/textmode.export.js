@@ -1,7 +1,7 @@
 import type { SVGCellData, SVGGenerationOptions } from './types';
 import { SVGPathGenerator } from './SVGPathGenerator';
 import type { TextmodeGrid } from 'textmode.js';
-import type { GlyphData, TextmodeFont } from 'textmode.js/fonts';
+import type { GlyphData, TextmodeFont } from 'textmode.js';
 import { resolveGlyphByEncodedValue } from '../base';
 
 /**

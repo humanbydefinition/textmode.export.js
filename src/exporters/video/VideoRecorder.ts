@@ -1,4 +1,4 @@
-import type { TextmodePluginContext } from 'textmode.js/plugins';
+import type { TextmodePluginContext } from 'textmode.js';
 import type { VideoExportProgress, VideoGenerationOptions } from './types';
 import WebMWriter from 'webm-writer';
 

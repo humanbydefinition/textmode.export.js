@@ -2,8 +2,8 @@ import type { SVGExportOptions, SVGGenerationOptions } from './types';
 import { SVGDataExtractor } from './SVGDataExtractor';
 import { SVGContentGenerator } from './SVGContentGenerator';
 import type { Textmodifier } from 'textmode.js';
-import { FileHandler } from '../base';
-import { TextmodeFont } from 'textmode.js/fonts';
+import { FileHandler, resolveLayerExportTarget } from '../base';
+import { TextmodeFont } from 'textmode.js';
 
 /**
  * Main SVG exporter for the textmode.js library.
@@ -23,6 +23,7 @@ export class SVGExporter {
 			drawMode: options.drawMode ?? 'fill',
 			strokeWidth: options.strokeWidth ?? 1.0,
 			filename: options.filename,
+			layer: options.layer,
 		};
 	}
 
@@ -36,19 +37,21 @@ export class SVGExporter {
 	public $generateSVG(textmodifier: Textmodifier, options: SVGExportOptions = {}): string {
 		const dataExtractor = new SVGDataExtractor();
 		const contentGenerator = new SVGContentGenerator();
+		const generationOptions = this._applyDefaultOptions(options);
+		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
 
 		// Extract SVG cell data
 		const cellDataArray = dataExtractor.$extractSVGCellData(
-			dataExtractor.$extractFramebufferData(textmodifier.layers.base.drawFramebuffer!),
-			textmodifier.grid!
+			dataExtractor.$extractFramebufferData(target.drawFramebuffer),
+			target.grid
 		);
 
 		// Generate SVG content
 		const svgContent = contentGenerator.$generateSVGContent(
 			cellDataArray,
-			textmodifier.grid!,
-			textmodifier.font as TextmodeFont,
-			this._applyDefaultOptions(options)
+			target.grid,
+			target.font as TextmodeFont,
+			generationOptions
 		);
 
 		return contentGenerator.$optimizeSVGContent(svgContent);

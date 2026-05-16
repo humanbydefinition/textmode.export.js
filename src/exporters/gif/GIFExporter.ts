@@ -1,5 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePluginContext } from 'textmode.js/plugins';
+import type { TextmodePluginContext } from 'textmode.js';
 import { GIFRecorder } from './GIFRecorder';
 import type { GIFExportOptions, GIFGenerationOptions } from './types';
 import { FileHandler } from '../base';

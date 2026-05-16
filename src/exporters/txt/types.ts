@@ -1,7 +1,9 @@
+import type { LayerExportOptions } from '../base';
+
 /**
  * Options for exporting the textmode content to TXT format.
  */
-export type TXTExportOptions = {
+export type TXTExportOptions = LayerExportOptions & {
 	/**
 	 * The filename to save the TXT file as.
 	 *
@@ -32,6 +34,7 @@ export interface TXTGenerationOptions {
 	preserveTrailingSpaces: boolean;
 	emptyCharacter: string;
 	filename?: string;
+	layer?: LayerExportOptions['layer'];
 }
 
 /**

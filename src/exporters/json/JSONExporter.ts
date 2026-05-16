@@ -1,21 +1,32 @@
 import type { Textmodifier } from 'textmode.js';
-import { FileHandler } from '../base';
+import {
+	FileHandler,
+	resolveLayerExportTarget,
+	resolveLayerStackExportTargets,
+	type ResolvedLayerExportTarget,
+	type ResolvedLayerStackExportTarget,
+} from '../base';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import { TEXTMODE_EXPORT_VERSION } from '../../version';
 import type {
 	JSONCellData,
+	JSONCellCollection,
 	JSONColorValue,
+	JSONExportMetadata,
 	JSONExportOptions,
 	JSONGenerationOptions,
+	JSONLayerGrid,
 	JSONObjectRowCell,
-	TextmodeLayerJSON,
+	TextmodeDocumentJSON,
+	TextmodeDocumentLayer,
 } from './types';
 
-const TEXTMODE_LAYER_SCHEMA = 'https://textmode.art/schemas/textmode-layer-1.0.schema.json';
+const TEXTMODE_DOCUMENT_FORMAT = 'textmode.document' as const;
+const TEXTMODE_DOCUMENT_FORMAT_VERSION = '2.0.0' as const;
 
 /**
  * Main JSON exporter for the textmode.js library.
- * Orchestrates structured base-layer export and file download.
+ * Orchestrates structured selected-layer or layer-stack export and file download.
  */
 export class JSONExporter {
 	/**
@@ -26,11 +37,25 @@ export class JSONExporter {
 	 */
 	private _applyDefaultOptions(options: JSONExportOptions): JSONGenerationOptions {
 		return {
+			target: options.target ?? 'selected',
 			pretty: options.pretty ?? true,
 			colorMode: options.colorMode ?? 'hex',
 			includeMetadata: options.includeMetadata ?? true,
 			filename: options.filename,
+			layer: options.layer,
 		};
+	}
+
+	private _createMetadata(generationOptions: JSONGenerationOptions): JSONExportMetadata | undefined {
+		return generationOptions.includeMetadata
+			? {
+					createdAt: new Date().toISOString(),
+					generator: {
+						name: 'textmode.export.js',
+						version: TEXTMODE_EXPORT_VERSION,
+					},
+				}
+			: undefined;
 	}
 
 	/**
@@ -58,20 +83,22 @@ export class JSONExporter {
 	 * Creates the row-based cell encoding.
 	 *
 	 * @param cells Extracted cell data
-	 * @param textmodifier The Textmodifier instance for grid dimensions
+	 * @param cols Number of grid columns
+	 * @param rows Number of grid rows
 	 * @param colorMode Configured color mode
 	 * @returns Readable row-based cell structure
 	 */
 	private _createObjectRowsCells(
 		cells: JSONCellData[],
-		textmodifier: Textmodifier,
+		cols: number,
+		rows: number,
 		colorMode: JSONGenerationOptions['colorMode']
-	): TextmodeLayerJSON['layer']['cells'] {
-		const rows: JSONObjectRowCell[][] = [];
+	): JSONCellCollection {
+		const rowCollections: JSONObjectRowCell[][] = [];
 
-		for (let y = 0; y < textmodifier.grid!.rows; y++) {
-			const rowStart = y * textmodifier.grid!.cols;
-			const rowCells = cells.slice(rowStart, rowStart + textmodifier.grid!.cols).map((cell) => ({
+		for (let y = 0; y < rows; y++) {
+			const rowStart = y * cols;
+			const rowCells = cells.slice(rowStart, rowStart + cols).map((cell) => ({
 				x: cell.x,
 				y: cell.y,
 				character: cell.character,
@@ -80,61 +107,98 @@ export class JSONExporter {
 				transform: { ...cell.transform },
 			}));
 
-			rows.push(rowCells);
+			rowCollections.push(rowCells);
 		}
 
 		return {
 			encoding: 'object-rows-v1',
-			rows,
+			rows: rowCollections,
+		};
+	}
+
+	private _createLayerGrid(target: ResolvedLayerExportTarget): JSONLayerGrid {
+		return {
+			cols: target.grid.cols,
+			rows: target.grid.rows,
+			cellWidth: target.grid.cellWidth,
+			cellHeight: target.grid.cellHeight,
+		};
+	}
+
+	private _createLayerCells(
+		target: ResolvedLayerExportTarget,
+		generationOptions: JSONGenerationOptions
+	): JSONCellCollection {
+		const cells = new JSONDataExtractor().$extractCellData(target);
+		return this._createObjectRowsCells(cells, target.grid.cols, target.grid.rows, generationOptions.colorMode);
+	}
+
+	private _createStackLayer(
+		target: ResolvedLayerStackExportTarget,
+		generationOptions: JSONGenerationOptions
+	): TextmodeDocumentLayer {
+		return {
+			id: target.id,
+			visible: target.visible,
+			opacity: target.opacity,
+			blendMode: target.blendMode,
+			offsetX: target.offsetX,
+			offsetY: target.offsetY,
+			rotationZ: target.rotationZ,
+			grid: this._createLayerGrid(target),
+			cells: this._createLayerCells(target, generationOptions),
 		};
 	}
 
 	/**
-	 * Generates structured JSON layer data without serializing it.
+	 * Generates structured JSON document data without serializing it.
 	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options
-	 * @returns Structured JSON document for the base layer
+	 * @returns Structured JSON document for the selected layer or layer stack
 	 */
-	public $generateJSONData(textmodifier: Textmodifier, options: JSONExportOptions = {}): TextmodeLayerJSON {
+	public $generateJSONData(textmodifier: Textmodifier, options: JSONExportOptions = {}): TextmodeDocumentJSON {
 		const generationOptions = this._applyDefaultOptions(options);
-		const cells = new JSONDataExtractor().$extractCellData(textmodifier);
-		const layerCells = this._createObjectRowsCells(cells, textmodifier, generationOptions.colorMode);
+		const metadata = this._createMetadata(generationOptions);
+
+		if (generationOptions.target === 'all') {
+			const targets = resolveLayerStackExportTargets(textmodifier);
+			const canvasGrid = targets[0].grid;
+
+			return {
+				format: TEXTMODE_DOCUMENT_FORMAT,
+				formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
+				target: 'all',
+				...(metadata ? { metadata } : {}),
+				canvas: {
+					width: canvasGrid.width,
+					height: canvasGrid.height,
+				},
+				layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
+			};
+		}
+
+		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
 
 		return {
-			$schema: TEXTMODE_LAYER_SCHEMA,
-			format: 'textmode.layer',
-			formatVersion: '1.0.0',
-			...(generationOptions.includeMetadata
-				? {
-						metadata: {
-							createdAt: new Date().toISOString(),
-							generator: {
-								name: 'textmode.export.js',
-								version: TEXTMODE_EXPORT_VERSION,
-							},
-						},
-					}
-				: {}),
+			format: TEXTMODE_DOCUMENT_FORMAT,
+			formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
+			target: 'selected',
+			...(metadata ? { metadata } : {}),
 			canvas: {
-				width: textmodifier.grid!.width,
-				height: textmodifier.grid!.height,
+				width: target.grid.width,
+				height: target.grid.height,
 			},
-			grid: {
-				cols: textmodifier.grid!.cols,
-				rows: textmodifier.grid!.rows,
-				cellWidth: textmodifier.grid!.cellWidth,
-				cellHeight: textmodifier.grid!.cellHeight,
-			},
+			grid: this._createLayerGrid(target),
 			layer: {
-				id: 'base',
-				cells: layerCells,
+				id: target.id,
+				cells: this._createLayerCells(target, generationOptions),
 			},
 		};
 	}
 
 	/**
-	 * Generates the serialized JSON string for the current base layer.
+	 * Generates the serialized JSON string for the selected layer or layer stack.
 	 *
 	 * @param textmodifier The Textmodifier instance to extract data from
 	 * @param options Export options

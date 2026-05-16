@@ -27,6 +27,16 @@ interface FormatContext {
 	initialized: boolean;
 }
 
+interface LayerTargetAwareBlade {
+	refreshLayerTargets(): void;
+}
+
+function hasLayerTargets(
+	blade: Blade<ExportOptionsMap[ExportFormat]>
+): blade is Blade<ExportOptionsMap[ExportFormat]> & LayerTargetAwareBlade {
+	return typeof (blade as Partial<LayerTargetAwareBlade>).refreshLayerTargets === 'function';
+}
+
 export class OverlayController {
 	private readonly _textmodifier: Textmodifier;
 	private readonly _state: StateManager<OverlayState>;
@@ -100,6 +110,7 @@ export class OverlayController {
 
 	public show(): void {
 		if (this._shadowHost) {
+			this.refreshLayerTargets();
 			this._shadowHost.style.display = '';
 		}
 	}
@@ -120,6 +131,12 @@ export class OverlayController {
 
 	public isVisible(): boolean {
 		return this._shadowHost ? this._shadowHost.style.display !== 'none' : false;
+	}
+
+	public refreshLayerTargets(): void {
+		if (this._currentBlade && hasLayerTargets(this._currentBlade.blade)) {
+			this._currentBlade.blade.refreshLayerTargets();
+		}
 	}
 
 	public $dispose(): void {
@@ -290,6 +307,7 @@ export class OverlayController {
 		}
 		this._currentBlade = context;
 		this._formatSelect.value = format;
+		this.refreshLayerTargets();
 
 		this._updateCopyButtonState();
 		this._updateExportButton();

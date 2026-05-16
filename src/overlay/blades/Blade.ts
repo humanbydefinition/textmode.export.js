@@ -1,5 +1,6 @@
 import type { ExportFormat } from '../types';
 import { Component } from '../components/base/Component';
+import type { LayerTargetProvider } from '../../exporters/base';
 
 interface ManagedComponent {
 	unmount(): void;
@@ -11,6 +12,7 @@ export interface BladeConfig<TOptions> {
 	supportsClipboard: boolean;
 	format: ExportFormat;
 	defaultOptions: TOptions;
+	layerTargetProvider?: LayerTargetProvider;
 }
 
 export abstract class Blade<TOptions> extends Component<void> {

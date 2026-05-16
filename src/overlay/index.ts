@@ -1,5 +1,6 @@
 import type { Textmodifier } from 'textmode.js';
 import type { TextmodeExportAPI } from '../types';
+import type { LayerTargetProvider } from '../exporters/base';
 import { OverlayController } from './core/OverlayController';
 import { EventBus } from './core/EventBus';
 import { StateManager } from './core/StateManager';
@@ -14,10 +15,15 @@ export type { ExportFormat } from './types';
  *
  * @param textmodifier - The text modifier instance.
  * @param exportAPI - The export API instance.
+ * @param layerTargetProvider - Provider for dynamic layer export targets.
  * @returns The overlay controller instance.
  */
-export function createExportOverlay(textmodifier: Textmodifier, exportAPI: TextmodeExportAPI): OverlayController {
-	const definitions = getExportFormatDefinitions();
+export function createExportOverlay(
+	textmodifier: Textmodifier,
+	exportAPI: TextmodeExportAPI,
+	layerTargetProvider?: LayerTargetProvider
+): OverlayController {
+	const definitions = getExportFormatDefinitions(layerTargetProvider);
 	const defaultFormat = definitions[0]?.format;
 	const state = new StateManager(createInitialOverlayState(defaultFormat));
 	const events = new EventBus<OverlayEvents>();

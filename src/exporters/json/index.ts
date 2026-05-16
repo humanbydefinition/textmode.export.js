@@ -4,6 +4,8 @@ export { JSONDataExtractor } from './JSONDataExtractor';
 
 // Export types
 export type {
+	JSONDocumentFormat,
+	JSONDocumentVersion,
 	JSONCellCollection,
 	JSONCellData,
 	JSONCellTransform,
@@ -11,9 +13,15 @@ export type {
 	JSONExportColorMode,
 	JSONExportMetadata,
 	JSONExportOptions,
+	JSONExportTarget,
 	JSONGenerationOptions,
+	JSONLayerGrid,
 	JSONObjectRowCell,
 	JSONObjectRowsCellCollection,
 	JSONRGBAColor,
-	TextmodeLayerJSON,
+	TextmodeAllDocumentJSON,
+	TextmodeDocumentJSON,
+	TextmodeDocumentLayer,
+	TextmodeSelectedDocumentJSON,
+	TextmodeSelectedDocumentLayer,
 } from './types';

@@ -3,7 +3,7 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
-import type { JSONExportOptions, TextmodeLayerJSON } from './exporters/json';
+import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
@@ -84,89 +84,92 @@ export interface TextmodeExportAPI {
 	copyCanvas(options?: ImageExportOptions): Promise<void>;
 
 	/**
-	 * Downloads the current frame as an SVG file.
+	 * Downloads the selected layer as an SVG file.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
-	 * t.saveSVG({ filename: 'poster', includeBackgroundRectangles: true });
+	 * t.saveSVG({ filename: 'poster', layer: t.layers.base, includeBackgroundRectangles: true });
 	 * ```
 	 */
 	saveSVG(options?: SVGExportOptions): void;
 
 	/**
-	 * Downloads the current text content as a plain-text file.
+	 * Downloads the selected layer's text content as a plain-text file.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
-	 * t.saveStrings({ filename: 'frame', preserveTrailingSpaces: true });
+	 * t.saveStrings({ filename: 'frame', layer: t.layers.base, preserveTrailingSpaces: true });
 	 * ```
 	 */
 	saveStrings(options?: TXTExportOptions): void;
 
 	/**
-	 * Generates the SVG markup for the current frame.
+	 * Generates SVG markup for the selected layer.
 	 *
 	 * @param options Export options.
 	 * @returns The SVG content representing the artwork.
 	 *
 	 * @example
 	 * ```ts
-	 * const svg = t.toSVG({ drawMode: 'stroke', strokeWidth: 1.5 });
+	 * const svg = t.toSVG({ layer: t.layers.base, drawMode: 'stroke', strokeWidth: 1.5 });
 	 * ```
 	 */
 	toSVG(options?: SVGExportOptions): string;
 
 	/**
-	 * Produces the current text content as a string.
+	 * Produces the selected layer's text content as a string.
 	 *
 	 * @param options Export options.
 	 * @returns The textual representation of the artwork.
 	 *
 	 * @example
 	 * ```ts
-	 * const text = t.toString({ preserveTrailingSpaces: false });
+	 * const text = t.toString({ layer: t.layers.base, preserveTrailingSpaces: false });
 	 * ```
 	 */
 	toString(options?: TXTExportOptions): string;
 
 	/**
-	 * Produces the current base layer as structured JSON data.
+	 * Produces the selected layer or layer stack as structured JSON data.
 	 *
 	 * @param options Export options.
-	 * @returns The JSON document representing the current base layer.
+	 * @returns The JSON document representing the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
-	 * const layer = t.toJSON({ colorMode: 'hex', includeMetadata: true });
+	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
+	 * const stack = t.toJSON({ target: 'all' });
 	 * ```
 	 */
-	toJSON(options?: JSONExportOptions): TextmodeLayerJSON;
+	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
 	/**
-	 * Produces the current base layer as a JSON string.
+	 * Produces the selected layer or layer stack as a JSON string.
 	 *
 	 * @param options Export options.
-	 * @returns Serialized JSON string for the current base layer.
+	 * @returns Serialized JSON string for the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
-	 * const json = t.toJSONString({ pretty: false, colorMode: 'hex' });
+	 * const json = t.toJSONString({ layer: t.layers.base, pretty: false, colorMode: 'hex' });
+	 * const stackJson = t.toJSONString({ target: 'all' });
 	 * ```
 	 */
 	toJSONString(options?: JSONExportOptions): string;
 
 	/**
-	 * Downloads the current base layer as a JSON file.
+	 * Downloads the selected layer or layer stack as a JSON file.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
-	 * t.saveJSON({ filename: 'frame', pretty: true });
+	 * t.saveJSON({ filename: 'frame', layer: t.layers.base, pretty: true });
+	 * t.saveJSON({ filename: 'stack', target: 'all' });
 	 * ```
 	 */
 	saveJSON(options?: JSONExportOptions): void;
