@@ -17,7 +17,7 @@
  *
  * ### Text formats
  * - {@link TXTExportOptions | TXT} - Save text content as plain text
- * - {@link JSONExportOptions | JSON} - Save base-layer data as structured JSON
+ * - {@link JSONExportOptions | JSON} - Save layer data as structured JSON
  *
  * ### Animation formats
  * - {@link GIFExportOptions | GIF} - Save as animated GIF
@@ -27,7 +27,7 @@
  */
 
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePlugin, TextmodePluginContext } from 'textmode.js/plugins';
+import type { TextmodePlugin, TextmodePluginContext } from 'textmode.js';
 import { SVGExporter, type SVGExportOptions } from './exporters/svg';
 import { ImageExporter, type ImageExportOptions } from './exporters/image';
 import { TXTExporter, type TXTExportOptions } from './exporters/txt';
@@ -35,6 +35,7 @@ import { GIFExporter, type GIFExportOptions } from './exporters/gif';
 import { VideoExporter, type VideoExportOptions } from './exporters/video';
 import { JSONExporter, type JSONExportOptions } from './exporters/json';
 import { createExportOverlay } from './overlay';
+import { createLayerTargetProvider } from './exporters/base';
 import type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayController } from './types';
 import { TEXTMODE_EXPORT_VERSION } from './version';
 
@@ -46,6 +47,7 @@ export type { TXTExportOptions } from './exporters/txt';
 export type { JSONExportOptions, TextmodeLayerJSON } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
+export type { LayerExportOptions } from './exporters/base';
 
 type TextmodifierWithExportInternals = Textmodifier &
 	Partial<TextmodeExportAPI> & {
@@ -160,17 +162,17 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 
 			/**
-			 * Generates structured JSON data for the current base layer.
+			 * Generates structured JSON data for the selected layer.
 			 *
 			 * @param options Export options
-			 * @returns Object containing the exported base-layer data
+			 * @returns Object containing the exported layer data
 			 */
 			toJSON: (options: JSONExportOptions = {}) => {
 				return new JSONExporter().$generateJSONData(textmodifier, options);
 			},
 
 			/**
-			 * Generates serialized JSON for the current base layer.
+			 * Generates serialized JSON for the selected layer.
 			 *
 			 * @param options Export options
 			 * @returns String containing the JSON content
@@ -180,7 +182,7 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 
 			/**
-			 * Saves the current base layer as a JSON file.
+			 * Saves the selected layer as a JSON file.
 			 *
 			 * @param options Export options
 			 */
@@ -210,7 +212,16 @@ export const ExportPlugin: TextmodePlugin = {
 		};
 
 		// Create overlay controller (it needs access to export methods)
-		const overlayController = createExportOverlay(textmodifier, exportMethods as TextmodeExportAPI);
+		const overlayController = createExportOverlay(
+			textmodifier,
+			exportMethods as TextmodeExportAPI,
+			createLayerTargetProvider(textmodifier)
+		);
+		api.registerPostDrawHook(() => {
+			if (overlayController.isVisible()) {
+				overlayController.refreshLayerTargets();
+			}
+		});
 
 		// Create overlay API
 		const exportOverlayAPI: ExportOverlayController = {

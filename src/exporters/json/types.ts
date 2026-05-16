@@ -1,3 +1,5 @@
+import type { LayerExportOptions } from '../base';
+
 /**
  * Supported JSON color output modes.
  */
@@ -83,7 +85,7 @@ export interface TextmodeLayerJSON {
 		cellHeight: number;
 	};
 	layer: {
-		id: 'base';
+		id: string;
 		cells: JSONCellCollection;
 	};
 }
@@ -91,7 +93,7 @@ export interface TextmodeLayerJSON {
 /**
  * Options for exporting the textmode content to JSON format.
  */
-export type JSONExportOptions = {
+export type JSONExportOptions = LayerExportOptions & {
 	/**
 	 * The filename to save the JSON file as.
 	 *
@@ -133,6 +135,7 @@ export interface JSONGenerationOptions {
 	colorMode: JSONExportColorMode;
 	includeMetadata: boolean;
 	filename?: string;
+	layer?: LayerExportOptions['layer'];
 }
 
 /**

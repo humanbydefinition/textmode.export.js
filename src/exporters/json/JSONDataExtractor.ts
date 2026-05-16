@@ -1,5 +1,6 @@
-import type { Textmodifier } from 'textmode.js';
-import { DataExtractor, resolveGlyphByEncodedValue } from '../base';
+import type { TextmodeGrid } from 'textmode.js';
+import type { TextmodeFont, TextmodeTileset } from 'textmode.js';
+import { DataExtractor, resolveGlyphByEncodedValue, type ResolvedLayerExportTarget } from '../base';
 import { pixelsToRGBA } from '../../utils/pixels';
 import type { JSONCellData } from './types';
 
@@ -10,22 +11,22 @@ export class JSONDataExtractor extends DataExtractor {
 	/**
 	 * Extracts all base-layer cell data needed for JSON export.
 	 *
-	 * @param textmodifier The Textmodifier instance to extract data from
+	 * @param target The resolved layer target to extract data from
 	 * @returns Row-major cell data for the current base layer
 	 */
-	public $extractCellData(textmodifier: Textmodifier): JSONCellData[] {
-		const drawFramebuffer = textmodifier.layers.base.drawFramebuffer!;
-		const framebufferData = this.$extractFramebufferData(drawFramebuffer);
+	public $extractCellData(target: ResolvedLayerExportTarget): JSONCellData[] {
+		const framebufferData = this.$extractFramebufferData(target.drawFramebuffer);
 		const cells: JSONCellData[] = [];
+		const grid: TextmodeGrid = target.grid;
+		const font: TextmodeFont | TextmodeTileset = target.font;
 		let idx = 0;
 
-		for (let y = 0; y < textmodifier.grid!.rows; y++) {
-			for (let x = 0; x < textmodifier.grid!.cols; x++) {
+		for (let y = 0; y < grid.rows; y++) {
+			for (let x = 0; x < grid.cols; x++) {
 				const pixelIdx = idx * 4;
 				const encodedCharacterValue = this.$getEncodedCharacterValue(framebufferData.characterPixels, pixelIdx);
 				const transform = this.$extractCellTransform(framebufferData.characterPixels, pixelIdx);
-				const character =
-					resolveGlyphByEncodedValue(textmodifier.font, encodedCharacterValue)?.character ?? ' ';
+				const character = resolveGlyphByEncodedValue(font, encodedCharacterValue)?.character ?? ' ';
 
 				cells.push({
 					x,

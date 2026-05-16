@@ -1,3 +1,5 @@
+import type { LayerExportOptions } from '../base';
+
 /**
  * RGBA color representation.
  */
@@ -59,7 +61,7 @@ export interface FramebufferData {
 /**
  * Options for exporting the textmode content to SVG format.
  */
-export type SVGExportOptions = {
+export type SVGExportOptions = LayerExportOptions & {
 	/**
 	 * The filename to save the SVG file as.
 	 *
@@ -111,4 +113,5 @@ export interface SVGGenerationOptions {
 	drawMode: 'fill' | 'stroke';
 	strokeWidth: number;
 	filename?: string;
+	layer?: LayerExportOptions['layer'];
 }

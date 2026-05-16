@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Textmodifier } from 'textmode.js';
+import type { TextmodeLayer } from 'textmode.js';
 import { JSONExporter } from './JSONExporter';
 
 function readBlobAsText(blob: Blob): Promise<string> {
@@ -13,16 +14,12 @@ function readBlobAsText(blob: Blob): Promise<string> {
 	});
 }
 
-function createTextmodifierMock(): Textmodifier {
-	const characterPixels = Uint8Array.from([65, 0, 0, 0, 66, 0, 3, 255]);
-	const primaryColorPixels = Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255]);
-	const secondaryColorPixels = Uint8Array.from([0, 0, 0, 255, 0, 0, 255, 128]);
-
-	const characters = [
-		{ character: 'A', color: [65 / 255, 0, 0] },
-		{ character: 'B', color: [66 / 255, 0, 0] },
-	];
-
+function createLayerMock(
+	characterPixels: Uint8Array,
+	primaryColorPixels: Uint8Array,
+	secondaryColorPixels: Uint8Array,
+	characters: Array<{ character: string; color: [number, number, number] }>
+): TextmodeLayer {
 	return {
 		grid: {
 			cols: 2,
@@ -32,28 +29,51 @@ function createTextmodifierMock(): Textmodifier {
 			width: 16,
 			height: 16,
 		},
-		font: {
-			characters,
-		},
-		layers: {
-			base: {
-				drawFramebuffer: {
-					readPixels: (attachment: number) => {
-						switch (attachment) {
-							case 0:
-								return characterPixels;
-							case 1:
-								return primaryColorPixels;
-							case 2:
-								return secondaryColorPixels;
-							default:
-								throw new Error(`Unexpected attachment ${attachment}`);
-						}
-					},
-				},
+		font: { characters },
+		drawFramebuffer: {
+			readPixels: (attachment: number) => {
+				switch (attachment) {
+					case 0:
+						return characterPixels;
+					case 1:
+						return primaryColorPixels;
+					case 2:
+						return secondaryColorPixels;
+					default:
+						throw new Error(`Unexpected attachment ${attachment}`);
+				}
 			},
 		},
-	} as unknown as Textmodifier;
+	} as unknown as TextmodeLayer;
+}
+
+function createTextmodifierMock(): Textmodifier & { testLayer: TextmodeLayer } {
+	const characters = [
+		{ character: 'A', color: [65 / 255, 0, 0] as [number, number, number] },
+		{ character: 'B', color: [66 / 255, 0, 0] as [number, number, number] },
+		{ character: 'X', color: [88 / 255, 0, 0] as [number, number, number] },
+		{ character: 'Y', color: [89 / 255, 0, 0] as [number, number, number] },
+	];
+	const baseLayer = createLayerMock(
+		Uint8Array.from([65, 0, 0, 0, 66, 0, 3, 255]),
+		Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255]),
+		Uint8Array.from([0, 0, 0, 255, 0, 0, 255, 128]),
+		characters
+	);
+	const userLayer = createLayerMock(
+		Uint8Array.from([88, 0, 0, 0, 89, 0, 0, 0]),
+		Uint8Array.from([10, 20, 30, 255, 40, 50, 60, 255]),
+		Uint8Array.from([70, 80, 90, 255, 100, 110, 120, 255]),
+		characters
+	);
+
+	return {
+		layers: {
+			base: baseLayer,
+			all: [userLayer],
+		},
+		testLayer: userLayer,
+	} as unknown as Textmodifier & { testLayer: TextmodeLayer };
 }
 
 describe('JSONExporter', () => {
@@ -137,6 +157,49 @@ describe('JSONExporter', () => {
 				rotation: 0,
 			},
 		});
+	});
+
+	it('exports a selected user layer when provided', () => {
+		const exporter = new JSONExporter();
+		const textmodifier = createTextmodifierMock();
+		const document = exporter.$generateJSONData(textmodifier, {
+			layer: textmodifier.testLayer,
+			includeMetadata: false,
+		});
+
+		expect(document.layer.id).toBe('layer-1');
+		expect(document.layer.cells.encoding).toBe('object-rows-v1');
+
+		if (document.layer.cells.encoding !== 'object-rows-v1') {
+			throw new Error('Expected object rows encoding');
+		}
+
+		expect(document.layer.cells.rows[0][0]).toMatchObject({
+			character: 'X',
+			foreground: '#0a141eff',
+			background: '#46505aff',
+		});
+		expect(document.layer.cells.rows[0][1]).toMatchObject({
+			character: 'Y',
+			foreground: '#28323cff',
+			background: '#646e78ff',
+		});
+	});
+
+	it('rejects unmanaged layer references', () => {
+		const exporter = new JSONExporter();
+		const unmanagedLayer = createLayerMock(
+			Uint8Array.from([90, 0, 0, 0]),
+			Uint8Array.from([0, 0, 0, 255]),
+			Uint8Array.from([0, 0, 0, 255]),
+			[{ character: 'Z', color: [90 / 255, 0, 0] }]
+		);
+
+		expect(() =>
+			exporter.$generateJSONData(createTextmodifierMock(), {
+				layer: unmanagedLayer,
+			})
+		).toThrow('Cannot export a layer that is not managed');
 	});
 
 	it('serializes and downloads JSON files', async () => {

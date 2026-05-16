@@ -1,5 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
-import { FileHandler } from '../base';
+import { FileHandler, resolveLayerExportTarget } from '../base';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import { TEXTMODE_EXPORT_VERSION } from '../../version';
 import type {
@@ -30,6 +30,7 @@ export class JSONExporter {
 			colorMode: options.colorMode ?? 'hex',
 			includeMetadata: options.includeMetadata ?? true,
 			filename: options.filename,
+			layer: options.layer,
 		};
 	}
 
@@ -58,20 +59,22 @@ export class JSONExporter {
 	 * Creates the row-based cell encoding.
 	 *
 	 * @param cells Extracted cell data
-	 * @param textmodifier The Textmodifier instance for grid dimensions
+	 * @param cols Number of grid columns
+	 * @param rows Number of grid rows
 	 * @param colorMode Configured color mode
 	 * @returns Readable row-based cell structure
 	 */
 	private _createObjectRowsCells(
 		cells: JSONCellData[],
-		textmodifier: Textmodifier,
+		cols: number,
+		rows: number,
 		colorMode: JSONGenerationOptions['colorMode']
 	): TextmodeLayerJSON['layer']['cells'] {
-		const rows: JSONObjectRowCell[][] = [];
+		const rowCollections: JSONObjectRowCell[][] = [];
 
-		for (let y = 0; y < textmodifier.grid!.rows; y++) {
-			const rowStart = y * textmodifier.grid!.cols;
-			const rowCells = cells.slice(rowStart, rowStart + textmodifier.grid!.cols).map((cell) => ({
+		for (let y = 0; y < rows; y++) {
+			const rowStart = y * cols;
+			const rowCells = cells.slice(rowStart, rowStart + cols).map((cell) => ({
 				x: cell.x,
 				y: cell.y,
 				character: cell.character,
@@ -80,12 +83,12 @@ export class JSONExporter {
 				transform: { ...cell.transform },
 			}));
 
-			rows.push(rowCells);
+			rowCollections.push(rowCells);
 		}
 
 		return {
 			encoding: 'object-rows-v1',
-			rows,
+			rows: rowCollections,
 		};
 	}
 
@@ -98,8 +101,14 @@ export class JSONExporter {
 	 */
 	public $generateJSONData(textmodifier: Textmodifier, options: JSONExportOptions = {}): TextmodeLayerJSON {
 		const generationOptions = this._applyDefaultOptions(options);
-		const cells = new JSONDataExtractor().$extractCellData(textmodifier);
-		const layerCells = this._createObjectRowsCells(cells, textmodifier, generationOptions.colorMode);
+		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
+		const cells = new JSONDataExtractor().$extractCellData(target);
+		const layerCells = this._createObjectRowsCells(
+			cells,
+			target.grid.cols,
+			target.grid.rows,
+			generationOptions.colorMode
+		);
 
 		return {
 			$schema: TEXTMODE_LAYER_SCHEMA,
@@ -117,17 +126,17 @@ export class JSONExporter {
 					}
 				: {}),
 			canvas: {
-				width: textmodifier.grid!.width,
-				height: textmodifier.grid!.height,
+				width: target.grid.width,
+				height: target.grid.height,
 			},
 			grid: {
-				cols: textmodifier.grid!.cols,
-				rows: textmodifier.grid!.rows,
-				cellWidth: textmodifier.grid!.cellWidth,
-				cellHeight: textmodifier.grid!.cellHeight,
+				cols: target.grid.cols,
+				rows: target.grid.rows,
+				cellWidth: target.grid.cellWidth,
+				cellHeight: target.grid.cellHeight,
 			},
 			layer: {
-				id: 'base',
+				id: target.id,
 				cells: layerCells,
 			},
 		};

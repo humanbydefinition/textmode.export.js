@@ -2,9 +2,10 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { Textmodifier } from 'textmode.js';
+import type { TextmodeLayer } from 'textmode.js';
 import { SVGExporter } from './SVGExporter';
 
-function createTextmodifierMock(): Textmodifier {
+function createTextmodifierMock(): Textmodifier & { testLayer: TextmodeLayer } {
 	// textmode.js stores glyph identity colors in the framebuffer.
 	// The exporter resolves these encoded values through font.characters[*].color.
 	const characterPixels = Uint8Array.from([
@@ -20,6 +21,9 @@ function createTextmodifierMock(): Textmodifier {
 	]);
 	const primaryColorPixels = Uint8Array.from([255, 0, 0, 255, 0, 255, 0, 255]);
 	const secondaryColorPixels = Uint8Array.from([0, 0, 0, 255, 0, 0, 255, 128]);
+	const userCharacterPixels = Uint8Array.from([2, 0, 0, 0, 1, 0, 0, 0]);
+	const userPrimaryColorPixels = Uint8Array.from([10, 20, 30, 255, 40, 50, 60, 255]);
+	const userSecondaryColorPixels = Uint8Array.from([70, 80, 90, 255, 100, 110, 120, 255]);
 
 	// Minimal glyph data for SVG path generation
 	const glyphDataA = {
@@ -48,6 +52,56 @@ function createTextmodifierMock(): Textmodifier {
 		advanceWidth: 250,
 	};
 
+	const grid = {
+		cols: 2,
+		rows: 1,
+		cellWidth: 8,
+		cellHeight: 16,
+		width: 16,
+		height: 16,
+	};
+	const font = {
+		characters: [
+			{ character: 'A', color: [1 / 255, 0, 0], glyphData: glyphDataA },
+			{ character: 'B', color: [2 / 255, 0, 0], glyphData: glyphDataB },
+		],
+		characterMap: new Map([
+			['A', { character: 'A', color: [1 / 255, 0, 0], glyphData: glyphDataA }],
+			['B', { character: 'B', color: [2 / 255, 0, 0], glyphData: glyphDataB }],
+		]),
+		fontSize: 16,
+		font: {
+			head: { unitsPerEm: 1000 },
+			hhea: { ascender: 800 },
+		},
+	};
+	const createLayer = (
+		layerCharacterPixels: Uint8Array,
+		layerPrimaryColorPixels: Uint8Array,
+		layerSecondaryColorPixels: Uint8Array
+	): TextmodeLayer =>
+		({
+			grid,
+			font,
+			drawFramebuffer: {
+				readPixels: (attachment: number) => {
+					switch (attachment) {
+						case 0:
+							return layerCharacterPixels;
+						case 1:
+							return layerPrimaryColorPixels;
+						case 2:
+							return layerSecondaryColorPixels;
+						default:
+							throw new Error(`Unexpected attachment ${attachment}`);
+					}
+				},
+			},
+		}) as unknown as TextmodeLayer;
+
+	const baseLayer = createLayer(characterPixels, primaryColorPixels, secondaryColorPixels);
+	const userLayer = createLayer(userCharacterPixels, userPrimaryColorPixels, userSecondaryColorPixels);
+
 	return {
 		grid: {
 			cols: 2,
@@ -57,40 +111,13 @@ function createTextmodifierMock(): Textmodifier {
 			width: 16,
 			height: 16,
 		},
-		font: {
-			characters: [
-				{ character: 'A', color: [1 / 255, 0, 0], glyphData: glyphDataA },
-				{ character: 'B', color: [2 / 255, 0, 0], glyphData: glyphDataB },
-			],
-			characterMap: new Map([
-				['A', { character: 'A', color: [1 / 255, 0, 0], glyphData: glyphDataA }],
-				['B', { character: 'B', color: [2 / 255, 0, 0], glyphData: glyphDataB }],
-			]),
-			fontSize: 16,
-			font: {
-				head: { unitsPerEm: 1000 },
-				hhea: { ascender: 800 },
-			},
-		},
+		font,
 		layers: {
-			base: {
-				drawFramebuffer: {
-					readPixels: (attachment: number) => {
-						switch (attachment) {
-							case 0:
-								return characterPixels;
-							case 1:
-								return primaryColorPixels;
-							case 2:
-								return secondaryColorPixels;
-							default:
-								throw new Error(`Unexpected attachment ${attachment}`);
-						}
-					},
-				},
-			},
+			base: baseLayer,
+			all: [userLayer],
 		},
-	} as unknown as Textmodifier;
+		testLayer: userLayer,
+	} as unknown as Textmodifier & { testLayer: TextmodeLayer };
 }
 
 describe('SVGExporter', () => {
@@ -141,6 +168,18 @@ describe('SVGExporter', () => {
 		});
 		expect(svg).toContain('stroke-width="2.5"');
 		expect(svg).toContain('fill="none"');
+	});
+
+	it('generates SVG from a selected user layer', () => {
+		const exporter = new SVGExporter();
+		const textmodifier = createTextmodifierMock();
+		const svg = exporter.$generateSVG(textmodifier, {
+			layer: textmodifier.testLayer,
+			includeBackgroundRectangles: false,
+		});
+
+		expect(svg).toContain('M2.00,12.80');
+		expect(svg).toContain('M8.00,12.80');
 	});
 
 	it('triggers a download when saving', () => {
