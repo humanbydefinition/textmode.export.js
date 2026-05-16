@@ -4,6 +4,32 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Textmodifier } from 'textmode.js';
 import type { TextmodeLayer } from 'textmode.js';
 import { JSONExporter } from './JSONExporter';
+import type { TextmodeLayerJSON, TextmodeLayersJSON } from './types';
+
+type LayerMockOptions = {
+	visible?: boolean;
+	opacity?: number;
+	blendMode?: string;
+	offsetX?: number;
+	offsetY?: number;
+	rotationZ?: number;
+};
+
+function expectSingleLayerDocument(document: TextmodeLayerJSON | TextmodeLayersJSON): TextmodeLayerJSON {
+	if (!('layer' in document)) {
+		throw new Error('Expected a single-layer JSON document');
+	}
+
+	return document;
+}
+
+function expectLayerStackDocument(document: TextmodeLayerJSON | TextmodeLayersJSON): TextmodeLayersJSON {
+	if (!('layers' in document)) {
+		throw new Error('Expected an all-layers JSON document');
+	}
+
+	return document;
+}
 
 function readBlobAsText(blob: Blob): Promise<string> {
 	return new Promise((resolve, reject) => {
@@ -18,7 +44,8 @@ function createLayerMock(
 	characterPixels: Uint8Array,
 	primaryColorPixels: Uint8Array,
 	secondaryColorPixels: Uint8Array,
-	characters: Array<{ character: string; color: [number, number, number] }>
+	characters: Array<{ character: string; color: [number, number, number] }>,
+	options: LayerMockOptions = {}
 ): TextmodeLayer {
 	return {
 		grid: {
@@ -44,6 +71,12 @@ function createLayerMock(
 				}
 			},
 		},
+		_visible: options.visible,
+		_opacity: options.opacity,
+		_blendMode: options.blendMode,
+		_offsetX: options.offsetX,
+		_offsetY: options.offsetY,
+		_rotation: options.rotationZ,
 	} as unknown as TextmodeLayer;
 }
 
@@ -64,7 +97,15 @@ function createTextmodifierMock(): Textmodifier & { testLayer: TextmodeLayer } {
 		Uint8Array.from([88, 0, 0, 0, 89, 0, 0, 0]),
 		Uint8Array.from([10, 20, 30, 255, 40, 50, 60, 255]),
 		Uint8Array.from([70, 80, 90, 255, 100, 110, 120, 255]),
-		characters
+		characters,
+		{
+			visible: false,
+			opacity: 0.5,
+			blendMode: 'screen',
+			offsetX: 3,
+			offsetY: 4,
+			rotationZ: 15,
+		}
 	);
 
 	return {
@@ -84,7 +125,7 @@ describe('JSONExporter', () => {
 
 	it('generates a textmode.layer document with row-based cells by default', () => {
 		const exporter = new JSONExporter();
-		const document = exporter.$generateJSONData(createTextmodifierMock());
+		const document = expectSingleLayerDocument(exporter.$generateJSONData(createTextmodifierMock()));
 
 		expect(document.format).toBe('textmode.layer');
 		expect(document.formatVersion).toBe('1.0.0');
@@ -132,10 +173,12 @@ describe('JSONExporter', () => {
 
 	it('supports rgba colors while keeping the row-based cell layout', () => {
 		const exporter = new JSONExporter();
-		const document = exporter.$generateJSONData(createTextmodifierMock(), {
-			colorMode: 'rgba',
-			includeMetadata: false,
-		});
+		const document = expectSingleLayerDocument(
+			exporter.$generateJSONData(createTextmodifierMock(), {
+				colorMode: 'rgba',
+				includeMetadata: false,
+			})
+		);
 
 		expect(document.metadata).toBeUndefined();
 		expect(document.layer.cells.encoding).toBe('object-rows-v1');
@@ -162,10 +205,12 @@ describe('JSONExporter', () => {
 	it('exports a selected user layer when provided', () => {
 		const exporter = new JSONExporter();
 		const textmodifier = createTextmodifierMock();
-		const document = exporter.$generateJSONData(textmodifier, {
-			layer: textmodifier.testLayer,
-			includeMetadata: false,
-		});
+		const document = expectSingleLayerDocument(
+			exporter.$generateJSONData(textmodifier, {
+				layer: textmodifier.testLayer,
+				includeMetadata: false,
+			})
+		);
 
 		expect(document.layer.id).toBe('layer-1');
 		expect(document.layer.cells.encoding).toBe('object-rows-v1');
@@ -183,6 +228,95 @@ describe('JSONExporter', () => {
 			character: 'Y',
 			foreground: '#28323cff',
 			background: '#646e78ff',
+		});
+	});
+
+	it('exports the full layer stack when target is all', () => {
+		const exporter = new JSONExporter();
+		const document = expectLayerStackDocument(
+			exporter.$generateJSONData(createTextmodifierMock(), {
+				target: 'all',
+				includeMetadata: false,
+			})
+		);
+
+		expect(document.format).toBe('textmode.layer');
+		expect(document.formatVersion).toBe('1.1.0');
+		expect(document.metadata).toBeUndefined();
+		expect(document.canvas).toEqual({ width: 16, height: 16 });
+		expect(document.layers.map((layer) => layer.id)).toEqual(['base', 'layer-1']);
+		expect(document.layers[0]).toMatchObject({
+			id: 'base',
+			visible: true,
+			opacity: 1,
+			blendMode: 'normal',
+			offsetX: 0,
+			offsetY: 0,
+			rotationZ: 0,
+			grid: {
+				cols: 2,
+				rows: 1,
+				cellWidth: 8,
+				cellHeight: 16,
+			},
+		});
+		expect(document.layers[1]).toMatchObject({
+			id: 'layer-1',
+			visible: false,
+			opacity: 0.5,
+			blendMode: 'screen',
+			offsetX: 3,
+			offsetY: 4,
+			rotationZ: 15,
+			grid: {
+				cols: 2,
+				rows: 1,
+				cellWidth: 8,
+				cellHeight: 16,
+			},
+		});
+
+		const userLayerCells = document.layers[1].cells;
+		expect(userLayerCells.encoding).toBe('object-rows-v1');
+
+		if (userLayerCells.encoding !== 'object-rows-v1') {
+			throw new Error('Expected object rows encoding');
+		}
+
+		expect(userLayerCells.rows[0][0]).toMatchObject({
+			character: 'X',
+			foreground: '#0a141eff',
+			background: '#46505aff',
+		});
+		expect(userLayerCells.rows[0][1]).toMatchObject({
+			character: 'Y',
+			foreground: '#28323cff',
+			background: '#646e78ff',
+		});
+	});
+
+	it('applies color mode and metadata options to all layer entries', () => {
+		const exporter = new JSONExporter();
+		const document = expectLayerStackDocument(
+			exporter.$generateJSONData(createTextmodifierMock(), {
+				target: 'all',
+				colorMode: 'rgba',
+			})
+		);
+
+		expect(document.metadata?.generator.name).toBe('textmode.export.js');
+
+		const userLayerCells = document.layers[1].cells;
+		expect(userLayerCells.encoding).toBe('object-rows-v1');
+
+		if (userLayerCells.encoding !== 'object-rows-v1') {
+			throw new Error('Expected object rows encoding');
+		}
+
+		expect(userLayerCells.rows[0][0]).toMatchObject({
+			character: 'X',
+			foreground: { r: 10, g: 20, b: 30, a: 255 },
+			background: { r: 70, g: 80, b: 90, a: 255 },
 		});
 	});
 

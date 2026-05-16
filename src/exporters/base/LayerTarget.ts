@@ -23,6 +23,15 @@ export interface ResolvedLayerExportTarget {
 	drawFramebuffer: TextmodeFramebuffer;
 }
 
+export interface ResolvedLayerStackExportTarget extends ResolvedLayerExportTarget {
+	visible: boolean;
+	opacity: number;
+	blendMode: string;
+	offsetX: number;
+	offsetY: number;
+	rotationZ: number;
+}
+
 export interface LayerTargetOption {
 	id: string;
 	label: string;
@@ -94,4 +103,30 @@ export function resolveLayerExportTarget(textmodifier: Textmodifier, layer?: Tex
 		font,
 		drawFramebuffer,
 	};
+}
+
+export function resolveLayerStackExportTargets(textmodifier: Textmodifier): ResolvedLayerStackExportTarget[] {
+	const layers = [textmodifier.layers.base, ...textmodifier.layers.all];
+
+	return layers.map((layer) => {
+		const target = resolveLayerExportTarget(textmodifier, layer);
+		const internals = layer as {
+			_visible?: boolean;
+			_opacity?: number;
+			_blendMode?: string;
+			_offsetX?: number;
+			_offsetY?: number;
+			_rotation?: number;
+		};
+
+		return {
+			...target,
+			visible: internals._visible ?? true,
+			opacity: internals._opacity ?? 1,
+			blendMode: internals._blendMode ?? 'normal',
+			offsetX: internals._offsetX ?? 0,
+			offsetY: internals._offsetY ?? 0,
+			rotationZ: internals._rotation ?? 0,
+		};
+	});
 }

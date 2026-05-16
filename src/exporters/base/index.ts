@@ -6,10 +6,12 @@ export {
 	getLayerTargetId,
 	getLayerTargetOptions,
 	resolveLayerExportTarget,
+	resolveLayerStackExportTargets,
 } from './LayerTarget';
 export type {
 	LayerExportOptions,
 	LayerTargetOption,
 	LayerTargetProvider,
 	ResolvedLayerExportTarget,
+	ResolvedLayerStackExportTarget,
 } from './LayerTarget';

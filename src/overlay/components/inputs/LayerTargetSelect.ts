@@ -48,6 +48,10 @@ export class LayerTargetSelect extends Component<void> {
 		return this.provider.getLayerById(fallback);
 	}
 
+	setDisabled(disabled: boolean): void {
+		this.select.selectElement.disabled = disabled;
+	}
+
 	refresh(): void {
 		const options = this.provider.getOptions();
 		const currentValue = this.select.isMounted() ? this.select.value : this.provider.getDefaultId();

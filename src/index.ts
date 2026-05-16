@@ -44,7 +44,22 @@ export type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayContr
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
-export type { JSONExportOptions, TextmodeLayerJSON } from './exporters/json';
+export type {
+	JSONCellCollection,
+	JSONCellTransform,
+	JSONColorValue,
+	JSONExportColorMode,
+	JSONExportMetadata,
+	JSONExportOptions,
+	JSONExportTarget,
+	JSONLayerGrid,
+	JSONObjectRowCell,
+	JSONObjectRowsCellCollection,
+	JSONRGBAColor,
+	TextmodeLayerJSON,
+	TextmodeLayersJSON,
+	TextmodeLayersJSONLayer,
+} from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';

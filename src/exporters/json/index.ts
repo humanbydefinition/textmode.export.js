@@ -11,9 +11,13 @@ export type {
 	JSONExportColorMode,
 	JSONExportMetadata,
 	JSONExportOptions,
+	JSONExportTarget,
 	JSONGenerationOptions,
+	JSONLayerGrid,
 	JSONObjectRowCell,
 	JSONObjectRowsCellCollection,
 	JSONRGBAColor,
 	TextmodeLayerJSON,
+	TextmodeLayersJSON,
+	TextmodeLayersJSONLayer,
 } from './types';

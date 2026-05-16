@@ -1,6 +1,11 @@
 import type { LayerExportOptions } from '../base';
 
 /**
+ * Target scope for JSON export.
+ */
+export type JSONExportTarget = 'selected' | 'all';
+
+/**
  * Supported JSON color output modes.
  */
 export type JSONExportColorMode = 'hex' | 'rgba';
@@ -56,6 +61,16 @@ export interface JSONObjectRowsCellCollection {
 export type JSONCellCollection = JSONObjectRowsCellCollection;
 
 /**
+ * Grid dimensions exported for a layer.
+ */
+export interface JSONLayerGrid {
+	cols: number;
+	rows: number;
+	cellWidth: number;
+	cellHeight: number;
+}
+
+/**
  * Optional export metadata.
  */
 export interface JSONExportMetadata {
@@ -78,12 +93,7 @@ export interface TextmodeLayerJSON {
 		width: number;
 		height: number;
 	};
-	grid: {
-		cols: number;
-		rows: number;
-		cellWidth: number;
-		cellHeight: number;
-	};
+	grid: JSONLayerGrid;
 	layer: {
 		id: string;
 		cells: JSONCellCollection;
@@ -91,9 +101,48 @@ export interface TextmodeLayerJSON {
 }
 
 /**
+ * Single layer entry in an all-layers JSON export.
+ */
+export interface TextmodeLayersJSONLayer {
+	id: string;
+	visible: boolean;
+	opacity: number;
+	blendMode: string;
+	offsetX: number;
+	offsetY: number;
+	rotationZ: number;
+	grid: JSONLayerGrid;
+	cells: JSONCellCollection;
+}
+
+/**
+ * Layer stack document exported by the JSON exporter.
+ */
+export interface TextmodeLayersJSON {
+	$schema: string;
+	format: 'textmode.layer';
+	formatVersion: '1.1.0';
+	metadata?: JSONExportMetadata;
+	canvas: {
+		width: number;
+		height: number;
+	};
+	layers: TextmodeLayersJSONLayer[];
+}
+
+/**
  * Options for exporting the textmode content to JSON format.
  */
 export type JSONExportOptions = LayerExportOptions & {
+	/**
+	 * Scope of the JSON export.
+	 *
+	 * Use `'selected'` to export one layer, or `'all'` to export the base layer and every user-created layer.
+	 *
+	 * Defaults to `'selected'`.
+	 */
+	target?: JSONExportTarget;
+
 	/**
 	 * The filename to save the JSON file as.
 	 *
@@ -131,6 +180,7 @@ export type JSONExportOptions = LayerExportOptions & {
  * Internal options used by JSON generation (with all defaults applied).
  */
 export interface JSONGenerationOptions {
+	target: JSONExportTarget;
 	pretty: boolean | number;
 	colorMode: JSONExportColorMode;
 	includeMetadata: boolean;

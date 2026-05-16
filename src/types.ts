@@ -3,7 +3,7 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
-import type { JSONExportOptions, TextmodeLayerJSON } from './exporters/json';
+import type { JSONExportOptions, TextmodeLayerJSON, TextmodeLayersJSON } from './exporters/json';
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
@@ -134,39 +134,42 @@ export interface TextmodeExportAPI {
 	toString(options?: TXTExportOptions): string;
 
 	/**
-	 * Produces the selected layer as structured JSON data.
+	 * Produces the selected layer or layer stack as structured JSON data.
 	 *
 	 * @param options Export options.
-	 * @returns The JSON document representing the selected layer.
+	 * @returns The JSON document representing the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
 	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
+	 * const stack = t.toJSON({ target: 'all' });
 	 * ```
 	 */
-	toJSON(options?: JSONExportOptions): TextmodeLayerJSON;
+	toJSON(options?: JSONExportOptions): TextmodeLayerJSON | TextmodeLayersJSON;
 
 	/**
-	 * Produces the selected layer as a JSON string.
+	 * Produces the selected layer or layer stack as a JSON string.
 	 *
 	 * @param options Export options.
-	 * @returns Serialized JSON string for the selected layer.
+	 * @returns Serialized JSON string for the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
 	 * const json = t.toJSONString({ layer: t.layers.base, pretty: false, colorMode: 'hex' });
+	 * const stackJson = t.toJSONString({ target: 'all' });
 	 * ```
 	 */
 	toJSONString(options?: JSONExportOptions): string;
 
 	/**
-	 * Downloads the selected layer as a JSON file.
+	 * Downloads the selected layer or layer stack as a JSON file.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
 	 * t.saveJSON({ filename: 'frame', layer: t.layers.base, pretty: true });
+	 * t.saveJSON({ filename: 'stack', target: 'all' });
 	 * ```
 	 */
 	saveJSON(options?: JSONExportOptions): void;

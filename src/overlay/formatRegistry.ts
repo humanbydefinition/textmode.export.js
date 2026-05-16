@@ -30,6 +30,7 @@ export function getExportFormatDefinitions(
 					label: 'layer data (.json)',
 					supportsClipboard: true,
 					defaultOptions: {
+						target: 'selected',
 						pretty: true,
 						includeMetadata: true,
 						colorMode: 'hex',
