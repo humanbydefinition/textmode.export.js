@@ -142,7 +142,7 @@ export class VideoExporter {
 	private _currentPixelDensity(): number {
 		const modifier = this._textmodifier as Textmodifier & { pixelDensity?: () => number };
 		const density = modifier.pixelDensity?.();
-		return Number.isFinite(density) && density > 0 ? density : 1;
+		return typeof density === 'number' && Number.isFinite(density) && density > 0 ? density : 1;
 	}
 
 	private _withExtension(filename: string | undefined, extension: `.${VideoExportFormat}`): string | undefined {
