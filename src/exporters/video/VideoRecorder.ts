@@ -1,223 +1,203 @@
-import type { TextmodePluginContext } from 'textmode.js';
-import type { VideoExportProgress, VideoGenerationOptions } from './types';
-import WebMWriter from 'webm-writer';
+import {
+	BufferTarget,
+	CanvasSource,
+	Mp4OutputFormat,
+	Output,
+	WebMOutputFormat,
+	getFirstEncodableVideoCodec,
+	type VideoCodec,
+} from 'mediabunny';
+import { VideoExportError, createAbortError } from './errors';
+import type {
+	VideoBitratePreset,
+	VideoEncodingPlan,
+	VideoExportProgress,
+	VideoFrameDriverLike,
+	VideoGenerationOptions,
+} from './types';
+
+const WEBM_CODEC_PREFERENCES: VideoCodec[] = ['vp9', 'vp8'];
+const MP4_CODEC_PREFERENCES: VideoCodec[] = ['avc'];
 
 /**
- * Records frames from a canvas to create WEBM video files.
- * Captures frames at specified intervals using textmode.js post-draw hooks
- * and encodes them into a WEBM video format.
+ * Records deterministic textmode frames through WebCodecs and muxes them with Mediabunny.
  */
 export class VideoRecorder {
-	/**
-	 * Records a sequence of frames from the provided canvas and encodes them as a WEBM video.
-	 *
-	 * @param canvas - Source canvas to capture frames from
-	 * @param options - Video generation options
-	 * @param registerPostDrawHook - Hook registration function from textmode.js API
-	 * @param onProgress - Optional callback for recording progress updates
-	 * @returns Promise resolving to a Blob containing the encoded WEBM video
-	 * @throws {Error} If frame capture or encoding fails
-	 */
 	public async $record(
-		canvas: HTMLCanvasElement,
 		options: VideoGenerationOptions,
-		registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'],
+		frameDriver: VideoFrameDriverLike,
 		onProgress?: (progress: VideoExportProgress) => void
 	): Promise<Blob> {
-		// Calculate frame parameters
-		const targetFrameRate = Math.max(1, Math.round(options.frameRate));
-		const totalFrames = Math.max(1, Math.round(options.frameCount));
+		this._throwIfAborted(options.signal);
+		this._assertWebCodecsAvailable();
 
-		// Initialize WEBM encoder with quality and transparency settings
-		const writer = new WebMWriter({
-			quality: options.quality,
-			alphaQuality: options.transparent ? options.quality : undefined,
-			transparent: options.transparent,
-			frameRate: targetFrameRate,
+		const plan = await this._createEncodingPlan(options);
+		this._log(options, 'video export plan', plan);
+		this._emitProgress(onProgress, 'recording', 'probing', 0, plan.frameCount);
+
+		const format = plan.format === 'mp4' ? new Mp4OutputFormat() : new WebMOutputFormat();
+		const target = new BufferTarget();
+		const output = new Output({ format, target });
+		const source = new CanvasSource(frameDriver.canvas, {
+			codec: plan.codec,
+			bitrate: plan.bitrate,
+			alpha: plan.transparent ? 'keep' : 'discard',
+			bitrateMode: plan.bitrateMode,
+			latencyMode: plan.latencyMode,
+			hardwareAcceleration: plan.hardwareAcceleration,
+			keyFrameInterval: plan.keyFrameInterval,
+			sizeChangeBehavior: 'deny',
 		});
 
-		// Create reusable canvas snapshot function
-		const snapshotSurface = this._createSnapshotSurface();
+		output.addVideoTrack(source);
 
-		return await new Promise<Blob>((resolve, reject) => {
-			let stopHook: (() => void) | undefined;
-			let state: 'capturing' | 'encoding' = 'capturing';
-			let settled = false; // Prevent multiple resolve/reject calls
-			let framesCaptured = 0;
+		try {
+			await output.start();
 
-			/**
-			 * Cleans up the post-draw hook registration.
-			 */
-			const cleanup = () => {
-				if (stopHook) {
-					stopHook();
-					stopHook = undefined;
-				}
-			};
-
-			/**
-			 * Emits progress update for recording state.
-			 */
-			const emitRecordingProgress = () => {
-				onProgress?.({
-					state: 'recording',
-					frameIndex: framesCaptured,
-					totalFrames,
-				});
-			};
-
-			/**
-			 * Rejects the promise once with an error.
-			 * Ensures idempotent error handling.
-			 */
-			const rejectOnce = (error: unknown) => {
-				if (settled) {
-					return;
-				}
-				settled = true;
-				cleanup();
-				const message = error instanceof Error ? error.message : 'WEBM export failed';
-				onProgress?.({ state: 'error', message });
-				reject(error instanceof Error ? error : new Error(String(error)));
-			};
-
-			/**
-			 * Resolves the promise once with the encoded video blob.
-			 * Ensures idempotent success handling.
-			 */
-			const resolveOnce = (blob: Blob) => {
-				if (settled) {
-					return;
-				}
-				settled = true;
-				onProgress?.({
-					state: 'completed',
-					frameIndex: Math.min(totalFrames, framesCaptured),
-					totalFrames,
-				});
-				resolve(blob);
-			};
-
-			/**
-			 * Transitions from capturing to encoding phase.
-			 * Completes the WEBM writer and resolves with the final blob.
-			 */
-			const beginEncoding = () => {
-				if (state !== 'capturing' || settled) {
-					return;
-				}
-				state = 'encoding';
-				cleanup();
-
-				// Finalize WEBM encoding and retrieve the video blob
-				void writer
-					.complete()
-					.then((blob) => {
-						resolveOnce(blob);
-					})
-					.catch(rejectOnce);
-			};
-
-			/**
-			 * Captures a single frame from the canvas.
-			 * Called via post-draw hook on each render.
-			 */
-			const captureFrame = () => {
-				// Skip if not in capturing state
-				if (state !== 'capturing') {
-					return;
-				}
-
-				// Check if we've captured all required frames
-				if (framesCaptured >= totalFrames) {
-					beginEncoding();
-					return;
-				}
-
-				try {
-					// Capture frame snapshot and add to encoder
-					const frameSource = snapshotSurface(canvas);
-					writer.addFrame(frameSource);
-					framesCaptured += 1;
-					emitRecordingProgress();
-
-					// Begin encoding if we've reached the target frame count
-					if (framesCaptured >= totalFrames) {
-						beginEncoding();
-					}
-				} catch (error) {
-					rejectOnce(error);
-				}
-			};
-
-			// Register the post-draw hook
-			stopHook = registerPostDrawHook(() => {
-				captureFrame();
+			await frameDriver.$render({
+				frameCount: plan.frameCount,
+				frameRate: plan.frameRate,
+				signal: options.signal,
+				onFrame: async ({ frameIndex }) => {
+					this._throwIfAborted(options.signal);
+					await source.add(frameIndex / plan.frameRate, 1 / plan.frameRate);
+					this._emitProgress(onProgress, 'recording', 'rendering', frameIndex + 1, plan.frameCount);
+				},
 			});
 
-			// Send initial progress update
-			emitRecordingProgress();
+			this._throwIfAborted(options.signal);
+			this._emitProgress(onProgress, 'encoding', 'finalizing', plan.frameCount, plan.frameCount);
+			await output.finalize();
+
+			this._emitProgress(onProgress, 'completed', 'finalizing', plan.frameCount, plan.frameCount);
+			if (!target.buffer) {
+				throw new VideoExportError('VIDEO_EXPORT_FAILED', 'Video encoder finalized without producing data.');
+			}
+			return new Blob([target.buffer], { type: plan.mimeType });
+		} catch (error) {
+			const exportError = this._normalizeError(error);
+			onProgress?.({ state: 'error', message: exportError.message });
+			throw exportError;
+		}
+	}
+
+	private async _createEncodingPlan(options: VideoGenerationOptions): Promise<VideoEncodingPlan> {
+		if (options.format === 'mp4' && options.transparent) {
+			throw new VideoExportError(
+				'VIDEO_TRANSPARENCY_UNSUPPORTED',
+				"MP4/H.264 export does not support portable alpha. Use saveVideo({ format: 'webm', transparent: true }) instead."
+			);
+		}
+
+		const width = Math.max(1, Math.round(options.width));
+		const height = Math.max(1, Math.round(options.height));
+		const bitrate = this._resolveBitrate(options.bitrate, width, height, options.frameRate);
+		const format = options.format === 'mp4' ? new Mp4OutputFormat() : new WebMOutputFormat();
+		const codecPreferences = options.format === 'mp4' ? MP4_CODEC_PREFERENCES : WEBM_CODEC_PREFERENCES;
+		const containableCodecs = format
+			.getSupportedVideoCodecs()
+			.filter((codec): codec is VideoCodec => codecPreferences.includes(codec as VideoCodec));
+		const codec = await getFirstEncodableVideoCodec(containableCodecs, {
+			width,
+			height,
+			bitrate,
+		});
+
+		if (!codec) {
+			const requested = codecPreferences.join(' or ');
+			throw new VideoExportError(
+				'VIDEO_CODEC_UNSUPPORTED',
+				`This browser cannot encode ${requested} at ${width}x${height}. Try a browser/device with native WebCodecs encoding support or reduce the export dimensions.`
+			);
+		}
+
+		return {
+			format: options.format,
+			extension: options.format === 'mp4' ? '.mp4' : '.webm',
+			mimeType: format.mimeType,
+			codec,
+			bitrate,
+			bitrateMode: options.bitrateMode,
+			latencyMode: options.latencyMode,
+			hardwareAcceleration: options.hardwareAcceleration,
+			keyFrameInterval: options.keyFrameInterval,
+			frameRate: options.frameRate,
+			frameCount: options.frameCount,
+			width,
+			height,
+			transparent: options.transparent,
+		};
+	}
+
+	private _assertWebCodecsAvailable(): void {
+		const host = globalThis as typeof globalThis & {
+			VideoEncoder?: unknown;
+			VideoFrame?: unknown;
+		};
+
+		if (typeof host.VideoEncoder !== 'function' || typeof host.VideoFrame !== 'function') {
+			throw new VideoExportError(
+				'VIDEO_EXPORT_UNSUPPORTED',
+				'Video export requires native WebCodecs VideoEncoder and VideoFrame support. This browser cannot produce deterministic video exports without a native encoder.'
+			);
+		}
+	}
+
+	private _resolveBitrate(
+		bitrate: number | VideoBitratePreset,
+		width: number,
+		height: number,
+		frameRate: number
+	): number {
+		if (typeof bitrate === 'number' && Number.isFinite(bitrate) && bitrate > 0) {
+			return Math.round(bitrate);
+		}
+
+		const preset = typeof bitrate === 'string' ? bitrate : 'medium';
+		const pixels = width * height;
+		const rateFactor = Math.max(0.5, frameRate / 60);
+		const bitsPerPixel = preset === 'high' ? 6 : preset === 'low' ? 1.5 : 3;
+
+		return Math.max(250_000, Math.round(pixels * rateFactor * bitsPerPixel));
+	}
+
+	private _throwIfAborted(signal?: AbortSignal): void {
+		if (signal?.aborted) {
+			throw createAbortError();
+		}
+	}
+
+	private _emitProgress(
+		onProgress: ((progress: VideoExportProgress) => void) | undefined,
+		state: VideoExportProgress['state'],
+		phase: VideoExportProgress['phase'],
+		frameIndex: number,
+		totalFrames: number
+	): void {
+		onProgress?.({
+			state,
+			phase,
+			frameIndex,
+			frame: frameIndex,
+			totalFrames,
+			progress: totalFrames > 0 ? frameIndex / totalFrames : 0,
 		});
 	}
 
-	/**
-	 * Creates a reusable snapshot function for capturing canvas frames.
-	 * Uses a cached canvas and context to avoid repeated allocations.
-	 *
-	 * @returns Function that takes a canvas and returns a snapshot canvas
-	 */
-	private _createSnapshotSurface(): (currentCanvas: HTMLCanvasElement) => HTMLCanvasElement {
-		// Closure variables for canvas reuse
-		let snapshotCanvas: HTMLCanvasElement | null = null;
-		let snapshotContext: CanvasRenderingContext2D | null = null;
+	private _normalizeError(error: unknown): VideoExportError {
+		if (error instanceof VideoExportError) {
+			return error;
+		}
+		return new VideoExportError(
+			'VIDEO_EXPORT_FAILED',
+			error instanceof Error ? error.message : 'Video export failed.',
+			error
+		);
+	}
 
-		/**
-		 * Ensures snapshot canvas exists with correct dimensions.
-		 * Creates or resizes the canvas as needed.
-		 */
-		const ensureSnapshotSurface = (width: number, height: number) => {
-			// Initialize canvas on first use
-			if (!snapshotCanvas) {
-				snapshotCanvas = document.createElement('canvas');
-			}
-
-			// Resize canvas if dimensions changed
-			if (snapshotCanvas.width !== width || snapshotCanvas.height !== height) {
-				snapshotCanvas.width = width;
-				snapshotCanvas.height = height;
-				snapshotContext = snapshotCanvas.getContext('2d');
-				if (snapshotContext) {
-					snapshotContext.imageSmoothingEnabled = false; // Preserve pixel art quality
-				}
-			} else if (!snapshotContext) {
-				// Initialize context if canvas exists but context doesn't
-				snapshotContext = snapshotCanvas.getContext('2d');
-				if (snapshotContext) {
-					snapshotContext.imageSmoothingEnabled = false; // Preserve pixel art quality
-				}
-			}
-
-			return snapshotContext ? snapshotCanvas : null;
-		};
-
-		/**
-		 * Returns a snapshot of the current canvas.
-		 * Reuses the same canvas buffer across calls for performance.
-		 */
-		return (currentCanvas: HTMLCanvasElement) => {
-			const width = Math.max(1, currentCanvas.width);
-			const height = Math.max(1, currentCanvas.height);
-			const surface = ensureSnapshotSurface(width, height);
-
-			// Fallback to original canvas if snapshot surface unavailable
-			if (!surface || !snapshotContext) {
-				return currentCanvas;
-			}
-
-			// Copy current canvas to snapshot surface
-			snapshotContext.clearRect(0, 0, width, height);
-			snapshotContext.drawImage(currentCanvas, 0, 0, width, height);
-			return surface;
-		};
+	private _log(options: VideoGenerationOptions, ...args: unknown[]): void {
+		if (options.debugLogging) {
+			console.debug('[textmode-export]', ...args);
+		}
 	}
 }

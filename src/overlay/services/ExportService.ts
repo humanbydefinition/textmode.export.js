@@ -75,7 +75,7 @@ export class ExportService {
 					...(options as VideoExportOptions),
 					onProgress: hooks.onVideoProgress,
 				};
-				return this.api.saveWEBM(payload);
+				return this.api.saveVideo(payload);
 			}
 		}
 	}

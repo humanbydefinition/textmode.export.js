@@ -86,17 +86,23 @@ export function getExportFormatDefinitions(
 		},
 		{
 			format: 'video',
-			label: 'video (.webm)',
+			label: 'video (.webm / .mp4)',
 			supportsClipboard: false,
 			createBlade: () =>
 				new VideoBlade({
 					format: 'video',
-					label: 'video (.webm)',
+					label: 'video (.webm / .mp4)',
 					supportsClipboard: false,
 					defaultOptions: {
+						format: 'mp4',
 						frameCount: 480,
 						frameRate: 60,
-						quality: 0.7,
+						bitrate: 'medium',
+						bitrateMode: 'variable',
+						latencyMode: 'quality',
+						hardwareAcceleration: 'no-preference',
+						keyFrameInterval: 2,
+						transparent: false,
 					},
 				}),
 		},

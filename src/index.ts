@@ -21,7 +21,7 @@
  *
  * ### Animation formats
  * - {@link GIFExportOptions | GIF} - Save as animated GIF
- * - {@link VideoExportOptions | WEBM} - Save as video file
+ * - {@link VideoExportOptions | Video} - Save as WebM or MP4 video
  *
  * @module textmode.export.js
  */
@@ -65,7 +65,7 @@ export type {
 	TextmodeSelectedDocumentLayer,
 } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
-export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
+export type { VideoExportErrorCode, VideoExportOptions, VideoExportProgress } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
 
 type TextmodifierWithExportInternals = Textmodifier &
@@ -220,13 +220,13 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 
 			/**
-			 * Saves the current canvas as a WEBM video file
+			 * Saves the current canvas as an MP4/H.264 video file
 			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the file is saved
 			 */
-			saveWEBM: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveWEBM(options);
+			saveVideo: async (options: VideoExportOptions = {}) => {
+				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveVideo(options);
 			},
 		};
 
@@ -281,7 +281,7 @@ export const ExportPlugin: TextmodePlugin = {
 			'toJSONString',
 			'saveJSON',
 			'saveGIF',
-			'saveWEBM',
+			'saveVideo',
 		];
 
 		for (const key of exportApiKeys) {
