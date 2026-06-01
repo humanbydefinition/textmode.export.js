@@ -47,7 +47,7 @@
 	},
 	"dependencies": {
 		"gifenc": "^1.0.1",
-		"webm-writer": "^1.0.0"
+		"mediabunny": "^1.45.4"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^20.5.0",
