@@ -5,11 +5,11 @@ import {
 	Output,
 	WebMOutputFormat,
 	getFirstEncodableVideoCodec,
-	type VideoCodec,
 } from 'mediabunny';
 import { VideoExportError, createAbortError } from './errors';
 import type {
 	VideoBitratePreset,
+	VideoCodec,
 	VideoEncodingPlan,
 	VideoExportProgress,
 	VideoFrameDriverLike,

@@ -6,6 +6,10 @@
 		"lib": ["ES2022", "DOM", "DOM.Iterable"],
 		"types": ["vite/client", "node"],
 		"moduleResolution": "bundler",
+		"baseUrl": ".",
+		"paths": {
+			"mediabunny": ["src/types/mediabunny.d.ts"]
+		},
 		"allowImportingTsExtensions": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,

@@ -1,8 +1,8 @@
-import type { VideoCodec } from 'mediabunny';
-
 export type VideoRecordingState = 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 
 export type VideoExportPhase = 'probing' | 'rendering' | 'encoding' | 'finalizing';
+
+export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
 
 /**
  * Subjective bitrate preset used when an exact bits-per-second value is not supplied.
