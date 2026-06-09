@@ -65,7 +65,18 @@ export type {
 	TextmodeSelectedDocumentLayer,
 } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
-export type { VideoExportErrorCode, VideoExportOptions, VideoExportProgress } from './exporters/video';
+export type {
+	VideoBitrateMode,
+	VideoBitratePreset,
+	VideoExportErrorCode,
+	VideoExportFormat,
+	VideoExportOptions,
+	VideoExportPhase,
+	VideoExportProgress,
+	VideoHardwareAcceleration,
+	VideoLatencyMode,
+	VideoRecordingState,
+} from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
 
 type TextmodifierWithExportInternals = Textmodifier &

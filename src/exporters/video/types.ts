@@ -1,5 +1,11 @@
+/**
+ * Lifecycle state reported while a video export is being prepared, recorded, encoded, or completed.
+ */
 export type VideoRecordingState = 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 
+/**
+ * More granular phase information for progress UIs that need to distinguish setup, rendering, and finalization.
+ */
 export type VideoExportPhase = 'probing' | 'rendering' | 'encoding' | 'finalizing';
 
 export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
@@ -12,6 +18,9 @@ export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
  */
 export type VideoBitratePreset = 'low' | 'medium' | 'high';
 
+/**
+ * Video container format written by `saveVideo`.
+ */
 export type VideoExportFormat = 'webm' | 'mp4';
 
 /**
