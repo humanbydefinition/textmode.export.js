@@ -52,6 +52,9 @@ export interface ExportOverlayController {
 
 /**
  * Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
+ *
+ * @example
+ * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
  */
 export interface TextmodeExportAPI {
 	/**

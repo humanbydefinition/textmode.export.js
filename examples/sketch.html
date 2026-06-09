@@ -12,22 +12,24 @@
 			import * as exportModule from 'textmode.export.js';
 
 			const params = new URLSearchParams(window.location.search);
-			const examplePath = params.get('path');
+			const rawPath = params.get('path');
+			const group = params.get('group');
+			const entry = params.get('entry');
 			const isEmbeddedPreview = window.self !== window.top;
 			const validSegment = /^[A-Za-z0-9_.-]+$/;
+			const MANIFEST_URL = './manifest.json';
 
-			const EXAMPLES = {
-				'ExportPlugin/init': {
-					title: 'ExportPlugin.init',
-					subtitle:
-						'Installs ExportPlugin on a live textmode sketch and exposes the export overlay plus runtime helpers.',
-				},
-				'ExportPlugin/layerTargets': {
-					title: 'ExportPlugin.layerTargets',
-					subtitle:
-						'Builds a multi-layer sketch for checking selected-layer TXT, JSON, and SVG export targets.',
-				},
-			};
+			function resolveExamplePath() {
+				if (rawPath) {
+					return rawPath;
+				}
+
+				if (group && entry) {
+					return `${group}/${entry}`;
+				}
+
+				return null;
+			}
 
 			function isValidPath(path) {
 				const segments = path.split('/');
@@ -50,10 +52,62 @@
 				`;
 			}
 
-			if (!examplePath || !isValidPath(examplePath) || !(examplePath in EXAMPLES)) {
-				showError('Invalid example path.');
-			} else {
-				const example = EXAMPLES[examplePath];
+			function getExamplePath(sourceFile) {
+				if (!sourceFile.startsWith('examples/') || !sourceFile.endsWith('/sketch.js')) {
+					return null;
+				}
+
+				return sourceFile.slice('examples/'.length, -'/sketch.js'.length);
+			}
+
+			function findExample(manifest, examplePath) {
+				for (const manifestGroup of manifest.groups || []) {
+					for (const manifestExample of manifestGroup.examples || []) {
+						if (getExamplePath(manifestExample.sourceFile) === examplePath) {
+							return {
+								title: manifestExample.title,
+								subtitle: manifestExample.description || manifestGroup.description || '',
+							};
+						}
+					}
+				}
+
+				return null;
+			}
+
+			async function loadManifest() {
+				const response = await fetch(MANIFEST_URL);
+
+				if (!response.ok) {
+					throw new Error(`Unable to load examples manifest (${response.status}).`);
+				}
+
+				return response.json();
+			}
+
+			async function bootstrapSketch() {
+				const examplePath = resolveExamplePath();
+
+				if (!examplePath || !isValidPath(examplePath)) {
+					showError('Invalid example path.');
+					return;
+				}
+
+				let example;
+
+				try {
+					example = findExample(await loadManifest(), examplePath);
+				} catch (error) {
+					console.error(error);
+					showError('Unable to load examples manifest.');
+					return;
+				}
+
+				if (!example) {
+					showError('Invalid example path.');
+					return;
+				}
+
 				document.title = `textmode.export.js - ${example.title}`;
 
 				document.body.innerHTML = `
@@ -91,6 +145,8 @@
 				script.onerror = () => showError(`Unable to load ${examplePath}.`);
 				document.body.appendChild(script);
 			}
+
+			bootstrapSketch();
 		</script>
 	</body>
 </html>

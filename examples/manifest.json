@@ -1,0 +1,22 @@
+{
+	"version": 1,
+	"description": "Export plugin examples for textmode.js export workflows.",
+	"groups": [
+		{
+			"name": "ExportPlugin",
+			"description": "Plugin installation, overlay controls, export helpers, and layer-targeted exports.",
+			"examples": [
+				{
+					"title": "ExportPlugin.init",
+					"sourceFile": "examples/ExportPlugin/init/sketch.js",
+					"description": "Creates a textmode sketch with ExportPlugin installed and a live overlay ready for manual export flows."
+				},
+				{
+					"title": "ExportPlugin.layerTargets",
+					"sourceFile": "examples/ExportPlugin/layerTargets/sketch.js",
+					"description": "Draws base, foreground, and annotation layers so TXT, JSON, and SVG exports can target individual layers."
+				}
+			]
+		}
+	]
+}
