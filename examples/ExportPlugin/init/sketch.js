@@ -2,7 +2,7 @@
  * @title ExportPlugin.init
  * @author humanbydefinition
  */
-const tm = textmode.create({
+const t = textmode.create({
 	canvas: document.getElementById('textmode-canvas'),
 	width: window.innerWidth,
 	height: window.innerHeight,
@@ -12,17 +12,17 @@ const tm = textmode.create({
 
 console.log(textmode.version);
 
-tm.draw(() => {
-	tm.background(0);
+t.draw(() => {
+	t.background(0);
 
-	const time = tm.frameCount * 0.01;
+	const time = t.frameCount * 0.01;
 	const step = 3;
 
-	tm.translate(-tm.grid.cols / 2, -tm.grid.rows / 2, 0);
+	t.translate(-t.grid.cols / 2, -t.grid.rows / 2, 0);
 
-	for (let y = 0; y < tm.grid.rows; y += step) {
-		for (let x = 0; x < tm.grid.cols; x += step) {
-			tm.push();
+	for (let y = 0; y < t.grid.rows; y += step) {
+		for (let x = 0; x < t.grid.cols; x += step) {
+			t.push();
 
 			// Calculate distance from center (center is now at 0,0,0)
 			const distance = Math.sqrt(x ** 2 + y ** 2);
@@ -36,30 +36,30 @@ tm.draw(() => {
 
 			// Map to characters based on wave intensity
 			if (combined > 0.7) {
-				tm.char('#');
-				tm.charColor(255, 200, 100);
+				t.char('#');
+				t.charColor(255, 200, 100);
 			} else if (combined > 0.5) {
-				tm.char('@');
-				tm.charColor(200, 150, 255);
+				t.char('@');
+				t.charColor(200, 150, 255);
 			} else if (combined > 0.3) {
-				tm.char('%');
-				tm.charColor(100, 255, 200);
+				t.char('%');
+				t.charColor(100, 255, 200);
 			} else if (combined > 0.1) {
-				tm.char('.');
-				tm.charColor(150, 100, 255);
+				t.char('.');
+				t.charColor(150, 100, 255);
 			} else {
-				tm.char(' ');
+				t.char(' ');
 			}
 
-			tm.cellColor(0, 0, 0);
-			tm.translate(x, y, 0);
-			tm.rect(step, step);
+			t.cellColor(0, 0, 0);
+			t.translate(x, y, 0);
+			t.rect(step, step);
 
-			tm.pop();
+			t.pop();
 		}
 	}
 });
 
-tm.windowResized(() => {
-	tm.resizeCanvas(window.innerWidth, window.innerHeight);
+t.windowResized(() => {
+	t.resizeCanvas(window.innerWidth, window.innerHeight);
 });

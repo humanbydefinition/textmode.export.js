@@ -21,7 +21,7 @@
  *
  * ### Animation formats
  * - {@link GIFExportOptions | GIF} - Save as animated GIF
- * - {@link VideoExportOptions | WEBM} - Save as video file
+ * - {@link VideoExportOptions | Video} - Save as WebM or MP4 video
  *
  * @module textmode.export.js
  */
@@ -65,7 +65,18 @@ export type {
 	TextmodeSelectedDocumentLayer,
 } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
-export type { VideoExportOptions, VideoExportProgress } from './exporters/video';
+export type {
+	VideoBitrateMode,
+	VideoBitratePreset,
+	VideoExportErrorCode,
+	VideoExportFormat,
+	VideoExportOptions,
+	VideoExportPhase,
+	VideoExportProgress,
+	VideoHardwareAcceleration,
+	VideoLatencyMode,
+	VideoRecordingState,
+} from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
 
 type TextmodifierWithExportInternals = Textmodifier &
@@ -81,31 +92,7 @@ type TextmodifierWithExportInternals = Textmodifier &
  * access to all export options, which can be controlled at runtime.
  *
  * @example
- * ```js
- * import { textmode } from 'textmode.js';
- * import { ExportPlugin } from 'textmode.export.js';
- *
- * const t = textmode.create({
- *     plugins: [ExportPlugin]
- * });
- *
- * t.draw(() => {
- *     t.background(0);
- *     t.char('A');
- *     t.rotateZ(t.frameCount);
- *     t.rect(16, 16);
- * });
- *
- * // Export methods are now available
- * t.saveCanvas({ format: 'png', scale: 2.0 });
- * t.saveSVG({ filename: 'my-artwork' });
- * t.saveGIF({ duration: 3, fps: 30 });
- *
- * // Control overlay visibility at runtime
- * t.exportOverlay.hide();  // Hide the overlay
- * t.exportOverlay.show();  // Show the overlay
- * t.exportOverlay.toggle(); // Toggle visibility
- * ```
+ * {@includeCode ../examples/ExportPlugin/init/sketch.js}
  */
 export const ExportPlugin: TextmodePlugin = {
 	name: 'textmode.export',
@@ -220,13 +207,13 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 
 			/**
-			 * Saves the current canvas as a WEBM video file
+			 * Saves the current canvas as an MP4/H.264 video file
 			 *
 			 * @param options Export options
 			 * @returns Promise that resolves when the file is saved
 			 */
-			saveWEBM: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveWEBM(options);
+			saveVideo: async (options: VideoExportOptions = {}) => {
+				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveVideo(options);
 			},
 		};
 
@@ -281,7 +268,7 @@ export const ExportPlugin: TextmodePlugin = {
 			'toJSONString',
 			'saveJSON',
 			'saveGIF',
-			'saveWEBM',
+			'saveVideo',
 		];
 
 		for (const key of exportApiKeys) {

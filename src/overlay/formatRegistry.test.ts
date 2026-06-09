@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { TextmodeLayer } from 'textmode.js';
 import type { LayerTargetProvider } from '../exporters/base';
 import { getExportFormatDefinitions } from './formatRegistry';
+import { EventBus } from './core/EventBus';
+import { ExportService } from './services/ExportService';
+import type { OverlayEvents } from './models/OverlayEvents';
+import type { TextmodeExportAPI } from '../types';
 
 describe('getExportFormatDefinitions', () => {
 	it('adds layer targeting only to layer-data formats', () => {
@@ -79,5 +83,81 @@ describe('getExportFormatDefinitions', () => {
 		expect(hiddenAncestorFound).toBe(true);
 
 		blade.destroy();
+	});
+
+	it('groups WebM and MP4 into a single video definition', () => {
+		const definitions = getExportFormatDefinitions();
+		const videoDefinitions = definitions.filter((definition) => definition.format === 'video');
+
+		expect(videoDefinitions).toHaveLength(1);
+		expect(definitions.some((definition) => String(definition.format) === 'mp4')).toBe(false);
+		expect(videoDefinitions[0]?.label).toBe('video (.webm / .mp4)');
+	});
+
+	it('returns curated video options and hides transparency for MP4', () => {
+		const definition = getExportFormatDefinitions().find((candidate) => candidate.format === 'video');
+
+		if (!definition) {
+			throw new Error('Expected video export definition');
+		}
+
+		const container = document.createElement('div');
+		const blade = definition.createBlade();
+		blade.mount(container);
+
+		expect(blade.getOptions()).toMatchObject({
+			format: 'mp4',
+			bitrate: 'medium',
+			bitrateMode: 'variable',
+			latencyMode: 'quality',
+			hardwareAcceleration: 'no-preference',
+			keyFrameInterval: 2,
+		});
+		expect((blade.getOptions() as { transparent?: boolean }).transparent).toBeUndefined();
+
+		const formatSelect = container.querySelector<HTMLSelectElement>('#textmode-export-video-format');
+		const bitrateSelect = container.querySelector<HTMLSelectElement>('#textmode-export-video-bitrate');
+		const transparentCheckbox = container.querySelector<HTMLInputElement>('#textmode-export-video-transparent');
+
+		expect(formatSelect).not.toBeNull();
+		expect(bitrateSelect).not.toBeNull();
+		expect(transparentCheckbox).not.toBeNull();
+
+		if (!formatSelect || !bitrateSelect || !transparentCheckbox) {
+			throw new Error('Expected video controls');
+		}
+
+		expect(transparentCheckbox.disabled).toBe(true);
+
+		formatSelect.value = 'webm';
+		formatSelect.dispatchEvent(new Event('change'));
+		bitrateSelect.value = 'high';
+		transparentCheckbox.checked = true;
+
+		expect(blade.getOptions()).toMatchObject({
+			format: 'webm',
+			bitrate: 'high',
+			transparent: true,
+		});
+		expect(transparentCheckbox.disabled).toBe(false);
+
+		blade.destroy();
+	});
+
+	it('uses saveVideo for unified video exports', async () => {
+		const api = {
+			saveVideo: vi.fn(async () => undefined),
+		} as unknown as TextmodeExportAPI;
+		const service = new ExportService(api, new EventBus<OverlayEvents>());
+
+		await service.$requestExport('video', { format: 'webm', frameCount: 12 });
+
+		expect(api.saveVideo).toHaveBeenCalledWith(
+			expect.objectContaining({
+				format: 'webm',
+				frameCount: 12,
+				onProgress: expect.any(Function),
+			})
+		);
 	});
 });

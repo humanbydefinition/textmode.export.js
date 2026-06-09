@@ -52,6 +52,9 @@ export interface ExportOverlayController {
 
 /**
  * Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
+ *
+ * @example
+ * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
  */
 export interface TextmodeExportAPI {
 	/**
@@ -187,16 +190,25 @@ export interface TextmodeExportAPI {
 	saveGIF(options?: GIFExportOptions): Promise<void>;
 
 	/**
-	 * Captures a WEBM video and saves it to disk.
+	 * Captures a video and saves it to disk *(`'mp4'` by default)*.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
-	 * await t.saveWEBM({ frameCount: 240, frameRate: 60, filename: 'capture' });
+	 * await t.saveVideo({ frameCount: 240, frameRate: 60, filename: 'capture' });
+	 * await t.saveVideo({
+	 *     format: 'webm',
+	 *     bitrate: 'high',
+	 *     bitrateMode: 'variable',
+	 *     latencyMode: 'quality',
+	 *     keyFrameInterval: 2,
+	 *     frameCount: 240,
+	 *     filename: 'capture',
+	 * });
 	 * ```
 	 */
-	saveWEBM(options?: VideoExportOptions): Promise<void>;
+	saveVideo(options?: VideoExportOptions): Promise<void>;
 }
 
 /**

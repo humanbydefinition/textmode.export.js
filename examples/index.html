@@ -80,34 +80,61 @@
 		</div>
 
 		<script>
-			const GROUPS = [
-				{
-					name: 'ExportPlugin',
-					description:
-						'Plugin installation and runtime export helpers for images, SVG, text, GIF, WEBM, and the overlay UI.',
-					entries: [
-						{
-							name: 'init',
-							path: 'ExportPlugin/init',
-							description:
-								'Creates a textmode sketch with ExportPlugin installed and a live overlay ready for manual export flows.',
-						},
-						{
-							name: 'layerTargets',
-							path: 'ExportPlugin/layerTargets',
-							description:
-								'Draws base, foreground, and annotation layers so TXT, JSON, and SVG exports can target individual layers.',
-						},
-					],
-				},
-			];
+			const MANIFEST_URL = './manifest.json';
+			const container = document.getElementById('examples');
+			const searchInput = document.getElementById('search');
 
-			function getExampleHref(entry) {
-				return `./sketch.html?path=${encodeURIComponent(entry.path)}`;
+			function escapeHtml(value) {
+				return String(value).replace(/[&<>"']/g, (char) => {
+					return {
+						'&': '&amp;',
+						'<': '&lt;',
+						'>': '&gt;',
+						'"': '&quot;',
+						"'": '&#39;',
+					}[char];
+				});
+			}
+
+			function getExamplePath(sourceFile) {
+				if (!sourceFile.startsWith('examples/') || !sourceFile.endsWith('/sketch.js')) {
+					throw new Error(`Invalid example source file: ${sourceFile}`);
+				}
+
+				return sourceFile.slice('examples/'.length, -'/sketch.js'.length);
+			}
+
+			function getExampleName(examplePath) {
+				const segments = examplePath.split('/');
+				return segments[segments.length - 1];
+			}
+
+			function normalizeManifest(manifest) {
+				if (!Array.isArray(manifest.groups)) {
+					throw new Error('Examples manifest is missing a groups array.');
+				}
+
+				return manifest.groups.map((group) => ({
+					name: group.name,
+					description: group.description,
+					entries: group.examples.map((example) => {
+						const path = getExamplePath(example.sourceFile);
+
+						return {
+							name: getExampleName(path),
+							path,
+							title: example.title,
+							description: example.description || group.description || '',
+						};
+					}),
+				}));
+			}
+
+			function getExampleHref(examplePath) {
+				return `./sketch.html?path=${encodeURIComponent(examplePath)}`;
 			}
 
 			function render(groups) {
-				const container = document.getElementById('examples');
 				container.innerHTML = '';
 
 				groups.forEach((group) => {
@@ -118,16 +145,18 @@
 
 					section.innerHTML = `
 						<div class="flex items-center gap-3 px-4 py-3 border-b border-zinc-800 bg-zinc-900/60">
-							<h2 class="text-sm font-medium text-zinc-100 tracking-tight">${group.name}</h2>
-							<span class="text-xs text-zinc-600 hidden sm:block">${group.description}</span>
+							<h2 class="text-sm font-medium text-zinc-100 tracking-tight">${escapeHtml(group.name)}</h2>
+							<span class="text-xs text-zinc-600 hidden sm:block">${escapeHtml(group.description)}</span>
 							<span class="ml-auto text-xs text-zinc-600 tabular-nums" data-count>${group.entries.length}</span>
 						</div>
 						<div class="px-4 py-3 flex flex-wrap gap-1.5" data-entries>
 							${group.entries
-								.map(
-									(entry) =>
-										`<a href="${getExampleHref(entry)}" class="entry-badge" data-entry="${entry.name.toLowerCase()}" data-entry-name="${entry.name}" data-entry-description="${entry.description}" aria-expanded="false">${entry.name}</a>`
-								)
+								.map((entry) => {
+									const name = escapeHtml(entry.name);
+									const title = escapeHtml(entry.title);
+									const description = escapeHtml(entry.description);
+									return `<a href="${escapeHtml(getExampleHref(entry.path))}" class="entry-badge" data-entry="${escapeHtml(entry.name.toLowerCase())}" data-entry-name="${name}" data-entry-title="${escapeHtml(entry.title.toLowerCase())}" data-entry-description="${description}" aria-expanded="false" title="${title}">${name}</a>`;
+								})
 								.join('')}
 						</div>
 						<div class="example-preview" data-preview hidden>
@@ -143,13 +172,19 @@
 								</div>
 							</div>
 							<div class="example-preview-frame-wrap">
-								<iframe class="example-preview-frame" data-preview-frame loading="lazy" title="${group.name} example preview"></iframe>
+								<iframe class="example-preview-frame" data-preview-frame loading="lazy" title="${escapeHtml(group.name)} example preview"></iframe>
 							</div>
 						</div>
 					`;
 
 					container.appendChild(section);
 				});
+
+				filterExamples();
+			}
+
+			function showGalleryState(message) {
+				container.innerHTML = `<p class="text-xs text-zinc-600">${escapeHtml(message)}</p>`;
 			}
 
 			function closePreview(section) {
@@ -174,7 +209,6 @@
 				const link = section.querySelector('[data-preview-link]');
 				const currentActive = section.querySelector('.entry-badge.is-active');
 				const href = badge.getAttribute('href');
-				const groupName = section.dataset.groupName;
 				const entryName = badge.dataset.entryName;
 
 				document.querySelectorAll('#examples > div').forEach((otherSection) => {
@@ -190,16 +224,14 @@
 
 				badge.classList.add('is-active');
 				badge.setAttribute('aria-expanded', 'true');
-				title.textContent = `${groupName}.${entryName}`;
+				title.textContent = badge.title || entryName;
 				description.textContent = badge.dataset.entryDescription || '';
 				link.href = href;
 				frame.src = href;
 				preview.hidden = false;
 			}
 
-			render(GROUPS);
-
-			document.getElementById('examples').addEventListener('click', (event) => {
+			container.addEventListener('click', (event) => {
 				const closeButton = event.target.closest('[data-preview-close]');
 				if (closeButton) {
 					closePreview(closeButton.closest('[data-group]'));
@@ -226,8 +258,8 @@
 				openPreview(section, badge);
 			});
 
-			document.getElementById('search').addEventListener('input', function () {
-				const q = this.value.trim().toLowerCase();
+			function filterExamples() {
+				const q = searchInput.value.trim().toLowerCase();
 
 				document.querySelectorAll('#examples > div').forEach((section) => {
 					const badges = section.querySelectorAll('.entry-badge');
@@ -236,9 +268,14 @@
 
 					badges.forEach((badge) => {
 						const entryName = badge.dataset.entry;
+						const entryTitle = badge.dataset.entryTitle || '';
 						const entryDescription = (badge.dataset.entryDescription || '').toLowerCase();
 						const match =
-							!q || entryName.includes(q) || groupName.includes(q) || entryDescription.includes(q);
+							!q ||
+							entryName.includes(q) ||
+							entryTitle.includes(q) ||
+							groupName.includes(q) ||
+							entryDescription.includes(q);
 						badge.classList.toggle('hidden-entry', !match);
 						if (match) visible++;
 					});
@@ -257,7 +294,28 @@
 
 					section.style.display = visible === 0 ? 'none' : '';
 				});
-			});
+			}
+
+			searchInput.addEventListener('input', filterExamples);
+
+			async function bootstrapGallery() {
+				showGalleryState('Loading examples...');
+
+				try {
+					const response = await fetch(MANIFEST_URL);
+
+					if (!response.ok) {
+						throw new Error(`Unable to load examples manifest (${response.status}).`);
+					}
+
+					render(normalizeManifest(await response.json()));
+				} catch (error) {
+					console.error(error);
+					showGalleryState('Unable to load examples manifest.');
+				}
+			}
+
+			bootstrapGallery();
 		</script>
 	</body>
 </html>
