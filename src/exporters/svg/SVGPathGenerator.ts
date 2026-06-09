@@ -174,7 +174,7 @@ export class SVGPathGenerator {
 			return null;
 		}
 
-		const fontData = font.font;
+		const fontData = font.font as TyprFont;
 		const scale = fontSize / fontData.head.unitsPerEm;
 
 		// Horizontal centering (same as before)
