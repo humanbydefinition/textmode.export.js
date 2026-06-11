@@ -16,6 +16,10 @@ export function createAbortError(): VideoExportError {
 	return new VideoExportError('VIDEO_EXPORT_ABORTED', 'Video export was cancelled.');
 }
 
+export function createTimeoutError(message: string, cause?: unknown): VideoExportError {
+	return new VideoExportError('VIDEO_EXPORT_TIMEOUT', message, cause);
+}
+
 export function isAbortError(error: unknown): boolean {
 	if (error instanceof VideoExportError) {
 		return error.code === 'VIDEO_EXPORT_ABORTED';

@@ -5,8 +5,10 @@ export type VideoRecordingState = 'idle' | 'recording' | 'encoding' | 'completed
 
 /**
  * More granular phase information for progress UIs that need to distinguish setup, rendering, and finalization.
+ *
+ * `rendering` is retained for 1.5.x compatibility. Current deterministic video capture emits `capturing`.
  */
-export type VideoExportPhase = 'probing' | 'rendering' | 'encoding' | 'finalizing';
+export type VideoExportPhase = 'probing' | 'rendering' | 'capturing' | 'encoding' | 'draining' | 'finalizing';
 
 export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
 
@@ -57,6 +59,7 @@ export type VideoExportErrorCode =
 	| 'VIDEO_EXPORT_UNSUPPORTED'
 	| 'VIDEO_CODEC_UNSUPPORTED'
 	| 'VIDEO_EXPORT_ABORTED'
+	| 'VIDEO_EXPORT_TIMEOUT'
 	| 'VIDEO_EXPORT_FAILED'
 	| 'VIDEO_TRANSPARENCY_UNSUPPORTED';
 

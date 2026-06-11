@@ -1,6 +1,9 @@
 import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
 import { createAbortError } from './errors';
 import type { VideoRenderFrameOptions } from './types';
+import { withAbortableTimeout } from './withAbortableTimeout';
+
+const FRAME_RENDER_TIMEOUT_MS = 30_000;
 
 type VideoTextmodifier = Textmodifier & {
 	frameCount: number;
@@ -102,7 +105,7 @@ export class VideoFrameDriver {
 				this._syntheticFrameCount = originalFrameCount + frameIndex + 1;
 				this._syntheticMillis = (frameIndex * 1000) / frameRate;
 
-				await this._renderOneFrame(frameIndex);
+				await this._renderOneFrame(frameIndex, options.signal);
 				this._throwIfAborted(options.signal);
 				await options.onFrame({ frameIndex, canvas: this.canvas });
 			}
@@ -125,20 +128,36 @@ export class VideoFrameDriver {
 		}
 	}
 
-	private _renderOneFrame(frameIndex: number): Promise<void> {
+	private _renderOneFrame(frameIndex: number, signal?: AbortSignal): Promise<void> {
 		if (this._pendingFrame) {
 			throw new Error('A video export frame is already pending.');
 		}
 
 		const textmodifier = this._textmodifier;
-		return new Promise((resolve, reject) => {
-			this._pendingFrame = { frameIndex, resolve, reject };
+		const renderPromise = new Promise<void>((resolve, reject) => {
+			this._pendingFrame = {
+				frameIndex,
+				resolve,
+				reject,
+			};
 			try {
 				textmodifier.redraw(1);
 			} catch (error) {
 				this._pendingFrame = null;
 				reject(error);
 			}
+		});
+
+		return withAbortableTimeout(
+			renderPromise,
+			`Video export frame ${frameIndex + 1} did not render within ${FRAME_RENDER_TIMEOUT_MS}ms.`,
+			signal,
+			FRAME_RENDER_TIMEOUT_MS
+		).catch((error: unknown) => {
+			if (this._pendingFrame?.frameIndex === frameIndex) {
+				this._pendingFrame = null;
+			}
+			throw error;
 		});
 	}
 
