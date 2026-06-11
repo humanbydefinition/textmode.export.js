@@ -30,7 +30,7 @@ function createCanvas(width = 800, height = 600): HTMLCanvasElement {
 	return canvas;
 }
 
-function createHarness() {
+function createHarness({ autoPostDraw = true }: { autoPostDraw?: boolean } = {}) {
 	const sourceCanvas = createCanvas();
 	let postDrawHook: PostDrawHook | undefined;
 
@@ -47,7 +47,9 @@ function createHarness() {
 			this.looping = true;
 		}),
 		redraw: vi.fn(function (this: FakeTextmodifier) {
-			postDrawHook?.();
+			if (autoPostDraw) {
+				postDrawHook?.();
+			}
 		}),
 		isLooping: vi.fn(function (this: FakeTextmodifier) {
 			return this.looping;
@@ -91,6 +93,7 @@ describe('VideoFrameDriver', () => {
 	});
 
 	afterEach(() => {
+		vi.useRealTimers();
 		getContextSpy.mockRestore();
 	});
 
@@ -197,5 +200,23 @@ describe('VideoFrameDriver', () => {
 		expect(textmodifier.noLoop).toHaveBeenCalledTimes(2);
 		expect(textmodifier.loop).not.toHaveBeenCalled();
 		expect(textmodifier.looping).toBe(false);
+	});
+
+	it('times out a missing post-draw frame and restores textmodifier state', async () => {
+		vi.useFakeTimers();
+		const { textmodifier, registerPostDrawHook } = createHarness({ autoPostDraw: false });
+		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+
+		const renderPromise = driver.$render({ frameCount: 1, frameRate: 60, onFrame: () => undefined });
+		const expectation = expect(renderPromise).rejects.toMatchObject({
+			code: 'VIDEO_EXPORT_TIMEOUT',
+		});
+		await Promise.resolve();
+		await vi.advanceTimersByTimeAsync(30_000);
+
+		await expectation;
+		expect(textmodifier.frameCount).toBe(7);
+		expect(textmodifier.millis).toBe(1234);
+		expect(textmodifier.looping).toBe(true);
 	});
 });
