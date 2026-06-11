@@ -13,7 +13,7 @@
 - JSON document data (`.json`)
 - Image files (`.png`, `.jpg`, `.webp`)
 - Animated image files (`.gif`)
-- Video files (`.webm`)
+- Video files (`.webm`, `.mp4`)
 - Scalable vector graphics (`.svg`)
 
 Besides exporting programatically, `textmode.export.js` also provides an overlay UI for users to easily export their creations.
@@ -166,6 +166,6 @@ Now that you have `textmode.export.js` set up, you can explore the following res
 
 ## Acknowledgements
 
-`textmode.export.js` packages [`webm-writer-js`](https://github.com/thenickdude/webm-writer-js) by [**Nicholas Sherlock**](https://github.com/thenickdude) to provide WebM video export support. `webm-writer-js` is distributed under the [**WTFPL v2**](https://en.wikipedia.org/wiki/WTFPL) license.
+`textmode.export.js` packages [`mediabunny`](https://github.com/Vanilagy/mediabunny) by [**Vanilagy**](https://github.com/Vanilagy) to provide WebM and MP4 video export support via WebCodecs. `mediabunny` is distributed under the [**MPL-2.0**](https://www.mozilla.org/en-US/MPL/2.0/) license.
 
 Animated GIF export relies on [`gifenc`](https://github.com/mattdesl/gifenc) by [**Matt DesLauriers**](https://github.com/mattdesl), available under the [**MIT License**](https://opensource.org/licenses/MIT).
