@@ -28,6 +28,7 @@
 
 import type { Textmodifier } from 'textmode.js';
 import type { TextmodePlugin, TextmodePluginContext } from 'textmode.js';
+import './augmentations';
 import { SVGExporter, type SVGExportOptions } from './exporters/svg';
 import { ImageExporter, type ImageExportOptions } from './exporters/image';
 import { TXTExporter, type TXTExportOptions } from './exporters/txt';
