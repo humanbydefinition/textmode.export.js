@@ -7,6 +7,8 @@ import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController | ExportOverlayController API reference}
  */
 export interface ExportOverlayController {
 	/**
@@ -16,6 +18,8 @@ export interface ExportOverlayController {
 	 * ```ts
 	 * t.exportOverlay.show();
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/show | ExportOverlayController.show API reference}
 	 */
 	show(): void;
 
@@ -26,6 +30,8 @@ export interface ExportOverlayController {
 	 * ```ts
 	 * t.exportOverlay.hide();
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/hide | ExportOverlayController.hide API reference}
 	 */
 	hide(): void;
 
@@ -36,6 +42,8 @@ export interface ExportOverlayController {
 	 * ```ts
 	 * t.exportOverlay.toggle();
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/toggle | ExportOverlayController.toggle API reference}
 	 */
 	toggle(): void;
 
@@ -46,6 +54,8 @@ export interface ExportOverlayController {
 	 * ```ts
 	 * const visible = t.exportOverlay.isVisible();
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/isVisible | ExportOverlayController.isVisible API reference}
 	 */
 	isVisible(): boolean;
 }
@@ -55,10 +65,14 @@ export interface ExportOverlayController {
  *
  * @example
  * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI | TextmodeExportAPI API reference}
  */
 export interface TextmodeExportAPI {
 	/**
 	 * Controller for managing the export overlay UI visibility at runtime.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#exportoverlay | TextmodeExportAPI.exportOverlay API reference}
 	 */
 	exportOverlay: ExportOverlayController;
 
@@ -71,6 +85,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * await t.saveCanvas({ format: 'png', filename: 'frame-001' });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveCanvas | TextmodeExportAPI.saveCanvas API reference}
 	 */
 	saveCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -83,6 +99,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * await t.copyCanvas({ format: 'png' });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/copyCanvas | TextmodeExportAPI.copyCanvas API reference}
 	 */
 	copyCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -95,6 +113,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * t.saveSVG({ filename: 'poster', layer: t.layers.base, includeBackgroundRectangles: true });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveSVG | TextmodeExportAPI.saveSVG API reference}
 	 */
 	saveSVG(options?: SVGExportOptions): void;
 
@@ -107,6 +127,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * t.saveStrings({ filename: 'frame', layer: t.layers.base, preserveTrailingSpaces: true });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveStrings | TextmodeExportAPI.saveStrings API reference}
 	 */
 	saveStrings(options?: TXTExportOptions): void;
 
@@ -120,6 +142,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * const svg = t.toSVG({ layer: t.layers.base, drawMode: 'stroke', strokeWidth: 1.5 });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toSVG | TextmodeExportAPI.toSVG API reference}
 	 */
 	toSVG(options?: SVGExportOptions): string;
 
@@ -133,6 +157,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * const text = t.toString({ layer: t.layers.base, preserveTrailingSpaces: false });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toString | TextmodeExportAPI.toString API reference}
 	 */
 	toString(options?: TXTExportOptions): string;
 
@@ -147,6 +173,8 @@ export interface TextmodeExportAPI {
 	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
 	 * const stack = t.toJSON({ target: 'all' });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toJSON | TextmodeExportAPI.toJSON API reference}
 	 */
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
@@ -161,6 +189,8 @@ export interface TextmodeExportAPI {
 	 * const json = t.toJSONString({ layer: t.layers.base, pretty: false, colorMode: 'hex' });
 	 * const stackJson = t.toJSONString({ target: 'all' });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toJSONString | TextmodeExportAPI.toJSONString API reference}
 	 */
 	toJSONString(options?: JSONExportOptions): string;
 
@@ -174,6 +204,8 @@ export interface TextmodeExportAPI {
 	 * t.saveJSON({ filename: 'frame', layer: t.layers.base, pretty: true });
 	 * t.saveJSON({ filename: 'stack', target: 'all' });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveJSON | TextmodeExportAPI.saveJSON API reference}
 	 */
 	saveJSON(options?: JSONExportOptions): void;
 
@@ -186,6 +218,8 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * await t.saveGIF({ frameCount: 120, frameRate: 30, filename: 'loop' });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveGIF | TextmodeExportAPI.saveGIF API reference}
 	 */
 	saveGIF(options?: GIFExportOptions): Promise<void>;
 
@@ -207,6 +241,8 @@ export interface TextmodeExportAPI {
 	 *     filename: 'capture',
 	 * });
 	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveVideo | TextmodeExportAPI.saveVideo API reference}
 	 */
 	saveVideo(options?: VideoExportOptions): Promise<void>;
 }
@@ -217,6 +253,8 @@ export interface TextmodeExportAPI {
  * @deprecated This interface is only used by the deprecated `createTextmodeExportPlugin` function.
  * Use {@link ExportPlugin} directly instead, and control overlay visibility at runtime via
  * {@link ExportOverlayController}.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportPluginOptions | TextmodeExportPluginOptions API reference}
  */
 export interface TextmodeExportPluginOptions {
 	/**
@@ -224,6 +262,8 @@ export interface TextmodeExportPluginOptions {
 	 * Defaults to `true`.
 	 *
 	 * @deprecated Use runtime overlay controls instead: `textmodifier.exportOverlay.show()` / `.hide()`
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportPluginOptions#overlay | TextmodeExportPluginOptions.overlay API reference}
 	 */
 	overlay?: boolean;
 }

@@ -93,6 +93,8 @@ type TextmodifierWithExportInternals = Textmodifier &
  *
  * @example
  * {@includeCode ../examples/ExportPlugin/init/sketch.js}
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/variables/ExportPlugin | ExportPlugin API reference}
  */
 export const ExportPlugin: TextmodePlugin = {
 	name: 'textmode.export',
@@ -296,6 +298,8 @@ export const ExportPlugin: TextmodePlugin = {
  *
  * @param options Plugin options
  * @returns A textmode.js plugin instance.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/functions/createTextmodeExportPlugin | createTextmodeExportPlugin API reference}
  */
 export const createTextmodeExportPlugin = (options: TextmodeExportPluginOptions = {}): TextmodePlugin => {
 	const overlayEnabled = options.overlay ?? true;

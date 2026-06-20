@@ -4,12 +4,16 @@ import type { TextmodeLayer } from 'textmode.js';
 
 /**
  * Shared option for exporters that read layer framebuffer data.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/LayerExportOptions | LayerExportOptions API reference}
  */
 export interface LayerExportOptions {
 	/**
 	 * Layer to export.
 	 *
 	 * Defaults to `textmodifier.layers.base`.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/LayerExportOptions#layer | LayerExportOptions.layer API reference}
 	 */
 	layer?: TextmodeLayer;
 }
