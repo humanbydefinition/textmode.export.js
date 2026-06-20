@@ -2,26 +2,36 @@ import type { LayerExportOptions } from '../base';
 
 /**
  * Target scope for JSON export.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportTarget | JSONExportTarget API reference}
  */
 export type JSONExportTarget = 'selected' | 'all';
 
 /**
  * Canonical JSON document format identifier.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONDocumentFormat | JSONDocumentFormat API reference}
  */
 export type JSONDocumentFormat = 'textmode.document';
 
 /**
  * Canonical JSON document format version.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONDocumentVersion | JSONDocumentVersion API reference}
  */
 export type JSONDocumentVersion = '2.0.0';
 
 /**
  * Supported JSON color output modes.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportColorMode | JSONExportColorMode API reference}
  */
 export type JSONExportColorMode = 'hex' | 'rgba';
 
 /**
  * RGBA color representation used in JSON exports.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONRGBAColor | JSONRGBAColor API reference}
  */
 export interface JSONRGBAColor {
 	r: number;
@@ -32,11 +42,15 @@ export interface JSONRGBAColor {
 
 /**
  * Color value used in the exported JSON document.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONColorValue | JSONColorValue API reference}
  */
 export type JSONColorValue = string | JSONRGBAColor;
 
 /**
  * Cell transform data for JSON exports.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONCellTransform | JSONCellTransform API reference}
  */
 export interface JSONCellTransform {
 	invert: boolean;
@@ -47,6 +61,8 @@ export interface JSONCellTransform {
 
 /**
  * Rich per-cell representation for readable JSON exports.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONObjectRowCell | JSONObjectRowCell API reference}
  */
 export interface JSONObjectRowCell {
 	x: number;
@@ -59,6 +75,8 @@ export interface JSONObjectRowCell {
 
 /**
  * Row-based cell encoding.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONObjectRowsCellCollection | JSONObjectRowsCellCollection API reference}
  */
 export interface JSONObjectRowsCellCollection {
 	encoding: 'object-rows-v1';
@@ -67,11 +85,15 @@ export interface JSONObjectRowsCellCollection {
 
 /**
  * Supported JSON cell collection variants.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONCellCollection | JSONCellCollection API reference}
  */
 export type JSONCellCollection = JSONObjectRowsCellCollection;
 
 /**
  * Grid dimensions exported for a layer.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONLayerGrid | JSONLayerGrid API reference}
  */
 export interface JSONLayerGrid {
 	cols: number;
@@ -82,6 +104,8 @@ export interface JSONLayerGrid {
 
 /**
  * Optional export metadata.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONExportMetadata | JSONExportMetadata API reference}
  */
 export interface JSONExportMetadata {
 	createdAt: string;
@@ -93,6 +117,8 @@ export interface JSONExportMetadata {
 
 /**
  * Selected-layer entry in a JSON document export.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeSelectedDocumentLayer | TextmodeSelectedDocumentLayer API reference}
  */
 export interface TextmodeSelectedDocumentLayer {
 	id: string;
@@ -101,6 +127,8 @@ export interface TextmodeSelectedDocumentLayer {
 
 /**
  * Selected-layer document exported by the JSON exporter.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeSelectedDocumentJSON | TextmodeSelectedDocumentJSON API reference}
  */
 export interface TextmodeSelectedDocumentJSON {
 	format: JSONDocumentFormat;
@@ -117,6 +145,8 @@ export interface TextmodeSelectedDocumentJSON {
 
 /**
  * Single layer entry in an all-layers JSON export.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeDocumentLayer | TextmodeDocumentLayer API reference}
  */
 export interface TextmodeDocumentLayer {
 	id: string;
@@ -132,6 +162,8 @@ export interface TextmodeDocumentLayer {
 
 /**
  * Layer stack document exported by the JSON exporter.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeAllDocumentJSON | TextmodeAllDocumentJSON API reference}
  */
 export interface TextmodeAllDocumentJSON {
 	format: JSONDocumentFormat;
@@ -147,11 +179,15 @@ export interface TextmodeAllDocumentJSON {
 
 /**
  * JSON document exported by the JSON exporter.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/TextmodeDocumentJSON | TextmodeDocumentJSON API reference}
  */
 export type TextmodeDocumentJSON = TextmodeSelectedDocumentJSON | TextmodeAllDocumentJSON;
 
 /**
  * Options for exporting the textmode content to JSON format.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportOptions | JSONExportOptions API reference}
  */
 export type JSONExportOptions = LayerExportOptions & {
 	/**
