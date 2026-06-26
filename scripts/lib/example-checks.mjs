@@ -4,7 +4,8 @@ import process from 'node:process';
 
 const INCLUDE_CODE_PATTERN = /\{@includeCode\s+([^}\s]+)[^}]*\}/g;
 const MANIFEST_KEYS = new Set(['version', 'description', 'groups']);
-const GROUP_KEYS = new Set(['name', 'description', 'examples']);
+const GROUP_KEYS = new Set(['name', 'description', 'examples', 'subgroups']);
+const SUBGROUP_KEYS = new Set(['name', 'examples']);
 const EXAMPLE_KEYS = new Set(['title', 'description', 'sourceFile']);
 
 export const EXAMPLES_DIR = 'examples';
@@ -57,15 +58,28 @@ export function getSketchTitle(filePath) {
 }
 
 export function getManifestExamples(manifest) {
-	return manifest.groups.flatMap((group) =>
-		Array.isArray(group.examples)
+	return manifest.groups.flatMap((group) => {
+		if (Array.isArray(group.subgroups)) {
+			return group.subgroups.flatMap((sg) =>
+				Array.isArray(sg.examples)
+					? sg.examples.filter(isRecord).map((example) => ({
+							...example,
+							groupName: group.name,
+							groupDescription: group.description,
+							subgroupName: sg.name,
+						}))
+					: []
+			);
+		}
+
+		return Array.isArray(group.examples)
 			? group.examples.filter(isRecord).map((example) => ({
 					...example,
 					groupName: group.name,
 					groupDescription: group.description,
 				}))
-			: []
-	);
+			: [];
+	});
 }
 
 export function getTypeDocExampleIncludes(sourceDir = SOURCE_DIR, examplesDir = EXAMPLES_DIR) {
@@ -156,21 +170,74 @@ export function validateExamplesManifest(manifest, options = {}) {
 			issues.push(`Manifest group "${group.name ?? groupIndex + 1}" is missing a description.`);
 		}
 
-		if (!Array.isArray(group.examples)) {
-			issues.push(`Manifest group "${group.name ?? groupIndex + 1}" examples must be an array.`);
+		const hasExamples = Array.isArray(group.examples);
+		const hasSubgroups = Array.isArray(group.subgroups);
+
+		if (hasExamples && hasSubgroups) {
+			issues.push(
+				`Manifest group "${group.name}" must not have both \`examples\` and \`subgroups\`. Use one or the other.`
+			);
 			continue;
 		}
 
-		for (const [exampleIndex, example] of group.examples.entries()) {
-			if (!isRecord(example)) {
-				issues.push(`Manifest example ${exampleIndex + 1} in group "${group.name}" must be an object.`);
-				continue;
-			}
+		if (!hasExamples && !hasSubgroups) {
+			issues.push(
+				`Manifest group "${group.name}" must have either an \`examples\` array or a \`subgroups\` array.`
+			);
+			continue;
+		}
 
-			for (const key of getUnknownKeys(example, EXAMPLE_KEYS)) {
-				issues.push(
-					`Manifest example "${example.sourceFile ?? `${group.name}.${exampleIndex + 1}`}" contains unknown key: ${key}`
-				);
+		if (hasSubgroups) {
+			for (const [sgIndex, sg] of group.subgroups.entries()) {
+				if (!isRecord(sg)) {
+					issues.push(`Manifest subgroup ${sgIndex + 1} in group "${group.name}" must be an object.`);
+					continue;
+				}
+
+				for (const key of getUnknownKeys(sg, SUBGROUP_KEYS)) {
+					issues.push(
+						`Manifest subgroup "${sg.name ?? sgIndex + 1}" in group "${group.name}" contains unknown key: ${key}`
+					);
+				}
+
+				if (typeof sg.name !== 'string' || sg.name.length === 0) {
+					issues.push(`Manifest subgroup ${sgIndex + 1} in group "${group.name}" is missing a name.`);
+				}
+
+				if (!Array.isArray(sg.examples)) {
+					issues.push(
+						`Manifest subgroup "${sg.name ?? sgIndex + 1}" in group "${group.name}" examples must be an array.`
+					);
+					continue;
+				}
+
+				for (const [exampleIndex, example] of sg.examples.entries()) {
+					if (!isRecord(example)) {
+						issues.push(
+							`Manifest example ${exampleIndex + 1} in subgroup "${sg.name}" of group "${group.name}" must be an object.`
+						);
+						continue;
+					}
+
+					for (const key of getUnknownKeys(example, EXAMPLE_KEYS)) {
+						issues.push(
+							`Manifest example "${example.sourceFile ?? `${group.name}.${sg.name}.${exampleIndex + 1}`}" contains unknown key: ${key}`
+						);
+					}
+				}
+			}
+		} else {
+			for (const [exampleIndex, example] of group.examples.entries()) {
+				if (!isRecord(example)) {
+					issues.push(`Manifest example ${exampleIndex + 1} in group "${group.name}" must be an object.`);
+					continue;
+				}
+
+				for (const key of getUnknownKeys(example, EXAMPLE_KEYS)) {
+					issues.push(
+						`Manifest example "${example.sourceFile ?? `${group.name}.${exampleIndex + 1}`}" contains unknown key: ${key}`
+					);
+				}
 			}
 		}
 	}
