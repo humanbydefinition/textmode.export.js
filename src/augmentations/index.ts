@@ -1,0 +1,4 @@
+/**
+ * Augmentation barrel.
+ */
+import './textmode';

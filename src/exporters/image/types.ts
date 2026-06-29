@@ -9,15 +9,21 @@ export type ImageFormat = 'png' | 'jpg' | 'webp';
 
 /**
  * Options for exporting the textmode content to image format.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageExportOptions | ImageExportOptions API reference}
  */
 export type ImageExportOptions = {
 	/**
 	 * Target filename without extension. Defaults to an auto-generated value.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageExportOptions#filename | ImageExportOptions.filename API reference}
 	 */
 	filename?: string;
 
 	/**
 	 * The image format to export *(`'png'`, `'jpg'`, or `'webp'`)*. Defaults to `'png'`.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageExportOptions#format | ImageExportOptions.format API reference}
 	 */
 	format?: 'png' | 'jpg' | 'webp';
 
@@ -27,6 +33,8 @@ export type ImageExportOptions = {
 	 * `1.0` = original size, `2.0` = double size, `0.5` = half size.
 	 *
 	 * Defaults to `1.0`.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageExportOptions#scale | ImageExportOptions.scale API reference}
 	 */
 	scale?: number;
 };
