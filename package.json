@@ -25,10 +25,10 @@
 		"build:bundle": "vite build",
 		"build:types": "tsc",
 		"build": "npm run build:bundle && npm run build:types",
-		"check": "npm run check:format && npm run lint && npm run lint:md && npm run check:types && npm run check:api-docs && npm run test && npm run build",
-		"docs:links:add": "node ./scripts/add-api-doc-links.mjs",
-		"check:api-docs": "node ./scripts/check-public-api-docs.mjs",
-		"check:examples": "node ./scripts/check-examples.mjs",
+		"check": "npm run check:format && npm run check:deps && npm run lint && npm run lint:md && npm run check:types && npm run check:api-docs && npm run test && npm run build",
+		"docs:links:add": "textmode-add-api-links",
+		"check:api-docs": "textmode-check-api-docs",
+		"check:examples": "textmode-check-examples",
 		"dev:docs": "typedoc --watch",
 		"build:docs": "typedoc",
 		"preview": "vite preview",
@@ -41,11 +41,12 @@
 		"check:types": "tsc --noEmit",
 		"lint:md": "markdownlint-cli2",
 		"lint:md:fix": "markdownlint-cli2 --fix",
-		"lint": "eslint src --config eslint.config.js",
-		"prepare": "husky"
+		"lint": "eslint src",
+		"prepare": "husky && install-husky",
+		"check:deps": "check-deps"
 	},
 	"peerDependencies": {
-		"textmode.js": ">=0.13.0"
+		"textmode.js": ">=0.16.0"
 	},
 	"dependencies": {
 		"gifenc": "^1.0.1",
@@ -68,7 +69,7 @@
 		"eslint-plugin-jsdoc": "^62.9.0",
 		"globals": "^17.5.0",
 		"husky": "^9.1.7",
-		"jsdom": "^26.1.0",
+		"jsdom": "^27.4.0",
 		"lint-staged": "^16.4.0",
 		"markdownlint-cli2": "^0.22.1",
 		"markdownlint-cli2-formatter-default": "^0.0.6",
@@ -84,7 +85,14 @@
 		"typescript-eslint": "^8.59.0",
 		"vite": "^6.3.4",
 		"vite-plugin-css-injected-by-js": "^3.5.2",
-		"vitest": "^3.1.2"
+		"vitest": "^3.1.2",
+		"@textmode/commitlint-config": "^0.1.0",
+		"@textmode/eslint-config": "^0.1.0",
+		"@textmode/markdownlint-config": "^0.1.0",
+		"@textmode/prettier-config": "^0.1.0",
+		"@textmode/release-config": "^0.1.0",
+		"@textmode/tooling-scripts": "^0.1.0",
+		"@textmode/tsconfig": "^0.1.0"
 	},
 	"keywords": [
 		"textmode",
@@ -110,6 +118,12 @@
 	"homepage": "https://code.textmode.art",
 	"lint-staged": {
 		"*": "prettier --ignore-unknown --write"
+	},
+	"prettier": "@textmode/prettier-config",
+	"commitlint": {
+		"extends": [
+			"@textmode/commitlint-config"
+		]
 	},
 	"repository": {
 		"type": "git",
