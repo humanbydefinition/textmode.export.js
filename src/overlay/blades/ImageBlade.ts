@@ -67,6 +67,11 @@ export class ImageBlade extends Blade<ImageExportOptions> {
 		};
 	}
 
+	setDefaults(values: Partial<ImageExportOptions>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
+	}
+
 	reset(): void {
 		this.applyDefaults();
 		this.scaleInput.refresh();
@@ -78,9 +83,8 @@ export class ImageBlade extends Blade<ImageExportOptions> {
 	}
 
 	private applyDefaults(): void {
-		const defaults = this._config.defaultOptions ?? {};
-		this.formatSelect.value = (defaults.format as ImageFormat) ?? 'png';
-		const scale = defaults.scale ?? 1;
-		this.scaleInput.value = String(scale);
+		const defaults = this._config.defaultOptions;
+		this.formatSelect.value = defaults.format ?? 'png';
+		this.scaleInput.value = String(defaults.scale ?? 1);
 	}
 }

@@ -7,31 +7,24 @@ import { StatusDisplay } from '../components/display/StatusDisplay';
 import type { BladeConfig } from './Blade';
 import { Blade } from './Blade';
 
-const FALLBACK_DEFAULTS = {
-	frameCount: 300,
-	frameRate: 60,
-	scale: 1,
-	repeat: 0,
-} as const;
-
 export class GIFBlade extends Blade<GIFExportOptions> {
 	private frameCountInput = this._manageComponent(
 		new NumberInput({
-			defaultValue: String(FALLBACK_DEFAULTS.frameCount),
+			defaultValue: '300',
 			attributes: { min: '1', max: '600', step: '1' },
 		})
 	);
 
 	private frameRateInput = this._manageComponent(
 		new NumberInput({
-			defaultValue: String(FALLBACK_DEFAULTS.frameRate),
+			defaultValue: '60',
 			attributes: { min: '1', max: '60', step: '1' },
 		})
 	);
 
 	private scaleInput = this._manageComponent(
 		new NumberInput({
-			defaultValue: String(FALLBACK_DEFAULTS.scale),
+			defaultValue: '1',
 			attributes: { min: '0.1', max: '8', step: '0.1' },
 		})
 	);
@@ -61,7 +54,7 @@ export class GIFBlade extends Blade<GIFExportOptions> {
 	private recordingState: GIFRecordingState = 'idle';
 
 	constructor(config: BladeConfig<GIFExportOptions>) {
-		super(config);
+		super(config, { recording: true });
 	}
 
 	render(): HTMLElement {
@@ -116,13 +109,18 @@ export class GIFBlade extends Blade<GIFExportOptions> {
 	}
 
 	getOptions(): GIFExportOptions {
-		const defaults = this._config.defaultOptions ?? {};
+		const defaults = this._config.defaultOptions;
 		return {
 			frameCount: this.safeParseInt(this.frameCountInput.value, defaults.frameCount ?? 300),
 			frameRate: this.safeParseInt(this.frameRateInput.value, defaults.frameRate ?? 60),
 			scale: this.safeParseFloat(this.scaleInput.value, defaults.scale ?? 1),
 			repeat: this.safeParseInt(this.repeatInput.value, defaults.repeat ?? 0),
 		};
+	}
+
+	setDefaults(values: Partial<GIFExportOptions>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
 	}
 
 	reset(): void {
@@ -203,16 +201,11 @@ export class GIFBlade extends Blade<GIFExportOptions> {
 	}
 
 	private applyDefaults(): void {
-		const defaults = this._config.defaultOptions ?? {};
-		const frameCount = defaults.frameCount ?? FALLBACK_DEFAULTS.frameCount;
-		const frameRate = defaults.frameRate ?? FALLBACK_DEFAULTS.frameRate;
-		const scale = defaults.scale ?? FALLBACK_DEFAULTS.scale;
-		const repeat = defaults.repeat ?? FALLBACK_DEFAULTS.repeat;
-
-		this.frameCountInput.value = String(frameCount);
-		this.frameRateInput.value = String(frameRate);
-		this.scaleInput.value = String(scale);
-		this.repeatInput.value = String(repeat);
+		const defaults = this._config.defaultOptions;
+		this.frameCountInput.value = String(defaults.frameCount ?? 300);
+		this.frameRateInput.value = String(defaults.frameRate ?? 60);
+		this.scaleInput.value = String(defaults.scale ?? 1);
+		this.repeatInput.value = String(defaults.repeat ?? 0);
 
 		this.frameCountInput.refresh();
 		this.frameRateInput.refresh();

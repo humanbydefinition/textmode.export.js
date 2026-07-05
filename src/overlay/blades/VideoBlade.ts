@@ -20,16 +20,8 @@ import { Blade } from './Blade';
 
 const FRAME_RATE_MIN = 1;
 const FRAME_RATE_MAX = 60;
-const DEFAULT_FRAME_RATE = 60;
 const FRAME_COUNT_MIN = 1;
-const FRAME_COUNT_MAX = DEFAULT_FRAME_RATE * 60;
-const DEFAULT_FRAME_COUNT = DEFAULT_FRAME_RATE * 8;
-const DEFAULT_VIDEO_FORMAT: VideoExportFormat = 'mp4';
-const DEFAULT_BITRATE: VideoBitratePreset = 'medium';
-const DEFAULT_BITRATE_MODE: VideoBitrateMode = 'variable';
-const DEFAULT_LATENCY_MODE: VideoLatencyMode = 'quality';
-const DEFAULT_HARDWARE_ACCELERATION: VideoHardwareAcceleration = 'no-preference';
-const DEFAULT_KEYFRAME_INTERVAL = 2;
+const FRAME_COUNT_MAX = 60 * 60;
 
 export class VideoBlade extends Blade<VideoExportOptions> {
 	private formatSelect = this._manageComponent(
@@ -39,7 +31,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				{ value: 'mp4', label: 'MP4/H.264 (.mp4)' },
 				{ value: 'webm', label: 'WebM (.webm)' },
 			],
-			defaultValue: DEFAULT_VIDEO_FORMAT,
+			defaultValue: 'mp4',
 		})
 	);
 
@@ -51,13 +43,13 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				{ value: 'medium', label: 'medium' },
 				{ value: 'high', label: 'high' },
 			],
-			defaultValue: DEFAULT_BITRATE,
+			defaultValue: 'medium',
 		})
 	);
 
 	private frameRateInput = this._manageComponent(
 		new NumberInput({
-			defaultValue: String(DEFAULT_FRAME_RATE),
+			defaultValue: '60',
 			attributes: { min: String(FRAME_RATE_MIN), max: String(FRAME_RATE_MAX), step: '1' },
 			formatDisplay: (numericValue) => (Number.isFinite(numericValue) ? `${numericValue} fps` : null),
 		})
@@ -65,7 +57,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 
 	private frameCountInput = this._manageComponent(
 		new NumberInput({
-			defaultValue: String(DEFAULT_FRAME_COUNT),
+			defaultValue: '480',
 			attributes: { min: String(FRAME_COUNT_MIN), max: String(FRAME_COUNT_MAX), step: '1' },
 		})
 	);
@@ -77,7 +69,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				{ value: 'variable', label: 'variable' },
 				{ value: 'constant', label: 'constant' },
 			],
-			defaultValue: DEFAULT_BITRATE_MODE,
+			defaultValue: 'variable',
 		})
 	);
 
@@ -88,7 +80,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				{ value: 'quality', label: 'quality' },
 				{ value: 'realtime', label: 'realtime' },
 			],
-			defaultValue: DEFAULT_LATENCY_MODE,
+			defaultValue: 'quality',
 		})
 	);
 
@@ -100,13 +92,13 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				{ value: 'prefer-hardware', label: 'prefer hardware' },
 				{ value: 'prefer-software', label: 'prefer software' },
 			],
-			defaultValue: DEFAULT_HARDWARE_ACCELERATION,
+			defaultValue: 'no-preference',
 		})
 	);
 
 	private keyFrameIntervalInput = this._manageComponent(
 		new NumberInput({
-			defaultValue: String(DEFAULT_KEYFRAME_INTERVAL),
+			defaultValue: '2',
 			attributes: { min: '0', step: '0.25' },
 			formatDisplay: (numericValue) => (Number.isFinite(numericValue) ? `${numericValue}s` : null),
 		})
@@ -132,7 +124,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	private recordingState: VideoRecordingState = 'idle';
 
 	constructor(config: BladeConfig<VideoExportOptions>) {
-		super(config);
+		super(config, { recording: true });
 	}
 
 	render(): HTMLElement {
@@ -228,7 +220,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	}
 
 	getOptions(): VideoExportOptions {
-		const defaults = this._config.defaultOptions ?? {};
+		const defaults = this._config.defaultOptions;
 		const frameCount = Number.parseInt(this.frameCountInput.value, 10);
 		const frameRate = Number.parseFloat(this.frameRateInput.value);
 		const keyFrameInterval = Number.parseFloat(this.keyFrameIntervalInput.value);
@@ -240,11 +232,9 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 			bitrateMode: this.bitrateModeSelect.value,
 			latencyMode: this.latencyModeSelect.value,
 			hardwareAcceleration: this.hardwareAccelerationSelect.value,
-			keyFrameInterval: Number.isFinite(keyFrameInterval)
-				? keyFrameInterval
-				: (defaults.keyFrameInterval ?? DEFAULT_KEYFRAME_INTERVAL),
-			frameCount: Number.isFinite(frameCount) ? frameCount : (defaults.frameCount ?? DEFAULT_FRAME_COUNT),
-			frameRate: Number.isFinite(frameRate) ? frameRate : (defaults.frameRate ?? DEFAULT_FRAME_RATE),
+			keyFrameInterval: Number.isFinite(keyFrameInterval) ? keyFrameInterval : (defaults.keyFrameInterval ?? 2),
+			frameCount: Number.isFinite(frameCount) ? frameCount : (defaults.frameCount ?? 480),
+			frameRate: Number.isFinite(frameRate) ? frameRate : (defaults.frameRate ?? 60),
 		};
 
 		if (format === 'webm') {
@@ -252,6 +242,11 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		}
 
 		return options;
+	}
+
+	setDefaults(values: Partial<VideoExportOptions>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
 	}
 
 	reset(): void {
@@ -339,20 +334,16 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	}
 
 	private applyDefaults(): void {
-		const defaults = this._config.defaultOptions ?? {};
-		const format = defaults.format ?? DEFAULT_VIDEO_FORMAT;
-		const frameCount = defaults.frameCount ?? DEFAULT_FRAME_COUNT;
-		const frameRate = defaults.frameRate ?? DEFAULT_FRAME_RATE;
-		const keyFrameInterval = defaults.keyFrameInterval ?? DEFAULT_KEYFRAME_INTERVAL;
+		const defaults = this._config.defaultOptions;
 
-		this.formatSelect.value = format;
+		this.formatSelect.value = defaults.format ?? 'mp4';
 		this.bitrateSelect.value = this.resolveBitratePreset(defaults.bitrate);
-		this.frameCountInput.value = String(frameCount);
-		this.frameRateInput.value = String(frameRate);
-		this.bitrateModeSelect.value = defaults.bitrateMode ?? DEFAULT_BITRATE_MODE;
-		this.latencyModeSelect.value = defaults.latencyMode ?? DEFAULT_LATENCY_MODE;
-		this.hardwareAccelerationSelect.value = defaults.hardwareAcceleration ?? DEFAULT_HARDWARE_ACCELERATION;
-		this.keyFrameIntervalInput.value = String(keyFrameInterval);
+		this.frameCountInput.value = String(defaults.frameCount ?? 480);
+		this.frameRateInput.value = String(defaults.frameRate ?? 60);
+		this.bitrateModeSelect.value = defaults.bitrateMode ?? 'variable';
+		this.latencyModeSelect.value = defaults.latencyMode ?? 'quality';
+		this.hardwareAccelerationSelect.value = defaults.hardwareAcceleration ?? 'no-preference';
+		this.keyFrameIntervalInput.value = String(defaults.keyFrameInterval ?? 2);
 		this.transparencyInput.checked = Boolean(defaults.transparent);
 
 		this.frameCountInput.refresh();
@@ -362,7 +353,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	}
 
 	private resolveBitratePreset(value: VideoExportOptions['bitrate']): VideoBitratePreset {
-		return value === 'low' || value === 'medium' || value === 'high' ? value : DEFAULT_BITRATE;
+		return value === 'low' || value === 'medium' || value === 'high' ? value : 'medium';
 	}
 
 	private readonly handleFormatChange = () => {

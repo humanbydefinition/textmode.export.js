@@ -2,10 +2,12 @@ import { GIFBlade, ImageBlade, JSONBlade, SVGBlade, TextBlade, VideoBlade } from
 import type { ExportFormat } from './types';
 import type { FormatDefinition } from './models/FormatDefinition';
 import type { LayerTargetProvider } from '../exporters/base';
+import { CURATED_DEFAULTS } from './config/ExportDefaults';
 
 export function getExportFormatDefinitions(
 	layerTargetProvider?: LayerTargetProvider
 ): ReadonlyArray<FormatDefinition<ExportFormat>> {
+	const defaults = CURATED_DEFAULTS;
 	return [
 		{
 			format: 'txt',
@@ -16,7 +18,7 @@ export function getExportFormatDefinitions(
 					format: 'txt',
 					label: 'plain text (.txt)',
 					supportsClipboard: true,
-					defaultOptions: { preserveTrailingSpaces: false, emptyCharacter: ' ' },
+					defaultOptions: defaults.txt,
 					layerTargetProvider,
 				}),
 		},
@@ -29,12 +31,7 @@ export function getExportFormatDefinitions(
 					format: 'json',
 					label: 'document data (.json)',
 					supportsClipboard: true,
-					defaultOptions: {
-						target: 'selected',
-						pretty: true,
-						includeMetadata: true,
-						colorMode: 'hex',
-					},
+					defaultOptions: defaults.json,
 					layerTargetProvider,
 				}),
 		},
@@ -47,7 +44,7 @@ export function getExportFormatDefinitions(
 					format: 'image',
 					label: 'image (.png / .jpg / .webp)',
 					supportsClipboard: true,
-					defaultOptions: { format: 'png', scale: 1 },
+					defaultOptions: defaults.image,
 				}),
 		},
 		{
@@ -59,11 +56,7 @@ export function getExportFormatDefinitions(
 					format: 'svg',
 					label: 'vector (.svg)',
 					supportsClipboard: true,
-					defaultOptions: {
-						includeBackgroundRectangles: true,
-						drawMode: 'fill',
-						strokeWidth: 1,
-					},
+					defaultOptions: defaults.svg,
 					layerTargetProvider,
 				}),
 		},
@@ -76,12 +69,7 @@ export function getExportFormatDefinitions(
 					format: 'gif',
 					label: 'animated GIF (.gif)',
 					supportsClipboard: false,
-					defaultOptions: {
-						frameCount: 300,
-						frameRate: 60,
-						scale: 1,
-						repeat: 0,
-					},
+					defaultOptions: defaults.gif,
 				}),
 		},
 		{
@@ -93,17 +81,7 @@ export function getExportFormatDefinitions(
 					format: 'video',
 					label: 'video (.webm / .mp4)',
 					supportsClipboard: false,
-					defaultOptions: {
-						format: 'mp4',
-						frameCount: 480,
-						frameRate: 60,
-						bitrate: 'medium',
-						bitrateMode: 'variable',
-						latencyMode: 'quality',
-						hardwareAcceleration: 'no-preference',
-						keyFrameInterval: 2,
-						transparent: false,
-					},
+					defaultOptions: defaults.video,
 				}),
 		},
 	];
