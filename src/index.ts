@@ -37,11 +37,12 @@ import { VideoExporter, type VideoExportOptions } from './exporters/video';
 import { JSONExporter, type JSONExportOptions } from './exporters/json';
 import { createExportOverlay } from './overlay';
 import { createLayerTargetProvider } from './exporters/base';
-import type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayController } from './types';
+import type { TextmodeExportAPI, ExportOverlayController, ExportDefaults, ExportDefaultsPatch } from './types';
 import { TEXTMODE_EXPORT_VERSION } from './version';
 
-// Re-export all export option types for consumers
-export type { TextmodeExportAPI, TextmodeExportPluginOptions, ExportOverlayController } from './types';
+// Re-export all types for consumers
+export type { ExportDefaults, ExportDefaultsPatch } from './types';
+export type { TextmodeExportAPI, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
@@ -80,10 +81,23 @@ export type {
 } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
 
-type TextmodifierWithExportInternals = Textmodifier &
-	Partial<TextmodeExportAPI> & {
-		_exportOverlayController?: ReturnType<typeof createExportOverlay>;
-	};
+// Module-level WeakMap to store the overlay controller without leaking
+// private keys onto the user's Textmodifier instance.
+const _controllers = new WeakMap<Textmodifier, ReturnType<typeof createExportOverlay>>();
+const _apiKeys: ReadonlyArray<keyof TextmodeExportAPI> = [
+	'exportOverlay',
+	'saveCanvas',
+	'copyCanvas',
+	'saveSVG',
+	'saveStrings',
+	'toSVG',
+	'toString',
+	'toJSON',
+	'toJSONString',
+	'saveJSON',
+	'saveGIF',
+	'saveVideo',
+];
 
 /**
  * Export plugin for textmode.js.
@@ -220,7 +234,7 @@ export const ExportPlugin: TextmodePlugin = {
 			},
 		};
 
-		// Create overlay controller (it needs access to export methods)
+		// Create overlay controller
 		const overlayController = createExportOverlay(
 			textmodifier,
 			exportMethods as TextmodeExportAPI,
@@ -238,6 +252,9 @@ export const ExportPlugin: TextmodePlugin = {
 			hide: () => overlayController.hide(),
 			toggle: () => overlayController.toggle(),
 			isVisible: () => overlayController.isVisible(),
+			setDefaults: (patch: ExportDefaultsPatch) => overlayController.setDefaults(patch),
+			getDefaults: () => overlayController.getDefaults(),
+			resetDefaults: (format?: keyof ExportDefaults) => overlayController.resetDefaults(format),
 		};
 
 		// Combine into full export API
@@ -246,92 +263,29 @@ export const ExportPlugin: TextmodePlugin = {
 			exportOverlay: exportOverlayAPI,
 		};
 
-		const exportTarget = textmodifier as TextmodifierWithExportInternals;
-		Object.assign(exportTarget, exportAPI);
-
-		// Store controller reference for cleanup
-		exportTarget._exportOverlayController = overlayController;
+		// Attach methods to textmodifier and store controller reference
+		Object.assign(textmodifier, exportAPI);
+		_controllers.set(textmodifier, overlayController);
 	},
 
 	async uninstall(textmodifier: Textmodifier) {
-		const exportTarget = textmodifier as TextmodifierWithExportInternals;
-		const overlayController = exportTarget._exportOverlayController;
+		const overlayController = _controllers.get(textmodifier);
 		overlayController?.$dispose();
-		delete exportTarget._exportOverlayController;
+		_controllers.delete(textmodifier);
 
-		const exportApiKeys: Array<keyof TextmodeExportAPI> = [
-			'exportOverlay',
-			'saveCanvas',
-			'copyCanvas',
-			'saveSVG',
-			'saveStrings',
-			'toSVG',
-			'toString',
-			'toJSON',
-			'toJSONString',
-			'saveJSON',
-			'saveGIF',
-			'saveVideo',
-		];
-
-		for (const key of exportApiKeys) {
-			delete exportTarget[key];
+		for (const key of _apiKeys) {
+			delete (textmodifier as unknown as Record<string, unknown>)[key];
 		}
 	},
-};
-
-/**
- * Creates the `textmode.export.js` plugin for textmode.js.
- *
- * @deprecated Use {@link ExportPlugin} directly instead.
- * This function is provided for backwards compatibility only.
- *
- * @example
- * ```javascript
- * // Old way (deprecated)
- * import { createTextmodeExportPlugin } from 'textmode.export.js';
- * const t = textmode.create({ plugins: [createTextmodeExportPlugin()] });
- *
- * // New way (recommended)
- * import { ExportPlugin } from 'textmode.export.js';
- * const t = textmode.create({ plugins: [ExportPlugin] });
- * ```
- *
- * @param options Plugin options
- * @returns A textmode.js plugin instance.
- *
- * @see {@link https://code.textmode.art/api/textmode.export.js/functions/createTextmodeExportPlugin | createTextmodeExportPlugin API reference}
- */
-export const createTextmodeExportPlugin = (options: TextmodeExportPluginOptions = {}): TextmodePlugin => {
-	const overlayEnabled = options.overlay ?? true;
-
-	// Return modified plugin that respects overlay option
-	const plugin: TextmodePlugin = { ...ExportPlugin };
-	const originalInstall = plugin.install;
-
-	plugin.install = async (textmodifier: Textmodifier, api: TextmodePluginContext) => {
-		const exportTarget = textmodifier as TextmodifierWithExportInternals;
-		await originalInstall.call(plugin, exportTarget, api);
-
-		// If overlay should be disabled, hide it after installation
-		if (!overlayEnabled) {
-			exportTarget.exportOverlay?.hide();
-		}
-	};
-
-	return plugin;
 };
 
 declare global {
 	interface Window {
 		ExportPlugin?: TextmodePlugin;
-		createTextmodeExportPlugin?: typeof createTextmodeExportPlugin;
 	}
 }
 
 // UMD global export
 if (typeof window !== 'undefined') {
 	window.ExportPlugin = ExportPlugin;
-	// Keep backwards compatibility
-	window.createTextmodeExportPlugin = createTextmodeExportPlugin;
 }
