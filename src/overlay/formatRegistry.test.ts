@@ -8,6 +8,7 @@ import { EventBus } from './core/EventBus';
 import { ExportService } from './services/ExportService';
 import type { OverlayEvents } from './models/OverlayEvents';
 import type { TextmodeExportAPI } from '../types';
+import { CURATED_DEFAULTS } from './config/ExportDefaults';
 
 describe('getExportFormatDefinitions', () => {
 	it('adds layer targeting only to layer-data formats', () => {
@@ -159,5 +160,62 @@ describe('getExportFormatDefinitions', () => {
 				onProgress: expect.any(Function),
 			})
 		);
+	});
+
+	it('seeds blades with curated defaults', () => {
+		const definitions = getExportFormatDefinitions();
+		const container = document.createElement('div');
+
+		for (const definition of definitions) {
+			const blade = definition.createBlade();
+			blade.mount(container);
+
+			const options = blade.getOptions();
+			const curated = CURATED_DEFAULTS[definition.format];
+
+			const curatedKeys = Object.keys(curated);
+			for (const key of curatedKeys) {
+				const bladeValue = (options as Record<string, unknown>)[key];
+				// Skip keys that the blade conditionally omits
+				// (e.g. video transparent is only present for WebM)
+				if (typeof bladeValue === 'undefined') {
+					continue;
+				}
+				const curatedValue = (curated as Record<string, unknown>)[key];
+				expect(bladeValue).toEqual(curatedValue);
+			}
+
+			blade.destroy();
+		}
+	});
+
+	it('blades report correct capabilities', () => {
+		const layer = {} as TextmodeLayer;
+		const provider: LayerTargetProvider = {
+			getDefaultId: () => 'base',
+			getLayerById: () => layer,
+			getOptions: () => [{ id: 'base', label: 'Base layer', layer }],
+		};
+		const definitions = getExportFormatDefinitions(provider);
+
+		for (const definition of definitions) {
+			const blade = definition.createBlade();
+
+			if (definition.format === 'gif' || definition.format === 'video') {
+				expect(blade.capabilities.recording).toBe(true);
+			} else {
+				expect(blade.capabilities.recording).toBe(false);
+			}
+
+			if (definition.format === 'txt' || definition.format === 'json' || definition.format === 'svg') {
+				expect(blade.capabilities.layerTarget).toBe(true);
+			} else {
+				expect(blade.capabilities.layerTarget).toBe(false);
+			}
+
+			expect(blade.capabilities.clipboard).toBe(definition.supportsClipboard);
+
+			blade.destroy();
+		}
 	});
 });

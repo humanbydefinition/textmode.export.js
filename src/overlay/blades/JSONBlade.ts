@@ -106,6 +106,11 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 		};
 	}
 
+	setDefaults(values: Partial<JSONExportOptions>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
+	}
+
 	reset(): void {
 		this.applyDefaults();
 	}
@@ -119,7 +124,7 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 	}
 
 	private applyDefaults(): void {
-		const defaults = this._config.defaultOptions ?? {};
+		const defaults = this._config.defaultOptions;
 		this.target.value = defaults.target ?? 'selected';
 		this.prettyPrint.checked =
 			typeof defaults.pretty === 'number' ? defaults.pretty > 0 : (defaults.pretty ?? true);
