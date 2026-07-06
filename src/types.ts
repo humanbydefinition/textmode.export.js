@@ -29,7 +29,7 @@ export type VideoOverlayDefaults = Pick<
  * and after a {@link ExportOverlayController.resetDefaults} call.
  *
  * Each sub-object contains the library-chosen defaults for the fields that
- * the overlay exposes.  `defaultFormat` controls which export format is
+ * the overlay exposes.  Top-level `format` controls which export format is
  * selected in the overlay. You can read and override them at runtime via
  * {@link ExportOverlayController.getDefaults} and
  * {@link ExportOverlayController.setDefaults}.
@@ -42,7 +42,7 @@ export type ExportDefaults = {
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
 	 */
-	defaultFormat: 'txt' | 'json' | 'image' | 'gif' | 'video' | 'svg';
+	format: 'txt' | 'json' | 'image' | 'gif' | 'video' | 'svg';
 	txt: TXTOverlayDefaults;
 	json: JSONOverlayDefaults;
 	image: ImageOverlayDefaults;
@@ -55,20 +55,20 @@ export type ExportDefaults = {
  * Partial patch accepted by {@link ExportOverlayController.setDefaults}.
  *
  * Every supplied per-format sub-object is deep-merged into the corresponding
- * format's curated defaults. `defaultFormat` changes the overlay's selected
+ * format's curated defaults. Top-level `format` changes the overlay's selected
  * format. Omitted keys keep their current value.
  *
  * @example
  * ```ts
- * t.exportOverlay.setDefaults({ defaultFormat: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
+ * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
  * ```
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaultsPatch | ExportDefaultsPatch API reference}
  */
 export type ExportDefaultsPatch = {
-	defaultFormat?: ExportDefaults['defaultFormat'];
+	format?: ExportDefaults['format'];
 } & {
-	[K in Exclude<keyof ExportDefaults, 'defaultFormat'>]?: Partial<ExportDefaults[K]>;
+	[K in Exclude<keyof ExportDefaults, 'format'>]?: Partial<ExportDefaults[K]>;
 };
 
 /**
@@ -196,7 +196,7 @@ export interface ExportOverlayController {
 	 * Override the curated overlay defaults at runtime.
 	 *
 	 * Merges the supplied patch into the internal defaults store. Per-format
-	 * option patches are pushed into mounted blades; `defaultFormat` updates
+	 * option patches are pushed into mounted blades; top-level `format` updates
 	 * the overlay's selected export format immediately.
 	 *
 	 * @param patch Partial defaults to merge per format.
@@ -204,7 +204,7 @@ export interface ExportOverlayController {
 	 * @example
 	 * ```ts
 	 * // Select image export by default, set image scale to 2×, and GIF to 30 fps
-	 * t.exportOverlay.setDefaults({ defaultFormat: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
+	 * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setDefaults | ExportOverlayController.setDefaults API reference}
@@ -243,7 +243,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.resetDefaults('image');
 	 *
 	 * // Reset the overlay's selected default export format
-	 * t.exportOverlay.resetDefaults('defaultFormat');
+	 * t.exportOverlay.resetDefaults('format');
 	 *
 	 * // Reset all formats
 	 * t.exportOverlay.resetDefaults();

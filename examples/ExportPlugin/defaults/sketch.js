@@ -12,7 +12,7 @@ const t = textmode.create({
 
 // Override every default value that can be controlled in the overlay
 t.exportOverlay.setDefaults({
-	defaultFormat: 'image',
+	format: 'image',
 	txt: {
 		preserveTrailingSpaces: false,
 		emptyCharacter: ' ',

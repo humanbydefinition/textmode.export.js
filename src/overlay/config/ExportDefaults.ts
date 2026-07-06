@@ -1,7 +1,7 @@
 import type { ExportDefaults } from '../types';
 
 export const CURATED_DEFAULTS: Readonly<ExportDefaults> = Object.freeze({
-	defaultFormat: 'txt',
+	format: 'txt',
 	txt: Object.freeze({
 		preserveTrailingSpaces: false,
 		emptyCharacter: ' ',
@@ -42,7 +42,7 @@ export const CURATED_DEFAULTS: Readonly<ExportDefaults> = Object.freeze({
 
 export function createExportDefaults(): ExportDefaults {
 	return {
-		defaultFormat: CURATED_DEFAULTS.defaultFormat,
+		format: CURATED_DEFAULTS.format,
 		txt: { ...CURATED_DEFAULTS.txt },
 		json: { ...CURATED_DEFAULTS.json },
 		image: { ...CURATED_DEFAULTS.image },

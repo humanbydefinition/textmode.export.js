@@ -94,13 +94,13 @@ export class OverlayController {
 		this._textmodifier = textmodifier;
 		this._defaultsStore = defaultsStore;
 
-		const defaultFormat = this._resolveInitialFormat(defaultsStore.current.defaultFormat, definitions);
-		this._state = new StateManager(createInitialOverlayState(defaultFormat));
+		const initialFormat = this._resolveInitialFormat(defaultsStore.current.format, definitions);
+		this._state = new StateManager(createInitialOverlayState(initialFormat));
 		this._events = new EventBus<OverlayEvents>();
 		this._exportService = new ExportService(exportAPI, this._events);
 		this._clipboardService = new ClipboardService(exportAPI);
 		this._definitions = definitions;
-		this._currentFormat = defaultFormat;
+		this._currentFormat = initialFormat;
 		this._initializeFormatMap();
 		this._registerEventHandlers();
 	}
@@ -168,13 +168,13 @@ export class OverlayController {
 	 * the new defaults when the user switches to them.
 	 */
 	setDefaults(patch: ExportDefaultsPatch): void {
-		if (patch.defaultFormat) {
-			this._assertKnownFormat(patch.defaultFormat);
+		if (patch.format) {
+			this._assertKnownFormat(patch.format);
 		}
 		this._defaultsStore.merge(patch);
 		this._resetAffectedBlades(this._getFormatKeys(patch));
-		if (patch.defaultFormat) {
-			this._handleFormatChange(patch.defaultFormat);
+		if (patch.format) {
+			this._handleFormatChange(patch.format);
 		}
 	}
 
@@ -188,15 +188,15 @@ export class OverlayController {
 	/**
 	 * Restore one or all formats to the library's curated defaults.
 	 */
-	resetDefaults(format?: keyof ExportDefaults): void {
-		this._defaultsStore.reset(format);
-		if (format === 'defaultFormat') {
-			this._handleFormatChange(this._defaultsStore.current.defaultFormat);
+	resetDefaults(target?: keyof ExportDefaults): void {
+		this._defaultsStore.reset(target);
+		if (target === 'format') {
+			this._handleFormatChange(this._defaultsStore.current.format);
 			return;
 		}
-		this._resetAffectedBlades(format ? [format] : undefined);
-		if (!format) {
-			this._handleFormatChange(this._defaultsStore.current.defaultFormat);
+		this._resetAffectedBlades(target ? [target] : undefined);
+		if (!target) {
+			this._handleFormatChange(this._defaultsStore.current.format);
 		}
 	}
 
@@ -256,12 +256,12 @@ export class OverlayController {
 	}
 
 	private _resolveInitialFormat(
-		defaultFormat: ExportFormat,
+		requestedFormat: ExportFormat,
 		definitions: ReadonlyArray<FormatDefinition>
 	): ExportFormat {
-		return definitions.some((definition) => definition.format === defaultFormat)
-			? defaultFormat
-			: (definitions[0]?.format ?? defaultFormat);
+		return definitions.some((definition) => definition.format === requestedFormat)
+			? requestedFormat
+			: (definitions[0]?.format ?? requestedFormat);
 	}
 
 	private _getFormatKeys(patch: ExportDefaultsPatch): ExportFormat[] {
