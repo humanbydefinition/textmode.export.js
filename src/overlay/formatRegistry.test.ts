@@ -9,6 +9,7 @@ import { ExportService } from './services/ExportService';
 import type { OverlayEvents } from './models/OverlayEvents';
 import type { TextmodeExportAPI } from '../types';
 import { CURATED_DEFAULTS } from './config/ExportDefaults';
+import { DefaultsStore } from './config/DefaultsStore';
 
 describe('getExportFormatDefinitions', () => {
 	it('adds layer targeting only to layer-data formats', () => {
@@ -187,6 +188,42 @@ describe('getExportFormatDefinitions', () => {
 
 			blade.destroy();
 		}
+	});
+
+	it('constructs blades with mutable defaults', () => {
+		const definitions = getExportFormatDefinitions();
+		const container = document.createElement('div');
+
+		for (const definition of definitions) {
+			const blade = definition.createBlade();
+			blade.mount(container);
+
+			expect(() => {
+				blade.setDefaults({});
+			}).not.toThrow();
+
+			blade.destroy();
+		}
+	});
+
+	it('lets blades created before a defaults update use the updated values on first mount', () => {
+		const store = new DefaultsStore();
+		const definitions = getExportFormatDefinitions(undefined, (format) => store.get(format));
+		const imageDefinition = definitions.find((definition) => definition.format === 'image');
+
+		if (!imageDefinition) {
+			throw new Error('Expected image export definition');
+		}
+
+		const blade = imageDefinition.createBlade();
+		store.merge({ image: { scale: 3 } });
+
+		const container = document.createElement('div');
+		blade.mount(container);
+		blade.reset();
+
+		expect(blade.getOptions()).toMatchObject({ scale: 3 });
+		blade.destroy();
 	});
 
 	it('blades report correct capabilities', () => {

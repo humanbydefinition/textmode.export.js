@@ -2,8 +2,27 @@ import type { ImageExportOptions } from './exporters/image';
 import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
-import type { VideoExportOptions } from './exporters/video';
+import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
+
+export type TXTOverlayDefaults = Pick<TXTExportOptions, 'preserveTrailingSpaces' | 'emptyCharacter'>;
+export type JSONOverlayDefaults = Pick<JSONExportOptions, 'target' | 'pretty' | 'includeMetadata' | 'colorMode'>;
+export type ImageOverlayDefaults = Pick<ImageExportOptions, 'format' | 'scale'>;
+export type SVGOverlayDefaults = Pick<SVGExportOptions, 'includeBackgroundRectangles' | 'drawMode' | 'strokeWidth'>;
+export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRate' | 'scale' | 'repeat'>;
+export type VideoOverlayDefaults = Pick<
+	VideoExportOptions,
+	| 'format'
+	| 'frameCount'
+	| 'frameRate'
+	| 'bitrateMode'
+	| 'latencyMode'
+	| 'hardwareAcceleration'
+	| 'keyFrameInterval'
+	| 'transparent'
+> & {
+	bitrate?: VideoBitratePreset;
+};
 
 /**
  * Per-format default options used to seed the overlay UI inputs at mount time
@@ -17,12 +36,12 @@ import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
  */
 export type ExportDefaults = {
-	txt: TXTExportOptions;
-	json: JSONExportOptions;
-	image: ImageExportOptions;
-	svg: SVGExportOptions;
-	gif: GIFExportOptions;
-	video: VideoExportOptions;
+	txt: TXTOverlayDefaults;
+	json: JSONOverlayDefaults;
+	image: ImageOverlayDefaults;
+	svg: SVGOverlayDefaults;
+	gif: GIFOverlayDefaults;
+	video: VideoOverlayDefaults;
 };
 
 /**

@@ -1,0 +1,253 @@
+// @vitest-environment jsdom
+
+import type { Textmodifier } from 'textmode.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { TextmodeExportAPI } from '../../types';
+import type { BladeCapabilities, BladeConfig } from '../blades';
+import { Blade } from '../blades';
+import { DefaultsStore } from '../config/DefaultsStore';
+import type { FormatDefinition } from '../models/FormatDefinition';
+import type { OverlayEvents } from '../models/OverlayEvents';
+import type { ExportFormat, ExportOptionsMap } from '../types';
+import type { EventBus } from './EventBus';
+import { OverlayController } from './OverlayController';
+
+class TestBlade extends Blade<Record<string, unknown>> {
+	resetCount = 0;
+	progressCount = 0;
+
+	constructor(config: BladeConfig<Record<string, unknown>>, capabilities?: Partial<BladeCapabilities>) {
+		super(config, capabilities);
+	}
+
+	render(): HTMLElement {
+		return document.createElement('div');
+	}
+
+	getOptions(): Record<string, unknown> {
+		return { ...this._config.defaultOptions };
+	}
+
+	setDefaults(values: Record<string, unknown>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
+	}
+
+	reset(): void {
+		this.resetCount += 1;
+	}
+
+	validate(): boolean {
+		return true;
+	}
+
+	isRecording(): boolean {
+		return false;
+	}
+
+	setRecordingState(): void {
+		// Test double
+	}
+
+	handleProgress(): void {
+		this.progressCount += 1;
+	}
+}
+
+interface TestControllerHarness {
+	controller: OverlayController;
+	blades: Map<ExportFormat, TestBlade>;
+	defaultsStore: DefaultsStore;
+	events: EventBus<OverlayEvents>;
+	switchFormat(format: ExportFormat): void;
+}
+
+function createTextmodifier(): Textmodifier {
+	const canvas = document.createElement('canvas');
+	canvas.getBoundingClientRect = () =>
+		({
+			top: 0,
+			left: 0,
+			right: 100,
+			bottom: 100,
+			width: 100,
+			height: 100,
+			x: 0,
+			y: 0,
+			toJSON: () => ({}),
+		}) as DOMRect;
+
+	return { canvas } as unknown as Textmodifier;
+}
+
+function createExportAPI(): TextmodeExportAPI {
+	return {
+		exportOverlay: {
+			show: vi.fn(),
+			hide: vi.fn(),
+			toggle: vi.fn(),
+			isVisible: vi.fn(() => true),
+			setDefaults: vi.fn(),
+			getDefaults: vi.fn(),
+			resetDefaults: vi.fn(),
+		},
+		saveCanvas: vi.fn(async () => undefined),
+		copyCanvas: vi.fn(async () => undefined),
+		saveSVG: vi.fn(),
+		saveStrings: vi.fn(),
+		toSVG: vi.fn(() => ''),
+		toString: vi.fn(() => ''),
+		toJSON: vi.fn(() => ({}) as never),
+		toJSONString: vi.fn(() => ''),
+		saveJSON: vi.fn(),
+		saveGIF: vi.fn(async () => undefined),
+		saveVideo: vi.fn(async () => undefined),
+	};
+}
+
+function createHarness(formats: ExportFormat[]): TestControllerHarness {
+	const defaultsStore = new DefaultsStore();
+	const blades = new Map<ExportFormat, TestBlade>();
+	const definitions = formats.map((format) => ({
+		format,
+		label: format,
+		supportsClipboard: false,
+		createBlade: () => {
+			const blade = new TestBlade(
+				{
+					format,
+					label: format,
+					supportsClipboard: false,
+					defaultOptions: defaultsStore.get(format),
+				} as BladeConfig<Record<string, unknown>>,
+				{ recording: format === 'gif' || format === 'video' }
+			);
+			blades.set(format, blade);
+			return blade as unknown as Blade<ExportOptionsMap[ExportFormat]>;
+		},
+	})) satisfies Array<FormatDefinition<ExportFormat>>;
+
+	const controller = new OverlayController(createTextmodifier(), createExportAPI(), defaultsStore, definitions);
+	controller.$mount();
+
+	const internals = controller as unknown as {
+		_events: EventBus<OverlayEvents>;
+		_handleFormatChange(format: ExportFormat): void;
+	};
+
+	return {
+		controller,
+		blades,
+		defaultsStore,
+		events: internals._events,
+		switchFormat: (format) => internals._handleFormatChange(format),
+	};
+}
+
+beforeEach(() => {
+	vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+		callback(0);
+		return 1;
+	});
+	vi.stubGlobal('cancelAnimationFrame', vi.fn());
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+	document.body.innerHTML = '';
+});
+
+describe('OverlayController defaults API', () => {
+	it('does not reset unmounted blades when defaults are set immediately', () => {
+		const { controller, blades, switchFormat } = createHarness(['txt', 'image']);
+		const txtBlade = blades.get('txt');
+		const imageBlade = blades.get('image');
+
+		if (!txtBlade || !imageBlade) {
+			throw new Error('Expected txt and image blades');
+		}
+
+		expect(txtBlade.resetCount).toBe(1);
+		expect(imageBlade.resetCount).toBe(0);
+
+		expect(() => controller.setDefaults({ image: { scale: 2 } })).not.toThrow();
+
+		expect(txtBlade.resetCount).toBe(1);
+		expect(imageBlade.resetCount).toBe(0);
+
+		switchFormat('image');
+
+		expect(imageBlade.resetCount).toBe(1);
+		expect(imageBlade.getOptions()).toMatchObject({ scale: 2 });
+		controller.$dispose();
+	});
+
+	it('resets only requested formats and defers unmounted formats until mount', () => {
+		const { controller, blades, switchFormat } = createHarness(['txt', 'image']);
+		const txtBlade = blades.get('txt');
+		const imageBlade = blades.get('image');
+
+		if (!txtBlade || !imageBlade) {
+			throw new Error('Expected txt and image blades');
+		}
+
+		controller.setDefaults({ image: { scale: 4 } });
+		controller.resetDefaults('image');
+
+		expect(txtBlade.resetCount).toBe(1);
+		expect(imageBlade.resetCount).toBe(0);
+
+		switchFormat('image');
+
+		expect(imageBlade.resetCount).toBe(1);
+		expect(imageBlade.getOptions()).toMatchObject({ scale: 1 });
+		controller.$dispose();
+	});
+
+	it('returns defaults snapshots from getDefaults', () => {
+		const { controller } = createHarness(['txt']);
+		const defaults = controller.getDefaults();
+
+		defaults.txt.emptyCharacter = '#';
+
+		expect(controller.getDefaults().txt.emptyCharacter).toBe(' ');
+		controller.$dispose();
+	});
+});
+
+describe('OverlayController recording progress routing', () => {
+	it('forwards progress only to the selected matching recording blade', () => {
+		const { controller, blades, events, switchFormat } = createHarness(['gif', 'video']);
+		const gifBlade = blades.get('gif');
+		const videoBlade = blades.get('video');
+
+		if (!gifBlade || !videoBlade) {
+			throw new Error('Expected gif and video blades');
+		}
+
+		switchFormat('video');
+		events.$emit('export:progress', {
+			format: 'gif',
+			progress: { state: 'recording', frameIndex: 1, totalFrames: 10 },
+		});
+
+		expect(gifBlade.progressCount).toBe(0);
+		expect(videoBlade.progressCount).toBe(0);
+
+		events.$emit('export:progress', {
+			format: 'video',
+			progress: { state: 'recording', frameIndex: 2, totalFrames: 10 },
+		});
+
+		expect(videoBlade.progressCount).toBe(1);
+
+		switchFormat('gif');
+		events.$emit('export:progress', {
+			format: 'gif',
+			progress: { state: 'encoding', frameIndex: 10, totalFrames: 10 },
+		});
+
+		expect(gifBlade.progressCount).toBe(1);
+		controller.$dispose();
+	});
+});
