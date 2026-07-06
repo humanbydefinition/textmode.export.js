@@ -94,7 +94,7 @@ export class OverlayController {
 		this._textmodifier = textmodifier;
 		this._defaultsStore = defaultsStore;
 
-		const defaultFormat = definitions[0]?.format;
+		const defaultFormat = this._resolveInitialFormat(defaultsStore.current.defaultFormat, definitions);
 		this._state = new StateManager(createInitialOverlayState(defaultFormat));
 		this._events = new EventBus<OverlayEvents>();
 		this._exportService = new ExportService(exportAPI, this._events);
@@ -168,8 +168,14 @@ export class OverlayController {
 	 * the new defaults when the user switches to them.
 	 */
 	setDefaults(patch: ExportDefaultsPatch): void {
+		if (patch.defaultFormat) {
+			this._assertKnownFormat(patch.defaultFormat);
+		}
 		this._defaultsStore.merge(patch);
-		this._resetAffectedBlades(Object.keys(patch) as ExportFormat[]);
+		this._resetAffectedBlades(this._getFormatKeys(patch));
+		if (patch.defaultFormat) {
+			this._handleFormatChange(patch.defaultFormat);
+		}
 	}
 
 	/**
@@ -182,9 +188,16 @@ export class OverlayController {
 	/**
 	 * Restore one or all formats to the library's curated defaults.
 	 */
-	resetDefaults(format?: ExportFormat): void {
+	resetDefaults(format?: keyof ExportDefaults): void {
 		this._defaultsStore.reset(format);
+		if (format === 'defaultFormat') {
+			this._handleFormatChange(this._defaultsStore.current.defaultFormat);
+			return;
+		}
 		this._resetAffectedBlades(format ? [format] : undefined);
+		if (!format) {
+			this._handleFormatChange(this._defaultsStore.current.defaultFormat);
+		}
 	}
 
 	public $dispose(): void {
@@ -239,6 +252,27 @@ export class OverlayController {
 				initialized: false,
 				needsReset: false,
 			});
+		}
+	}
+
+	private _resolveInitialFormat(
+		defaultFormat: ExportFormat,
+		definitions: ReadonlyArray<FormatDefinition>
+	): ExportFormat {
+		return definitions.some((definition) => definition.format === defaultFormat)
+			? defaultFormat
+			: (definitions[0]?.format ?? defaultFormat);
+	}
+
+	private _getFormatKeys(patch: ExportDefaultsPatch): ExportFormat[] {
+		return this._definitions
+			.map((definition) => definition.format)
+			.filter((format): format is ExportFormat => patch[format] !== undefined);
+	}
+
+	private _assertKnownFormat(format: ExportFormat): void {
+		if (!this._formats.has(format)) {
+			throw new Error(`Unknown export format: ${format}`);
 		}
 	}
 

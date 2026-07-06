@@ -43,6 +43,7 @@ export type VideoOverlayDefaults = Pick<
  * overlay first mounts and after a {@link OverlayController.resetDefaults}.
  */
 export type ExportDefaults = {
+	defaultFormat: ExportFormat;
 	txt: TXTOverlayDefaults;
 	json: JSONOverlayDefaults;
 	image: ImageOverlayDefaults;
@@ -58,5 +59,7 @@ export type ExportDefaults = {
  * curated defaults.  Omitted keys keep their current value.
  */
 export type ExportDefaultsPatch = {
+	defaultFormat?: ExportFormat;
+} & {
 	[K in ExportFormat]?: Partial<ExportDefaults[K]>;
 };

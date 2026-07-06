@@ -4,6 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { CURATED_DEFAULTS } from './ExportDefaults';
 
 describe('CURATED_DEFAULTS', () => {
+	it('defines the default selected export format', () => {
+		expect(CURATED_DEFAULTS.defaultFormat).toBe('txt');
+	});
+
 	it('defines values for txt', () => {
 		expect(CURATED_DEFAULTS.txt).toEqual({
 			preserveTrailingSpaces: false,
