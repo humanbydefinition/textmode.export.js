@@ -18,8 +18,8 @@ export function createExportOverlay(
 	exportAPI: TextmodeExportAPI,
 	layerTargetProvider?: LayerTargetProvider
 ): OverlayController {
-	const definitions = getExportFormatDefinitions(layerTargetProvider);
 	const defaultsStore = new DefaultsStore();
+	const definitions = getExportFormatDefinitions(layerTargetProvider, (format) => defaultsStore.get(format));
 	const controller = new OverlayController(textmodifier, exportAPI, defaultsStore, definitions);
 	controller.$mount();
 	return controller;

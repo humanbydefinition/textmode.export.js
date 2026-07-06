@@ -1,18 +1,40 @@
 import type { ExportDefaults, ExportDefaultsPatch, ExportFormat } from '../types';
-import { CURATED_DEFAULTS } from './ExportDefaults';
+import { createExportDefaults } from './ExportDefaults';
+
+function replaceObject<TValue extends object>(target: TValue, source: TValue): void {
+	for (const key of Object.keys(target) as Array<keyof TValue>) {
+		delete target[key];
+	}
+	Object.assign(target, source);
+}
+
+function cloneDefaults(defaults: ExportDefaults): ExportDefaults {
+	return {
+		txt: { ...defaults.txt },
+		json: { ...defaults.json },
+		image: { ...defaults.image },
+		svg: { ...defaults.svg },
+		gif: { ...defaults.gif },
+		video: { ...defaults.video },
+	};
+}
 
 export class DefaultsStore {
 	private _defaults: ExportDefaults;
 
 	constructor() {
-		this._defaults = this._cloneCurated();
+		this._defaults = createExportDefaults();
 	}
 
 	get current(): Readonly<ExportDefaults> {
-		return this._defaults;
+		return this.snapshot();
 	}
 
-	get(format: ExportFormat): ExportDefaults[ExportFormat] {
+	snapshot(): ExportDefaults {
+		return cloneDefaults(this._defaults);
+	}
+
+	get<TFormat extends ExportFormat>(format: TFormat): ExportDefaults[TFormat] {
 		return this._defaults[format];
 	}
 
@@ -26,40 +48,35 @@ export class DefaultsStore {
 	}
 
 	reset(format?: ExportFormat): void {
+		const curated = createExportDefaults();
 		if (!format) {
-			this._defaults = this._cloneCurated();
+			replaceObject(this._defaults.txt, curated.txt);
+			replaceObject(this._defaults.json, curated.json);
+			replaceObject(this._defaults.image, curated.image);
+			replaceObject(this._defaults.svg, curated.svg);
+			replaceObject(this._defaults.gif, curated.gif);
+			replaceObject(this._defaults.video, curated.video);
 			return;
 		}
 		switch (format) {
 			case 'txt':
-				this._defaults.txt = { ...CURATED_DEFAULTS.txt };
+				replaceObject(this._defaults.txt, curated.txt);
 				break;
 			case 'json':
-				this._defaults.json = { ...CURATED_DEFAULTS.json };
+				replaceObject(this._defaults.json, curated.json);
 				break;
 			case 'image':
-				this._defaults.image = { ...CURATED_DEFAULTS.image };
+				replaceObject(this._defaults.image, curated.image);
 				break;
 			case 'svg':
-				this._defaults.svg = { ...CURATED_DEFAULTS.svg };
+				replaceObject(this._defaults.svg, curated.svg);
 				break;
 			case 'gif':
-				this._defaults.gif = { ...CURATED_DEFAULTS.gif };
+				replaceObject(this._defaults.gif, curated.gif);
 				break;
 			case 'video':
-				this._defaults.video = { ...CURATED_DEFAULTS.video };
+				replaceObject(this._defaults.video, curated.video);
 				break;
 		}
-	}
-
-	private _cloneCurated(): ExportDefaults {
-		return {
-			txt: { ...CURATED_DEFAULTS.txt },
-			json: { ...CURATED_DEFAULTS.json },
-			image: { ...CURATED_DEFAULTS.image },
-			svg: { ...CURATED_DEFAULTS.svg },
-			gif: { ...CURATED_DEFAULTS.gif },
-			video: { ...CURATED_DEFAULTS.video },
-		};
 	}
 }

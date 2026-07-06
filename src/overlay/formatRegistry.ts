@@ -2,12 +2,20 @@ import { GIFBlade, ImageBlade, JSONBlade, SVGBlade, TextBlade, VideoBlade } from
 import type { ExportFormat } from './types';
 import type { FormatDefinition } from './models/FormatDefinition';
 import type { LayerTargetProvider } from '../exporters/base';
-import { CURATED_DEFAULTS } from './config/ExportDefaults';
+import type { ExportDefaults } from './types';
+import { createExportDefaults } from './config/ExportDefaults';
+
+export type ExportDefaultsProvider = <TFormat extends ExportFormat>(format: TFormat) => ExportDefaults[TFormat];
+
+const createStandaloneDefaultsProvider = (): ExportDefaultsProvider => {
+	const defaults = createExportDefaults();
+	return (format) => defaults[format];
+};
 
 export function getExportFormatDefinitions(
-	layerTargetProvider?: LayerTargetProvider
+	layerTargetProvider?: LayerTargetProvider,
+	getDefaults: ExportDefaultsProvider = createStandaloneDefaultsProvider()
 ): ReadonlyArray<FormatDefinition<ExportFormat>> {
-	const defaults = CURATED_DEFAULTS;
 	return [
 		{
 			format: 'txt',
@@ -18,7 +26,7 @@ export function getExportFormatDefinitions(
 					format: 'txt',
 					label: 'plain text (.txt)',
 					supportsClipboard: true,
-					defaultOptions: defaults.txt,
+					defaultOptions: getDefaults('txt'),
 					layerTargetProvider,
 				}),
 		},
@@ -31,7 +39,7 @@ export function getExportFormatDefinitions(
 					format: 'json',
 					label: 'document data (.json)',
 					supportsClipboard: true,
-					defaultOptions: defaults.json,
+					defaultOptions: getDefaults('json'),
 					layerTargetProvider,
 				}),
 		},
@@ -44,7 +52,7 @@ export function getExportFormatDefinitions(
 					format: 'image',
 					label: 'image (.png / .jpg / .webp)',
 					supportsClipboard: true,
-					defaultOptions: defaults.image,
+					defaultOptions: getDefaults('image'),
 				}),
 		},
 		{
@@ -56,7 +64,7 @@ export function getExportFormatDefinitions(
 					format: 'svg',
 					label: 'vector (.svg)',
 					supportsClipboard: true,
-					defaultOptions: defaults.svg,
+					defaultOptions: getDefaults('svg'),
 					layerTargetProvider,
 				}),
 		},
@@ -69,7 +77,7 @@ export function getExportFormatDefinitions(
 					format: 'gif',
 					label: 'animated GIF (.gif)',
 					supportsClipboard: false,
-					defaultOptions: defaults.gif,
+					defaultOptions: getDefaults('gif'),
 				}),
 		},
 		{
@@ -81,7 +89,7 @@ export function getExportFormatDefinitions(
 					format: 'video',
 					label: 'video (.webm / .mp4)',
 					supportsClipboard: false,
-					defaultOptions: defaults.video,
+					defaultOptions: getDefaults('video'),
 				}),
 		},
 	];

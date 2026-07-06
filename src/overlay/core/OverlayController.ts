@@ -26,6 +26,7 @@ interface FormatContext {
 	definition: FormatDefinition<ExportFormat>;
 	blade: Blade<ExportOptionsMap[ExportFormat]>;
 	initialized: boolean;
+	needsReset: boolean;
 }
 
 interface LayerTargetAwareBlade {
@@ -155,7 +156,7 @@ export class OverlayController {
 	 */
 	setDefaults(patch: ExportDefaultsPatch): void {
 		this._defaultsStore.merge(patch);
-		this._pushDefaultsToBlades(patch);
+		this._resetAffectedBlades(Object.keys(patch) as ExportFormat[]);
 	}
 
 	/**
@@ -170,7 +171,7 @@ export class OverlayController {
 	 */
 	resetDefaults(format?: ExportFormat): void {
 		this._defaultsStore.reset(format);
-		this._pushDefaultsToBlades();
+		this._resetAffectedBlades(format ? [format] : undefined);
 	}
 
 	public $dispose(): void {
@@ -201,10 +202,18 @@ export class OverlayController {
 
 	// ---- Private helpers -------------------------------------------------------
 
-	private _pushDefaultsToBlades(_patch?: ExportDefaultsPatch): void {
+	private _resetAffectedBlades(formats?: ReadonlyArray<ExportFormat>): void {
+		const affected = new Set<ExportFormat>(formats ?? this._formats.keys());
 		for (const [format, context] of this._formats) {
-			const effective = this._defaultsStore.get(format as ExportFormat);
-			context.blade.setDefaults(effective as ExportOptionsMap[ExportFormat]);
+			if (!affected.has(format)) {
+				continue;
+			}
+			if (context.blade.isMounted()) {
+				context.blade.reset();
+				context.needsReset = false;
+			} else {
+				context.needsReset = true;
+			}
 		}
 	}
 
@@ -215,6 +224,7 @@ export class OverlayController {
 				definition,
 				blade,
 				initialized: false,
+				needsReset: false,
 			});
 		}
 	}
@@ -311,14 +321,21 @@ export class OverlayController {
 				if (!progress) {
 					return;
 				}
-				if (format === 'gif' && this._currentBlade && isRecordingBlade(this._currentBlade.blade)) {
+				if (format === 'gif') {
 					const gifProgress = progress as GIFExportProgress;
 					this._state.$set({ gifProgress });
-					this._currentBlade.blade.handleProgress(gifProgress);
-				} else if (format === 'video' && this._currentBlade && isRecordingBlade(this._currentBlade.blade)) {
+					if (this._currentBlade?.definition.format === 'gif' && isRecordingBlade(this._currentBlade.blade)) {
+						this._currentBlade.blade.handleProgress(gifProgress);
+					}
+				} else if (format === 'video') {
 					const videoProgress = progress as VideoExportProgress;
 					this._state.$set({ videoProgress });
-					this._currentBlade.blade.handleProgress(videoProgress);
+					if (
+						this._currentBlade?.definition.format === 'video' &&
+						isRecordingBlade(this._currentBlade.blade)
+					) {
+						this._currentBlade.blade.handleProgress(videoProgress);
+					}
 				}
 				this._updateExportButton();
 			})
@@ -344,9 +361,10 @@ export class OverlayController {
 
 		this._optionsContainer.innerHTML = '';
 		context.blade.mount(this._optionsContainer);
-		if (!context.initialized) {
+		if (!context.initialized || context.needsReset) {
 			context.blade.reset();
 			context.initialized = true;
+			context.needsReset = false;
 		}
 		this._currentBlade = context;
 		this._formatSelect.value = format;

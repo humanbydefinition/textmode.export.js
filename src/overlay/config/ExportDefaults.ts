@@ -38,3 +38,14 @@ export const CURATED_DEFAULTS: Readonly<ExportDefaults> = Object.freeze({
 		transparent: false,
 	}),
 });
+
+export function createExportDefaults(): ExportDefaults {
+	return {
+		txt: { ...CURATED_DEFAULTS.txt },
+		json: { ...CURATED_DEFAULTS.json },
+		image: { ...CURATED_DEFAULTS.image },
+		svg: { ...CURATED_DEFAULTS.svg },
+		gif: { ...CURATED_DEFAULTS.gif },
+		video: { ...CURATED_DEFAULTS.video },
+	};
+}
