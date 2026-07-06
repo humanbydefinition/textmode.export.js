@@ -14,7 +14,7 @@ import { createInitialOverlayState } from '../models/OverlayState';
 import type { FormatDefinition } from '../models/FormatDefinition';
 import { ClipboardService } from '../services/ClipboardService';
 import { ExportService } from '../services/ExportService';
-import { PositionService } from '../services/PositionService';
+import { PositionService, type OverlayPosition } from '../services/PositionService';
 import type { Blade } from '../blades';
 import { isRecordingBlade } from '../blades';
 import type { GIFExportProgress } from '../../exporters/gif';
@@ -108,7 +108,8 @@ export class OverlayController {
 	public $mount(): void {
 		this._createOverlay();
 		this._renderStaticContent();
-		this._positionService = new PositionService(this._textmodifier, this._shadowHost);
+		this._positionService = new PositionService(this._textmodifier, this._shadowHost, this._overlayElement);
+		this._positionService.attachDragHandle(this._header.dragHandleElement);
 		this._positionService.bind();
 		this._switchFormat(this._currentFormat);
 	}
@@ -142,6 +143,18 @@ export class OverlayController {
 		if (this._currentBlade && hasLayerTargets(this._currentBlade.blade)) {
 			this._currentBlade.blade.refreshLayerTargets();
 		}
+	}
+
+	public resetPosition(): void {
+		this._positionService.resetPosition();
+	}
+
+	public getPosition(): Readonly<OverlayPosition> {
+		return this._positionService.getPosition();
+	}
+
+	public setPosition(position: Pick<OverlayPosition, 'offsetX' | 'offsetY'>): void {
+		this._positionService.setPosition(position);
 	}
 
 	// ---- Runtime defaults API -------------------------------------------------

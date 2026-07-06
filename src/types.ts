@@ -62,6 +62,30 @@ export type ExportDefaultsPatch = {
 };
 
 /**
+ * Current canvas-relative placement state for the export overlay UI.
+ *
+ * `auto` means the overlay is using the library default offset from the
+ * textmode canvas. `custom` means the user or runtime API has moved it.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPosition | ExportOverlayPosition API reference}
+ */
+export interface ExportOverlayPosition {
+	mode: 'auto' | 'custom';
+	offsetX: number;
+	offsetY: number;
+}
+
+/**
+ * Canvas-relative placement coordinates for the export overlay UI.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPositionInput | ExportOverlayPositionInput API reference}
+ */
+export interface ExportOverlayPositionInput {
+	offsetX: number;
+	offsetY: number;
+}
+
+/**
  * Controller for managing the export overlay UI visibility at runtime.
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController | ExportOverlayController API reference}
@@ -114,6 +138,49 @@ export interface ExportOverlayController {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/isVisible | ExportOverlayController.isVisible API reference}
 	 */
 	isVisible(): boolean;
+
+	/**
+	 * Restores the export overlay to its default canvas-relative placement and
+	 * clears any remembered placement.
+	 *
+	 * @example
+	 * ```ts
+	 * t.exportOverlay.resetPosition();
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/resetPosition | ExportOverlayController.resetPosition API reference}
+	 */
+	resetPosition(): void;
+
+	/**
+	 * Reads the current export overlay placement.
+	 *
+	 * @returns The current canvas-relative overlay placement state.
+	 *
+	 * @example
+	 * ```ts
+	 * const position = t.exportOverlay.getPosition();
+	 * console.log(position.mode, position.offsetX, position.offsetY);
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/getPosition | ExportOverlayController.getPosition API reference}
+	 */
+	getPosition(): Readonly<ExportOverlayPosition>;
+
+	/**
+	 * Moves the export overlay to a custom canvas-relative placement and
+	 * remembers that placement for future sessions on the same origin.
+	 *
+	 * @param position Canvas-relative overlay offsets in CSS pixels.
+	 *
+	 * @example
+	 * ```ts
+	 * t.exportOverlay.setPosition({ offsetX: 24, offsetY: 24 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setPosition | ExportOverlayController.setPosition API reference}
+	 */
+	setPosition(position: ExportOverlayPositionInput): void;
 
 	/**
 	 * Override the curated per-format defaults at runtime.
@@ -176,7 +243,7 @@ export interface ExportOverlayController {
 }
 
 /**
- * Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
+ * Runtime export helpers that `ExportPlugin` attaches to the `Textmodifier` instance.
  *
  * @example
  * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
