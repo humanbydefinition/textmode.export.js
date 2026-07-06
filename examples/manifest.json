@@ -12,6 +12,11 @@
 					"description": "Creates a textmode sketch with ExportPlugin installed and a live overlay ready for manual export flows."
 				},
 				{
+					"title": "ExportPlugin.defaults",
+					"sourceFile": "examples/ExportPlugin/defaults/sketch.js",
+					"description": "Shows how to override and reset overlay default values at runtime using t.exportOverlay.setDefaults and .resetDefaults."
+				},
+				{
 					"title": "ExportPlugin.layerTargets",
 					"sourceFile": "examples/ExportPlugin/layerTargets/sketch.js",
 					"description": "Draws base, foreground, and annotation layers so TXT, JSON, and SVG exports can target individual layers."
