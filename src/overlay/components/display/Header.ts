@@ -5,13 +5,35 @@ type IconPath = Record<string, string>;
 
 export class Header extends Component<void> {
 	private static readonly _iconNamespace = 'http://www.w3.org/2000/svg';
+	private _dragHandle?: HTMLButtonElement;
+
+	get dragHandleElement(): HTMLButtonElement {
+		if (!this._dragHandle) {
+			throw new Error('Header drag handle is not mounted yet');
+		}
+		return this._dragHandle;
+	}
 
 	render(): HTMLElement {
+		this._dragHandle = undefined;
 		const container = document.createElement('div');
 		container.classList.add(overlayClasses.stack, overlayClasses.stackDense, overlayClasses.header);
 
 		const titleRow = document.createElement('div');
 		titleRow.classList.add(overlayClasses.headerTitleRow);
+
+		const identity = document.createElement('div');
+		identity.classList.add(overlayClasses.headerIdentity);
+
+		const dragHandle = this._createButton('Move export overlay', overlayClasses.grabHandle, [
+			{ d: 'M9 5h.01' },
+			{ d: 'M15 5h.01' },
+			{ d: 'M9 12h.01' },
+			{ d: 'M15 12h.01' },
+			{ d: 'M9 19h.01' },
+			{ d: 'M15 19h.01' },
+		]);
+		this._dragHandle = dragHandle;
 
 		const title = document.createElement('strong');
 		title.textContent = 'textmode.export.js';
@@ -51,7 +73,10 @@ export class Header extends Component<void> {
 		links.appendChild(githubLink);
 		links.appendChild(supportLink);
 
-		titleRow.appendChild(title);
+		identity.appendChild(dragHandle);
+		identity.appendChild(title);
+
+		titleRow.appendChild(identity);
 		titleRow.appendChild(links);
 
 		const divider = document.createElement('div');
@@ -60,6 +85,16 @@ export class Header extends Component<void> {
 		container.appendChild(titleRow);
 		container.appendChild(divider);
 		return container;
+	}
+
+	private _createButton(ariaLabel: string, iconClass: string, paths: IconPath[]): HTMLButtonElement {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.classList.add(iconClass);
+		button.setAttribute('aria-label', ariaLabel);
+		button.title = ariaLabel;
+		button.appendChild(this._createIcon(overlayClasses.linkIcon, paths));
+		return button;
 	}
 
 	private _createLink(href: string, ariaLabel: string, iconClass: string, paths: IconPath[]): HTMLAnchorElement {

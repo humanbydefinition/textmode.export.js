@@ -41,7 +41,7 @@ import type { TextmodeExportAPI, ExportOverlayController, ExportDefaults, Export
 import { TEXTMODE_EXPORT_VERSION } from './version';
 
 // Re-export all types for consumers
-export type { ExportDefaults, ExportDefaultsPatch } from './types';
+export type { ExportDefaults, ExportDefaultsPatch, ExportOverlayPosition, ExportOverlayPositionInput } from './types';
 export type { TextmodeExportAPI, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
@@ -252,6 +252,9 @@ export const ExportPlugin: TextmodePlugin = {
 			hide: () => overlayController.hide(),
 			toggle: () => overlayController.toggle(),
 			isVisible: () => overlayController.isVisible(),
+			resetPosition: () => overlayController.resetPosition(),
+			getPosition: () => overlayController.getPosition(),
+			setPosition: (position) => overlayController.setPosition(position),
 			setDefaults: (patch: ExportDefaultsPatch) => overlayController.setDefaults(patch),
 			getDefaults: () => overlayController.getDefaults(),
 			resetDefaults: (format?: keyof ExportDefaults) => overlayController.resetDefaults(format),
