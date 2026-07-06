@@ -14,6 +14,29 @@ export interface ExportHooks {
 	onVideoProgress?: (progress: VideoExportProgress) => void;
 }
 
+type Executor = (api: TextmodeExportAPI, options: unknown, hooks: ExportHooks) => Promise<void> | void;
+
+const EXECUTORS: Record<ExportFormat, Executor> = {
+	txt: (api, options) => Promise.resolve(api.saveStrings(options as TXTExportOptions)),
+	json: (api, options) => Promise.resolve(api.saveJSON(options as JSONExportOptions)),
+	image: (api, options) => api.saveCanvas(options as ImageExportOptions),
+	svg: (api, options) => Promise.resolve(api.saveSVG(options as SVGExportOptions)),
+	gif: (api, options, hooks) => {
+		const payload: GIFExportOptions = {
+			...(options as GIFExportOptions),
+			onProgress: hooks.onGIFProgress,
+		};
+		return api.saveGIF(payload);
+	},
+	video: (api, options, hooks) => {
+		const payload: VideoExportOptions = {
+			...(options as VideoExportOptions),
+			onProgress: hooks.onVideoProgress,
+		};
+		return api.saveVideo(payload);
+	},
+};
+
 export class ExportService {
 	private readonly api: TextmodeExportAPI;
 	private readonly events: EventBus<OverlayEvents>;
@@ -45,38 +68,11 @@ export class ExportService {
 						: undefined,
 			};
 
-			await this._execute(format, options, forwardingHooks);
+			await EXECUTORS[format](this.api, options, forwardingHooks);
 			this.events.$emit('export:success', { format });
 		} catch (error) {
 			this.events.$emit('export:error', { format, error: error as Error });
 			throw error;
-		}
-	}
-
-	private _execute(format: ExportFormat, options: unknown, hooks: ExportHooks): Promise<void> | void {
-		switch (format) {
-			case 'txt':
-				return Promise.resolve(this.api.saveStrings(options as TXTExportOptions));
-			case 'json':
-				return Promise.resolve(this.api.saveJSON(options as JSONExportOptions));
-			case 'image':
-				return this.api.saveCanvas(options as ImageExportOptions);
-			case 'svg':
-				return Promise.resolve(this.api.saveSVG(options as SVGExportOptions));
-			case 'gif': {
-				const payload: GIFExportOptions = {
-					...(options as GIFExportOptions),
-					onProgress: hooks.onGIFProgress,
-				};
-				return this.api.saveGIF(payload);
-			}
-			case 'video': {
-				const payload: VideoExportOptions = {
-					...(options as VideoExportOptions),
-					onProgress: hooks.onVideoProgress,
-				};
-				return this.api.saveVideo(payload);
-			}
 		}
 	}
 }

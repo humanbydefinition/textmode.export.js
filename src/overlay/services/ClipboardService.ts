@@ -3,6 +3,8 @@ import type { TextmodeExportAPI } from '../../types';
 
 type ClipboardExportFormat = Extract<ExportFormat, 'txt' | 'json' | 'svg' | 'image'>;
 
+const CLIPBOARD_FORMATS: ReadonlySet<ClipboardExportFormat> = new Set(['txt', 'json', 'svg', 'image']);
+
 export class ClipboardService {
 	private readonly api: TextmodeExportAPI;
 
@@ -10,11 +12,6 @@ export class ClipboardService {
 		this.api = api;
 	}
 
-	async $copy(format: 'txt', options: ExportOptionsMap['txt']): Promise<void>;
-	async $copy(format: 'json', options: ExportOptionsMap['json']): Promise<void>;
-	async $copy(format: 'svg', options: ExportOptionsMap['svg']): Promise<void>;
-	async $copy(format: 'image', options: ExportOptionsMap['image']): Promise<void>;
-	async $copy(format: ClipboardExportFormat, options: ExportOptionsMap[ClipboardExportFormat]): Promise<void>;
 	async $copy(format: ClipboardExportFormat, options: ExportOptionsMap[ClipboardExportFormat]): Promise<void> {
 		switch (format) {
 			case 'txt': {
@@ -39,5 +36,9 @@ export class ClipboardService {
 			default:
 				throw new Error(`Clipboard not supported for ${format}`);
 		}
+	}
+
+	static isClipboardFormat(format: ExportFormat): format is ClipboardExportFormat {
+		return (CLIPBOARD_FORMATS as ReadonlySet<ExportFormat>).has(format);
 	}
 }

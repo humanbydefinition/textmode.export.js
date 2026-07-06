@@ -2,9 +2,19 @@ import { GIFBlade, ImageBlade, JSONBlade, SVGBlade, TextBlade, VideoBlade } from
 import type { ExportFormat } from './types';
 import type { FormatDefinition } from './models/FormatDefinition';
 import type { LayerTargetProvider } from '../exporters/base';
+import type { ExportDefaults } from './types';
+import { createExportDefaults } from './config/ExportDefaults';
+
+export type ExportDefaultsProvider = <TFormat extends ExportFormat>(format: TFormat) => ExportDefaults[TFormat];
+
+const createStandaloneDefaultsProvider = (): ExportDefaultsProvider => {
+	const defaults = createExportDefaults();
+	return (format) => defaults[format];
+};
 
 export function getExportFormatDefinitions(
-	layerTargetProvider?: LayerTargetProvider
+	layerTargetProvider?: LayerTargetProvider,
+	getDefaults: ExportDefaultsProvider = createStandaloneDefaultsProvider()
 ): ReadonlyArray<FormatDefinition<ExportFormat>> {
 	return [
 		{
@@ -16,7 +26,7 @@ export function getExportFormatDefinitions(
 					format: 'txt',
 					label: 'plain text (.txt)',
 					supportsClipboard: true,
-					defaultOptions: { preserveTrailingSpaces: false, emptyCharacter: ' ' },
+					defaultOptions: getDefaults('txt'),
 					layerTargetProvider,
 				}),
 		},
@@ -29,12 +39,7 @@ export function getExportFormatDefinitions(
 					format: 'json',
 					label: 'document data (.json)',
 					supportsClipboard: true,
-					defaultOptions: {
-						target: 'selected',
-						pretty: true,
-						includeMetadata: true,
-						colorMode: 'hex',
-					},
+					defaultOptions: getDefaults('json'),
 					layerTargetProvider,
 				}),
 		},
@@ -47,7 +52,7 @@ export function getExportFormatDefinitions(
 					format: 'image',
 					label: 'image (.png / .jpg / .webp)',
 					supportsClipboard: true,
-					defaultOptions: { format: 'png', scale: 1 },
+					defaultOptions: getDefaults('image'),
 				}),
 		},
 		{
@@ -59,11 +64,7 @@ export function getExportFormatDefinitions(
 					format: 'svg',
 					label: 'vector (.svg)',
 					supportsClipboard: true,
-					defaultOptions: {
-						includeBackgroundRectangles: true,
-						drawMode: 'fill',
-						strokeWidth: 1,
-					},
+					defaultOptions: getDefaults('svg'),
 					layerTargetProvider,
 				}),
 		},
@@ -76,12 +77,7 @@ export function getExportFormatDefinitions(
 					format: 'gif',
 					label: 'animated GIF (.gif)',
 					supportsClipboard: false,
-					defaultOptions: {
-						frameCount: 300,
-						frameRate: 60,
-						scale: 1,
-						repeat: 0,
-					},
+					defaultOptions: getDefaults('gif'),
 				}),
 		},
 		{
@@ -93,17 +89,7 @@ export function getExportFormatDefinitions(
 					format: 'video',
 					label: 'video (.webm / .mp4)',
 					supportsClipboard: false,
-					defaultOptions: {
-						format: 'mp4',
-						frameCount: 480,
-						frameRate: 60,
-						bitrate: 'medium',
-						bitrateMode: 'variable',
-						latencyMode: 'quality',
-						hardwareAcceleration: 'no-preference',
-						keyFrameInterval: 2,
-						transparent: false,
-					},
+					defaultOptions: getDefaults('video'),
 				}),
 		},
 	];
