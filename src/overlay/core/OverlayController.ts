@@ -118,6 +118,7 @@ export class OverlayController {
 		if (this._shadowHost) {
 			this.refreshLayerTargets();
 			this._shadowHost.style.display = '';
+			this._positionService?.scheduleUpdate();
 		}
 	}
 
