@@ -29,13 +29,20 @@ export type VideoOverlayDefaults = Pick<
  * and after a {@link ExportOverlayController.resetDefaults} call.
  *
  * Each sub-object contains the library-chosen defaults for the fields that
- * the overlay exposes.  You can read and override them at runtime via
+ * the overlay exposes.  Top-level `format` controls which export format is
+ * selected in the overlay. You can read and override them at runtime via
  * {@link ExportOverlayController.getDefaults} and
  * {@link ExportOverlayController.setDefaults}.
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
  */
 export type ExportDefaults = {
+	/**
+	 * Export format selected by default in the overlay.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
+	 */
+	format: 'txt' | 'json' | 'image' | 'gif' | 'video' | 'svg';
 	txt: TXTOverlayDefaults;
 	json: JSONOverlayDefaults;
 	image: ImageOverlayDefaults;
@@ -47,19 +54,46 @@ export type ExportDefaults = {
 /**
  * Partial patch accepted by {@link ExportOverlayController.setDefaults}.
  *
- * Every supplied sub-object is deep-merged into the corresponding format's
- * curated defaults.  Omitted keys keep their current value.
+ * Every supplied per-format sub-object is deep-merged into the corresponding
+ * format's curated defaults. Top-level `format` changes the overlay's selected
+ * format. Omitted keys keep their current value.
  *
  * @example
  * ```ts
- * t.exportOverlay.setDefaults({ image: { scale: 2 }, gif: { frameRate: 30 } });
+ * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
  * ```
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaultsPatch | ExportDefaultsPatch API reference}
  */
 export type ExportDefaultsPatch = {
-	[K in keyof ExportDefaults]?: Partial<ExportDefaults[K]>;
+	format?: ExportDefaults['format'];
+} & {
+	[K in Exclude<keyof ExportDefaults, 'format'>]?: Partial<ExportDefaults[K]>;
 };
+
+/**
+ * Current canvas-relative placement state for the export overlay UI.
+ *
+ * `auto` means the overlay is using the library default offset from the
+ * textmode canvas. `custom` means the user or runtime API has moved it.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPosition | ExportOverlayPosition API reference}
+ */
+export interface ExportOverlayPosition {
+	mode: 'auto' | 'custom';
+	offsetX: number;
+	offsetY: number;
+}
+
+/**
+ * Canvas-relative placement coordinates for the export overlay UI.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPositionInput | ExportOverlayPositionInput API reference}
+ */
+export interface ExportOverlayPositionInput {
+	offsetX: number;
+	offsetY: number;
+}
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
@@ -116,19 +150,61 @@ export interface ExportOverlayController {
 	isVisible(): boolean;
 
 	/**
-	 * Override the curated per-format defaults at runtime.
+	 * Restores the export overlay to its default canvas-relative placement and
+	 * clears any remembered placement.
 	 *
-	 * Merges the supplied patch into the internal defaults store and
-	 * pushes the new values into every mounted blade.  The currently
-	 * visible blade is updated immediately; other formats pick up
-	 * the new defaults when the user switches to them.
+	 * @example
+	 * ```ts
+	 * t.exportOverlay.resetPosition();
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/resetPosition | ExportOverlayController.resetPosition API reference}
+	 */
+	resetPosition(): void;
+
+	/**
+	 * Reads the current export overlay placement.
+	 *
+	 * @returns The current canvas-relative overlay placement state.
+	 *
+	 * @example
+	 * ```ts
+	 * const position = t.exportOverlay.getPosition();
+	 * console.log(position.mode, position.offsetX, position.offsetY);
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/getPosition | ExportOverlayController.getPosition API reference}
+	 */
+	getPosition(): Readonly<ExportOverlayPosition>;
+
+	/**
+	 * Moves the export overlay to a custom canvas-relative placement and
+	 * remembers that placement for future sessions on the same origin.
+	 *
+	 * @param position Canvas-relative overlay offsets in CSS pixels.
+	 *
+	 * @example
+	 * ```ts
+	 * t.exportOverlay.setPosition({ offsetX: 24, offsetY: 24 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setPosition | ExportOverlayController.setPosition API reference}
+	 */
+	setPosition(position: ExportOverlayPositionInput): void;
+
+	/**
+	 * Override the curated overlay defaults at runtime.
+	 *
+	 * Merges the supplied patch into the internal defaults store. Per-format
+	 * option patches are pushed into mounted blades; top-level `format` updates
+	 * the overlay's selected export format immediately.
 	 *
 	 * @param patch Partial defaults to merge per format.
 	 *
 	 * @example
 	 * ```ts
-	 * // Set image scale to 2× and GIF to 30 fps
-	 * t.exportOverlay.setDefaults({ image: { scale: 2 }, gif: { frameRate: 30 } });
+	 * // Select image export by default, set image scale to 2×, and GIF to 30 fps
+	 * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setDefaults | ExportOverlayController.setDefaults API reference}
@@ -166,6 +242,9 @@ export interface ExportOverlayController {
 	 * // Reset image defaults
 	 * t.exportOverlay.resetDefaults('image');
 	 *
+	 * // Reset the overlay's selected default export format
+	 * t.exportOverlay.resetDefaults('format');
+	 *
 	 * // Reset all formats
 	 * t.exportOverlay.resetDefaults();
 	 * ```
@@ -176,7 +255,7 @@ export interface ExportOverlayController {
 }
 
 /**
- * Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
+ * Runtime export helpers that `ExportPlugin` attaches to the `Textmodifier` instance.
  *
  * @example
  * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}

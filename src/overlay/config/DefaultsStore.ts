@@ -1,6 +1,8 @@
 import type { ExportDefaults, ExportDefaultsPatch, ExportFormat } from '../types';
 import { createExportDefaults } from './ExportDefaults';
 
+export type ExportDefaultsResetTarget = ExportFormat | 'format';
+
 function replaceObject<TValue extends object>(target: TValue, source: TValue): void {
 	for (const key of Object.keys(target) as Array<keyof TValue>) {
 		delete target[key];
@@ -10,6 +12,7 @@ function replaceObject<TValue extends object>(target: TValue, source: TValue): v
 
 function cloneDefaults(defaults: ExportDefaults): ExportDefaults {
 	return {
+		format: defaults.format,
 		txt: { ...defaults.txt },
 		json: { ...defaults.json },
 		image: { ...defaults.image },
@@ -39,6 +42,7 @@ export class DefaultsStore {
 	}
 
 	merge(patch: ExportDefaultsPatch): void {
+		if (patch.format) this._defaults.format = patch.format;
 		if (patch.txt) Object.assign(this._defaults.txt, patch.txt);
 		if (patch.json) Object.assign(this._defaults.json, patch.json);
 		if (patch.image) Object.assign(this._defaults.image, patch.image);
@@ -47,9 +51,10 @@ export class DefaultsStore {
 		if (patch.video) Object.assign(this._defaults.video, patch.video);
 	}
 
-	reset(format?: ExportFormat): void {
+	reset(target?: ExportDefaultsResetTarget): void {
 		const curated = createExportDefaults();
-		if (!format) {
+		if (!target) {
+			this._defaults.format = curated.format;
 			replaceObject(this._defaults.txt, curated.txt);
 			replaceObject(this._defaults.json, curated.json);
 			replaceObject(this._defaults.image, curated.image);
@@ -58,7 +63,10 @@ export class DefaultsStore {
 			replaceObject(this._defaults.video, curated.video);
 			return;
 		}
-		switch (format) {
+		switch (target) {
+			case 'format':
+				this._defaults.format = curated.format;
+				break;
 			case 'txt':
 				replaceObject(this._defaults.txt, curated.txt);
 				break;

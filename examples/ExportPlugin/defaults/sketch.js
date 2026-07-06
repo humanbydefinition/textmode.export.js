@@ -10,15 +10,48 @@ const t = textmode.create({
 	plugins: [ExportPlugin],
 });
 
-// Override the default values pre-filled in the overlay inputs
+// Override every default value that can be controlled in the overlay
 t.exportOverlay.setDefaults({
-	image: { scale: 2 },
-	gif: { frameCount: 120, frameRate: 30 },
-	video: { frameCount: 240, frameRate: 30, bitrate: 'low' },
+	format: 'image',
+	txt: {
+		preserveTrailingSpaces: false,
+		emptyCharacter: ' ',
+	},
+	json: {
+		target: 'selected',
+		pretty: true,
+		includeMetadata: true,
+		colorMode: 'hex',
+	},
+	image: {
+		format: 'png',
+		scale: 2,
+	},
+	svg: {
+		includeBackgroundRectangles: true,
+		drawMode: 'fill',
+		strokeWidth: 1,
+	},
+	gif: {
+		frameCount: 120,
+		frameRate: 30,
+		scale: 1,
+		repeat: 0,
+	},
+	video: {
+		format: 'mp4',
+		frameCount: 240,
+		frameRate: 30,
+		bitrate: 'low',
+		bitrateMode: 'variable',
+		latencyMode: 'quality',
+		hardwareAcceleration: 'no-preference',
+		keyFrameInterval: 2,
+		transparent: false,
+	},
 });
 
-console.log('Current image defaults:', t.exportOverlay.getDefaults().image);
-console.log('Current GIF defaults:', t.exportOverlay.getDefaults().gif);
+console.log('Current overlay defaults:', t.exportOverlay.getDefaults());
 
 t.draw(() => {
 	t.background(0);

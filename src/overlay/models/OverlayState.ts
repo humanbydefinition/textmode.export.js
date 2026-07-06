@@ -15,7 +15,7 @@ export interface OverlayState {
 	error?: Error;
 }
 
-export const createInitialOverlayState = (defaultFormat: ExportFormat): OverlayState => ({
-	format: defaultFormat,
+export const createInitialOverlayState = (initialFormat: ExportFormat): OverlayState => ({
+	format: initialFormat,
 	isBusy: false,
 });
