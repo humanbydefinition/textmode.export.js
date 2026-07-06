@@ -7,6 +7,12 @@ interface ManagedComponent {
 	destroy(): void;
 }
 
+export interface BladeCapabilities {
+	clipboard: boolean;
+	layerTarget: boolean;
+	recording: boolean;
+}
+
 export interface BladeConfig<TOptions> {
 	label: string;
 	supportsClipboard: boolean;
@@ -16,17 +22,25 @@ export interface BladeConfig<TOptions> {
 }
 
 export abstract class Blade<TOptions> extends Component<void> {
-	protected readonly _config: BladeConfig<TOptions>;
+	readonly capabilities: BladeCapabilities;
+	protected _config: BladeConfig<TOptions>;
 	private readonly _managedComponents = new Set<ManagedComponent>();
 
-	constructor(config: BladeConfig<TOptions>) {
+	constructor(config: BladeConfig<TOptions>, capabilities?: Partial<BladeCapabilities>) {
 		super();
 		this._config = config;
+		this.capabilities = {
+			clipboard: config.supportsClipboard,
+			layerTarget: !!config.layerTargetProvider,
+			recording: false,
+			...capabilities,
+		};
 	}
 
 	abstract getOptions(): TOptions;
 	abstract reset(): void;
 	abstract validate(): boolean;
+	abstract setDefaults(values: Partial<TOptions>): void;
 
 	protected _manageComponent<TComponent extends ManagedComponent>(component: TComponent): TComponent {
 		this._managedComponents.add(component);

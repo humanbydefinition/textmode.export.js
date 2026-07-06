@@ -79,9 +79,12 @@ t.draw(() => {
 });
 
 // Control the export overlay UI at runtime
-// t.exportOverlay.hide();  // Hide the overlay
-// t.exportOverlay.show();  // Show the overlay
+// t.exportOverlay.hide();   // Hide the overlay
+// t.exportOverlay.show();   // Show the overlay
 // t.exportOverlay.toggle(); // Toggle visibility
+
+// Override input defaults at runtime
+// t.exportOverlay.setDefaults({ image: { scale: 2 } });
 
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);
@@ -147,9 +150,12 @@ t.draw(() => {
 });
 
 // Control the export overlay UI at runtime
-// t.exportOverlay.hide();  // Hide the overlay
-// t.exportOverlay.show();  // Show the overlay
+// t.exportOverlay.hide();   // Hide the overlay
+// t.exportOverlay.show();   // Show the overlay
 // t.exportOverlay.toggle(); // Toggle visibility
+
+// Override input defaults at runtime
+// t.exportOverlay.setDefaults({ image: { scale: 2 } });
 
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);

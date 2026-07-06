@@ -1,6 +1,6 @@
 import type { Textmodifier } from 'textmode.js';
 import type { TextmodeExportAPI } from '../../types';
-import type { ExportFormat, ExportOptionsMap } from '../types';
+import type { ExportDefaults, ExportDefaultsPatch, ExportFormat, ExportOptionsMap } from '../types';
 import { overlayClasses } from '../utils/classes';
 import { Header } from '../components/display/Header';
 import { Field } from '../components/base/Field';
@@ -10,21 +10,23 @@ import { EventBus } from './EventBus';
 import { StateManager } from './StateManager';
 import type { OverlayEvents } from '../models/OverlayEvents';
 import type { OverlayState } from '../models/OverlayState';
+import { createInitialOverlayState } from '../models/OverlayState';
 import type { FormatDefinition } from '../models/FormatDefinition';
 import { ClipboardService } from '../services/ClipboardService';
 import { ExportService } from '../services/ExportService';
-import { PositionService } from '../services/PositionService';
+import { PositionService, type OverlayPosition } from '../services/PositionService';
 import type { Blade } from '../blades';
-import { GIFBlade } from '../blades/GIFBlade';
-import { VideoBlade } from '../blades/VideoBlade';
+import { isRecordingBlade } from '../blades';
 import type { GIFExportProgress } from '../../exporters/gif';
 import type { VideoExportProgress } from '../../exporters/video';
+import { DefaultsStore } from '../config/DefaultsStore';
 import overlayStyles from '../style.css?inline';
 
 interface FormatContext {
 	definition: FormatDefinition<ExportFormat>;
 	blade: Blade<ExportOptionsMap[ExportFormat]>;
 	initialized: boolean;
+	needsReset: boolean;
 }
 
 interface LayerTargetAwareBlade {
@@ -34,11 +36,12 @@ interface LayerTargetAwareBlade {
 function hasLayerTargets(
 	blade: Blade<ExportOptionsMap[ExportFormat]>
 ): blade is Blade<ExportOptionsMap[ExportFormat]> & LayerTargetAwareBlade {
-	return typeof (blade as Partial<LayerTargetAwareBlade>).refreshLayerTargets === 'function';
+	return blade.capabilities.layerTarget;
 }
 
 export class OverlayController {
 	private readonly _textmodifier: Textmodifier;
+	private readonly _defaultsStore: DefaultsStore;
 	private readonly _state: StateManager<OverlayState>;
 	private readonly _events: EventBus<OverlayEvents>;
 	private readonly _exportService: ExportService;
@@ -85,17 +88,19 @@ export class OverlayController {
 	constructor(
 		textmodifier: Textmodifier,
 		exportAPI: TextmodeExportAPI,
-		state: StateManager<OverlayState>,
-		events: EventBus<OverlayEvents>,
+		defaultsStore: DefaultsStore,
 		definitions: ReadonlyArray<FormatDefinition>
 	) {
 		this._textmodifier = textmodifier;
-		this._state = state;
-		this._events = events;
-		this._exportService = new ExportService(exportAPI, events);
+		this._defaultsStore = defaultsStore;
+
+		const initialFormat = this._resolveInitialFormat(defaultsStore.current.format, definitions);
+		this._state = new StateManager(createInitialOverlayState(initialFormat));
+		this._events = new EventBus<OverlayEvents>();
+		this._exportService = new ExportService(exportAPI, this._events);
 		this._clipboardService = new ClipboardService(exportAPI);
 		this._definitions = definitions;
-		this._currentFormat = state.snapshot.format;
+		this._currentFormat = initialFormat;
 		this._initializeFormatMap();
 		this._registerEventHandlers();
 	}
@@ -103,7 +108,8 @@ export class OverlayController {
 	public $mount(): void {
 		this._createOverlay();
 		this._renderStaticContent();
-		this._positionService = new PositionService(this._textmodifier, this._shadowHost);
+		this._positionService = new PositionService(this._textmodifier, this._shadowHost, this._overlayElement);
+		this._positionService.attachDragHandle(this._header.dragHandleElement);
 		this._positionService.bind();
 		this._switchFormat(this._currentFormat);
 	}
@@ -112,6 +118,7 @@ export class OverlayController {
 		if (this._shadowHost) {
 			this.refreshLayerTargets();
 			this._shadowHost.style.display = '';
+			this._positionService?.scheduleUpdate();
 		}
 	}
 
@@ -136,6 +143,61 @@ export class OverlayController {
 	public refreshLayerTargets(): void {
 		if (this._currentBlade && hasLayerTargets(this._currentBlade.blade)) {
 			this._currentBlade.blade.refreshLayerTargets();
+		}
+	}
+
+	public resetPosition(): void {
+		this._positionService.resetPosition();
+	}
+
+	public getPosition(): Readonly<OverlayPosition> {
+		return this._positionService.getPosition();
+	}
+
+	public setPosition(position: Pick<OverlayPosition, 'offsetX' | 'offsetY'>): void {
+		this._positionService.setPosition(position);
+	}
+
+	// ---- Runtime defaults API -------------------------------------------------
+
+	/**
+	 * Override the curated per-format defaults at runtime.
+	 *
+	 * Merges the supplied patch into the internal defaults store and
+	 * pushes the new values into every mounted blade.  The currently
+	 * visible blade is updated immediately; other formats pick up
+	 * the new defaults when the user switches to them.
+	 */
+	setDefaults(patch: ExportDefaultsPatch): void {
+		if (patch.format) {
+			this._assertKnownFormat(patch.format);
+		}
+		this._defaultsStore.merge(patch);
+		this._resetAffectedBlades(this._getFormatKeys(patch));
+		if (patch.format) {
+			this._handleFormatChange(patch.format);
+		}
+	}
+
+	/**
+	 * Read the current effective defaults for every format.
+	 */
+	getDefaults(): Readonly<ExportDefaults> {
+		return this._defaultsStore.current;
+	}
+
+	/**
+	 * Restore one or all formats to the library's curated defaults.
+	 */
+	resetDefaults(target?: keyof ExportDefaults): void {
+		this._defaultsStore.reset(target);
+		if (target === 'format') {
+			this._handleFormatChange(this._defaultsStore.current.format);
+			return;
+		}
+		this._resetAffectedBlades(target ? [target] : undefined);
+		if (!target) {
+			this._handleFormatChange(this._defaultsStore.current.format);
 		}
 	}
 
@@ -165,6 +227,23 @@ export class OverlayController {
 		this._positionService?.dispose();
 	}
 
+	// ---- Private helpers -------------------------------------------------------
+
+	private _resetAffectedBlades(formats?: ReadonlyArray<ExportFormat>): void {
+		const affected = new Set<ExportFormat>(formats ?? this._formats.keys());
+		for (const [format, context] of this._formats) {
+			if (!affected.has(format)) {
+				continue;
+			}
+			if (context.blade.isMounted()) {
+				context.blade.reset();
+				context.needsReset = false;
+			} else {
+				context.needsReset = true;
+			}
+		}
+	}
+
 	private _initializeFormatMap(): void {
 		for (const definition of this._definitions) {
 			const blade = definition.createBlade();
@@ -172,7 +251,29 @@ export class OverlayController {
 				definition,
 				blade,
 				initialized: false,
+				needsReset: false,
 			});
+		}
+	}
+
+	private _resolveInitialFormat(
+		requestedFormat: ExportFormat,
+		definitions: ReadonlyArray<FormatDefinition>
+	): ExportFormat {
+		return definitions.some((definition) => definition.format === requestedFormat)
+			? requestedFormat
+			: (definitions[0]?.format ?? requestedFormat);
+	}
+
+	private _getFormatKeys(patch: ExportDefaultsPatch): ExportFormat[] {
+		return this._definitions
+			.map((definition) => definition.format)
+			.filter((format): format is ExportFormat => patch[format] !== undefined);
+	}
+
+	private _assertKnownFormat(format: ExportFormat): void {
+		if (!this._formats.has(format)) {
+			throw new Error(`Unknown export format: ${format}`);
 		}
 	}
 
@@ -268,14 +369,21 @@ export class OverlayController {
 				if (!progress) {
 					return;
 				}
-				if (format === 'gif' && this._currentBlade?.blade instanceof GIFBlade) {
+				if (format === 'gif') {
 					const gifProgress = progress as GIFExportProgress;
 					this._state.$set({ gifProgress });
-					this._currentBlade.blade.handleProgress(gifProgress);
-				} else if (format === 'video' && this._currentBlade?.blade instanceof VideoBlade) {
+					if (this._currentBlade?.definition.format === 'gif' && isRecordingBlade(this._currentBlade.blade)) {
+						this._currentBlade.blade.handleProgress(gifProgress);
+					}
+				} else if (format === 'video') {
 					const videoProgress = progress as VideoExportProgress;
 					this._state.$set({ videoProgress });
-					this._currentBlade.blade.handleProgress(videoProgress);
+					if (
+						this._currentBlade?.definition.format === 'video' &&
+						isRecordingBlade(this._currentBlade.blade)
+					) {
+						this._currentBlade.blade.handleProgress(videoProgress);
+					}
 				}
 				this._updateExportButton();
 			})
@@ -301,9 +409,10 @@ export class OverlayController {
 
 		this._optionsContainer.innerHTML = '';
 		context.blade.mount(this._optionsContainer);
-		if (!context.initialized) {
+		if (!context.initialized || context.needsReset) {
 			context.blade.reset();
 			context.initialized = true;
+			context.needsReset = false;
 		}
 		this._currentBlade = context;
 		this._formatSelect.value = format;
@@ -333,37 +442,17 @@ export class OverlayController {
 			return;
 		}
 
-		if (format === 'gif') {
-			const blade = this._currentBlade.blade as GIFBlade;
+		if (isRecordingBlade(this._currentBlade.blade)) {
+			const blade = this._currentBlade.blade;
 			if (blade.isRecording()) {
 				return;
 			}
 			blade.setRecordingState('recording');
 			try {
-				await this._exportService.$requestExport('gif', options, {
+				await this._exportService.$requestExport(format, options, {
 					onGIFProgress: (progress) => {
 						blade.setRecordingState(progress.state, progress);
 					},
-				});
-			} catch (error) {
-				blade.setRecordingState('error');
-				throw error;
-			}
-			window.setTimeout(() => {
-				blade.setRecordingState('idle');
-				this._updateExportButton();
-			}, 1600);
-			return;
-		}
-
-		if (format === 'video') {
-			const blade = this._currentBlade.blade as VideoBlade;
-			if (blade.isRecording()) {
-				return;
-			}
-			blade.setRecordingState('recording');
-			try {
-				await this._exportService.$requestExport('video', options, {
 					onVideoProgress: (progress) => {
 						blade.setRecordingState(progress.state, progress);
 					},
@@ -435,36 +524,21 @@ export class OverlayController {
 		}
 
 		const format = this._currentBlade.definition.format;
-		if (format === 'gif' && this._currentBlade.blade instanceof GIFBlade) {
+		if (isRecordingBlade(this._currentBlade.blade)) {
 			const blade = this._currentBlade.blade;
-			const progress = this._state.snapshot.gifProgress;
+			const progress = format === 'gif' ? this._state.snapshot.gifProgress : this._state.snapshot.videoProgress;
 			if (blade.isRecording()) {
 				this._exportButton.setDisabled(true);
 				if (progress?.totalFrames) {
 					const current = progress.frameIndex ?? 0;
 					const action = progress.state === 'encoding' ? 'encoding' : 'recording';
-					this._exportButton.setLabel(`${action} ${current}/${progress.totalFrames}`);
+					this._exportButton.setLabel(
+						format === 'gif'
+							? `${action} ${current}/${progress.totalFrames}`
+							: `recording ${current}/${progress.totalFrames} frames`
+					);
 				} else {
-					const action = progress?.state === 'encoding' ? 'encoding' : 'recording';
-					this._exportButton.setLabel(`${action}…`);
-				}
-			} else {
-				this._exportButton.setDisabled(false);
-				this._exportButton.setLabel('start recording');
-			}
-			return;
-		}
-
-		if (format === 'video' && this._currentBlade.blade instanceof VideoBlade) {
-			const blade = this._currentBlade.blade;
-			const progress = this._state.snapshot.videoProgress;
-			if (blade.isRecording()) {
-				this._exportButton.setDisabled(true);
-				if (progress?.totalFrames) {
-					const current = progress.frameIndex ?? 0;
-					this._exportButton.setLabel(`recording ${current}/${progress.totalFrames} frames`);
-				} else {
-					this._exportButton.setLabel('recording…');
+					this._exportButton.setLabel(progress?.state === 'encoding' ? 'encoding…' : 'recording…');
 				}
 			} else {
 				this._exportButton.setDisabled(false);

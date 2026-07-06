@@ -92,6 +92,11 @@ export class SVGBlade extends Blade<SVGExportOptions> {
 		};
 	}
 
+	setDefaults(values: Partial<SVGExportOptions>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
+	}
+
 	reset(): void {
 		this.applyDefaults();
 		this.updateStrokeControls();
@@ -116,11 +121,10 @@ export class SVGBlade extends Blade<SVGExportOptions> {
 	}
 
 	private applyDefaults(): void {
-		const defaults = this._config.defaultOptions ?? {};
+		const defaults = this._config.defaultOptions;
 		this.includeBackground.checked = defaults.includeBackgroundRectangles ?? true;
-		this.drawMode.value = (defaults.drawMode as NonNullable<SVGExportOptions['drawMode']>) ?? 'fill';
-		const strokeWidth = defaults.strokeWidth ?? 1;
-		this.strokeWidth.value = String(strokeWidth);
+		this.drawMode.value = defaults.drawMode ?? 'fill';
+		this.strokeWidth.value = String(defaults.strokeWidth ?? 1);
 		this.strokeWidth.refresh();
 	}
 }
