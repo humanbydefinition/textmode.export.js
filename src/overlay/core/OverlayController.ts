@@ -14,7 +14,7 @@ import { createInitialOverlayState } from '../models/OverlayState';
 import type { FormatDefinition } from '../models/FormatDefinition';
 import { ClipboardService } from '../services/ClipboardService';
 import { ExportService } from '../services/ExportService';
-import { PositionService } from '../services/PositionService';
+import { PositionService, type OverlayPosition } from '../services/PositionService';
 import type { Blade } from '../blades';
 import { isRecordingBlade } from '../blades';
 import type { GIFExportProgress } from '../../exporters/gif';
@@ -94,13 +94,13 @@ export class OverlayController {
 		this._textmodifier = textmodifier;
 		this._defaultsStore = defaultsStore;
 
-		const defaultFormat = definitions[0]?.format;
-		this._state = new StateManager(createInitialOverlayState(defaultFormat));
+		const initialFormat = this._resolveInitialFormat(defaultsStore.current.format, definitions);
+		this._state = new StateManager(createInitialOverlayState(initialFormat));
 		this._events = new EventBus<OverlayEvents>();
 		this._exportService = new ExportService(exportAPI, this._events);
 		this._clipboardService = new ClipboardService(exportAPI);
 		this._definitions = definitions;
-		this._currentFormat = defaultFormat;
+		this._currentFormat = initialFormat;
 		this._initializeFormatMap();
 		this._registerEventHandlers();
 	}
@@ -108,7 +108,8 @@ export class OverlayController {
 	public $mount(): void {
 		this._createOverlay();
 		this._renderStaticContent();
-		this._positionService = new PositionService(this._textmodifier, this._shadowHost);
+		this._positionService = new PositionService(this._textmodifier, this._shadowHost, this._overlayElement);
+		this._positionService.attachDragHandle(this._header.dragHandleElement);
 		this._positionService.bind();
 		this._switchFormat(this._currentFormat);
 	}
@@ -117,6 +118,7 @@ export class OverlayController {
 		if (this._shadowHost) {
 			this.refreshLayerTargets();
 			this._shadowHost.style.display = '';
+			this._positionService?.scheduleUpdate();
 		}
 	}
 
@@ -144,6 +146,18 @@ export class OverlayController {
 		}
 	}
 
+	public resetPosition(): void {
+		this._positionService.resetPosition();
+	}
+
+	public getPosition(): Readonly<OverlayPosition> {
+		return this._positionService.getPosition();
+	}
+
+	public setPosition(position: Pick<OverlayPosition, 'offsetX' | 'offsetY'>): void {
+		this._positionService.setPosition(position);
+	}
+
 	// ---- Runtime defaults API -------------------------------------------------
 
 	/**
@@ -155,8 +169,14 @@ export class OverlayController {
 	 * the new defaults when the user switches to them.
 	 */
 	setDefaults(patch: ExportDefaultsPatch): void {
+		if (patch.format) {
+			this._assertKnownFormat(patch.format);
+		}
 		this._defaultsStore.merge(patch);
-		this._resetAffectedBlades(Object.keys(patch) as ExportFormat[]);
+		this._resetAffectedBlades(this._getFormatKeys(patch));
+		if (patch.format) {
+			this._handleFormatChange(patch.format);
+		}
 	}
 
 	/**
@@ -169,9 +189,16 @@ export class OverlayController {
 	/**
 	 * Restore one or all formats to the library's curated defaults.
 	 */
-	resetDefaults(format?: ExportFormat): void {
-		this._defaultsStore.reset(format);
-		this._resetAffectedBlades(format ? [format] : undefined);
+	resetDefaults(target?: keyof ExportDefaults): void {
+		this._defaultsStore.reset(target);
+		if (target === 'format') {
+			this._handleFormatChange(this._defaultsStore.current.format);
+			return;
+		}
+		this._resetAffectedBlades(target ? [target] : undefined);
+		if (!target) {
+			this._handleFormatChange(this._defaultsStore.current.format);
+		}
 	}
 
 	public $dispose(): void {
@@ -226,6 +253,27 @@ export class OverlayController {
 				initialized: false,
 				needsReset: false,
 			});
+		}
+	}
+
+	private _resolveInitialFormat(
+		requestedFormat: ExportFormat,
+		definitions: ReadonlyArray<FormatDefinition>
+	): ExportFormat {
+		return definitions.some((definition) => definition.format === requestedFormat)
+			? requestedFormat
+			: (definitions[0]?.format ?? requestedFormat);
+	}
+
+	private _getFormatKeys(patch: ExportDefaultsPatch): ExportFormat[] {
+		return this._definitions
+			.map((definition) => definition.format)
+			.filter((format): format is ExportFormat => patch[format] !== undefined);
+	}
+
+	private _assertKnownFormat(format: ExportFormat): void {
+		if (!this._formats.has(format)) {
+			throw new Error(`Unknown export format: ${format}`);
 		}
 	}
 
