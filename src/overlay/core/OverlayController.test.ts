@@ -8,7 +8,9 @@ import { Blade } from '../blades';
 import { DefaultsStore } from '../config/DefaultsStore';
 import type { FormatDefinition } from '../models/FormatDefinition';
 import type { OverlayEvents } from '../models/OverlayEvents';
+import { PositionService } from '../services/PositionService';
 import type { ExportFormat, ExportOptionsMap } from '../types';
+import { overlayClasses } from '../utils/classes';
 import type { EventBus } from './EventBus';
 import { OverlayController } from './OverlayController';
 
@@ -87,6 +89,9 @@ function createExportAPI(): TextmodeExportAPI {
 			hide: vi.fn(),
 			toggle: vi.fn(),
 			isVisible: vi.fn(() => true),
+			resetPosition: vi.fn(),
+			getPosition: vi.fn(() => ({ mode: 'auto' as const, offsetX: 8, offsetY: 8 })),
+			setPosition: vi.fn(),
 			setDefaults: vi.fn(),
 			getDefaults: vi.fn(),
 			resetDefaults: vi.fn(),
@@ -153,11 +158,45 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	document.body.innerHTML = '';
 });
 
 describe('OverlayController defaults API', () => {
+	it('renders and wires the header move handle', () => {
+		const attachSpy = vi.spyOn(PositionService.prototype, 'attachDragHandle');
+		const { controller } = createHarness(['txt']);
+		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
+		const handle = host?.shadowRoot?.querySelector(`.${overlayClasses.grabHandle}`) as HTMLButtonElement | null;
+		const title = host?.shadowRoot?.querySelector(`.${overlayClasses.title}`);
+
+		expect(handle).toBeInstanceOf(HTMLButtonElement);
+		expect(handle?.getAttribute('aria-label')).toBe('Move export overlay');
+		expect(handle?.compareDocumentPosition(title as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+		expect(attachSpy).toHaveBeenCalledWith(handle);
+
+		controller.$dispose();
+	});
+
+	it('delegates public position API calls to PositionService', () => {
+		const { controller } = createHarness(['txt']);
+		const positionService = (controller as unknown as { _positionService: PositionService })._positionService;
+		const resetSpy = vi.spyOn(positionService, 'resetPosition');
+		const getSpy = vi.spyOn(positionService, 'getPosition');
+		const setSpy = vi.spyOn(positionService, 'setPosition');
+
+		controller.resetPosition();
+		controller.getPosition();
+		controller.setPosition({ offsetX: 24, offsetY: 32 });
+
+		expect(resetSpy).toHaveBeenCalledOnce();
+		expect(getSpy).toHaveBeenCalledOnce();
+		expect(setSpy).toHaveBeenCalledWith({ offsetX: 24, offsetY: 32 });
+
+		controller.$dispose();
+	});
+
 	it('does not reset unmounted blades when defaults are set immediately', () => {
 		const { controller, blades, switchFormat } = createHarness(['txt', 'image']);
 		const txtBlade = blades.get('txt');
