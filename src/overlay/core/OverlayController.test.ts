@@ -170,7 +170,7 @@ afterEach(() => {
 describe('OverlayController defaults API', () => {
 	it('uses the configured default format on mount', () => {
 		const { controller, blades } = createHarness(['txt', 'image'], {
-			configureDefaults: (defaultsStore) => defaultsStore.merge({ defaultFormat: 'image' }),
+			configureDefaults: (defaultsStore) => defaultsStore.merge({ format: 'image' }),
 		});
 		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
 		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
@@ -241,16 +241,16 @@ describe('OverlayController defaults API', () => {
 		controller.$dispose();
 	});
 
-	it('switches the selected format when defaultFormat is set', () => {
+	it('switches the selected format when format is set', () => {
 		const { controller, blades } = createHarness(['txt', 'image']);
 		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
 		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
 		const imageBlade = blades.get('image');
 
-		controller.setDefaults({ defaultFormat: 'image' });
+		controller.setDefaults({ format: 'image' });
 
 		expect(select?.value).toBe('image');
-		expect(controller.getDefaults().defaultFormat).toBe('image');
+		expect(controller.getDefaults().format).toBe('image');
 		expect(imageBlade?.resetCount).toBe(1);
 
 		controller.$dispose();
@@ -259,10 +259,10 @@ describe('OverlayController defaults API', () => {
 	it('rejects unknown default formats without changing defaults', () => {
 		const { controller } = createHarness(['txt', 'image']);
 
-		expect(() =>
-			controller.setDefaults({ defaultFormat: 'video' as ExportFormat })
-		).toThrowErrorMatchingInlineSnapshot(`[Error: Unknown export format: video]`);
-		expect(controller.getDefaults().defaultFormat).toBe('txt');
+		expect(() => controller.setDefaults({ format: 'video' as ExportFormat })).toThrowErrorMatchingInlineSnapshot(
+			`[Error: Unknown export format: video]`
+		);
+		expect(controller.getDefaults().format).toBe('txt');
 
 		controller.$dispose();
 	});
@@ -275,7 +275,7 @@ describe('OverlayController defaults API', () => {
 		controller.setDefaults({ image: { scale: 2 } });
 
 		expect(select?.value).toBe('txt');
-		expect(controller.getDefaults().defaultFormat).toBe('txt');
+		expect(controller.getDefaults().format).toBe('txt');
 
 		controller.$dispose();
 	});
@@ -285,11 +285,11 @@ describe('OverlayController defaults API', () => {
 		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
 		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
 
-		controller.setDefaults({ defaultFormat: 'image', image: { scale: 3 } });
-		controller.resetDefaults('defaultFormat');
+		controller.setDefaults({ format: 'image', image: { scale: 3 } });
+		controller.resetDefaults('format');
 
 		expect(select?.value).toBe('txt');
-		expect(controller.getDefaults().defaultFormat).toBe('txt');
+		expect(controller.getDefaults().format).toBe('txt');
 		expect(controller.getDefaults().image.scale).toBe(3);
 
 		controller.$dispose();
@@ -300,11 +300,11 @@ describe('OverlayController defaults API', () => {
 		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
 		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
 
-		controller.setDefaults({ defaultFormat: 'image', image: { scale: 3 } });
+		controller.setDefaults({ format: 'image', image: { scale: 3 } });
 		controller.resetDefaults();
 
 		expect(select?.value).toBe('txt');
-		expect(controller.getDefaults().defaultFormat).toBe('txt');
+		expect(controller.getDefaults().format).toBe('txt');
 		expect(controller.getDefaults().image.scale).toBe(1);
 
 		controller.$dispose();
