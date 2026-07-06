@@ -110,8 +110,12 @@ function createExportAPI(): TextmodeExportAPI {
 	};
 }
 
-function createHarness(formats: ExportFormat[]): TestControllerHarness {
+function createHarness(
+	formats: ExportFormat[],
+	options: { configureDefaults?: (defaultsStore: DefaultsStore) => void } = {}
+): TestControllerHarness {
 	const defaultsStore = new DefaultsStore();
+	options.configureDefaults?.(defaultsStore);
 	const blades = new Map<ExportFormat, TestBlade>();
 	const definitions = formats.map((format) => ({
 		format,
@@ -164,6 +168,22 @@ afterEach(() => {
 });
 
 describe('OverlayController defaults API', () => {
+	it('uses the configured default format on mount', () => {
+		const { controller, blades } = createHarness(['txt', 'image'], {
+			configureDefaults: (defaultsStore) => defaultsStore.merge({ defaultFormat: 'image' }),
+		});
+		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
+		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
+		const txtBlade = blades.get('txt');
+		const imageBlade = blades.get('image');
+
+		expect(select?.value).toBe('image');
+		expect(txtBlade?.resetCount).toBe(0);
+		expect(imageBlade?.resetCount).toBe(1);
+
+		controller.$dispose();
+	});
+
 	it('renders and wires the header move handle', () => {
 		const attachSpy = vi.spyOn(PositionService.prototype, 'attachDragHandle');
 		const { controller } = createHarness(['txt']);
@@ -218,6 +238,75 @@ describe('OverlayController defaults API', () => {
 
 		expect(imageBlade.resetCount).toBe(1);
 		expect(imageBlade.getOptions()).toMatchObject({ scale: 2 });
+		controller.$dispose();
+	});
+
+	it('switches the selected format when defaultFormat is set', () => {
+		const { controller, blades } = createHarness(['txt', 'image']);
+		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
+		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
+		const imageBlade = blades.get('image');
+
+		controller.setDefaults({ defaultFormat: 'image' });
+
+		expect(select?.value).toBe('image');
+		expect(controller.getDefaults().defaultFormat).toBe('image');
+		expect(imageBlade?.resetCount).toBe(1);
+
+		controller.$dispose();
+	});
+
+	it('rejects unknown default formats without changing defaults', () => {
+		const { controller } = createHarness(['txt', 'image']);
+
+		expect(() =>
+			controller.setDefaults({ defaultFormat: 'video' as ExportFormat })
+		).toThrowErrorMatchingInlineSnapshot(`[Error: Unknown export format: video]`);
+		expect(controller.getDefaults().defaultFormat).toBe('txt');
+
+		controller.$dispose();
+	});
+
+	it('preserves the selected format when only per-format defaults change', () => {
+		const { controller } = createHarness(['txt', 'image']);
+		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
+		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
+
+		controller.setDefaults({ image: { scale: 2 } });
+
+		expect(select?.value).toBe('txt');
+		expect(controller.getDefaults().defaultFormat).toBe('txt');
+
+		controller.$dispose();
+	});
+
+	it('resets the default format selection without resetting per-format defaults', () => {
+		const { controller } = createHarness(['txt', 'image']);
+		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
+		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
+
+		controller.setDefaults({ defaultFormat: 'image', image: { scale: 3 } });
+		controller.resetDefaults('defaultFormat');
+
+		expect(select?.value).toBe('txt');
+		expect(controller.getDefaults().defaultFormat).toBe('txt');
+		expect(controller.getDefaults().image.scale).toBe(3);
+
+		controller.$dispose();
+	});
+
+	it('resets all defaults and switches back to the curated default format', () => {
+		const { controller } = createHarness(['txt', 'image']);
+		const host = document.querySelector('[data-plugin="textmode-export-overlay-host"]') as HTMLDivElement | null;
+		const select = host?.shadowRoot?.querySelector<HTMLSelectElement>('#textmode-export-format');
+
+		controller.setDefaults({ defaultFormat: 'image', image: { scale: 3 } });
+		controller.resetDefaults();
+
+		expect(select?.value).toBe('txt');
+		expect(controller.getDefaults().defaultFormat).toBe('txt');
+		expect(controller.getDefaults().image.scale).toBe(1);
+
 		controller.$dispose();
 	});
 
