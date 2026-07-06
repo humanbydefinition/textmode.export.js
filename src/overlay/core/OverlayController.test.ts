@@ -217,6 +217,19 @@ describe('OverlayController defaults API', () => {
 		controller.$dispose();
 	});
 
+	it('schedules a fresh position update when shown after being hidden', () => {
+		const { controller } = createHarness(['txt']);
+		const positionService = (controller as unknown as { _positionService: PositionService })._positionService;
+		const scheduleSpy = vi.spyOn(positionService, 'scheduleUpdate');
+
+		controller.hide();
+		controller.show();
+
+		expect(scheduleSpy).toHaveBeenCalledOnce();
+
+		controller.$dispose();
+	});
+
 	it('does not reset unmounted blades when defaults are set immediately', () => {
 		const { controller, blades, switchFormat } = createHarness(['txt', 'image']);
 		const txtBlade = blades.get('txt');
