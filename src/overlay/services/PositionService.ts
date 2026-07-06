@@ -36,6 +36,7 @@ export class PositionService {
 	private dragHandle?: HTMLElement;
 	private dragState?: DragState;
 	private position: OverlayPosition;
+	private renderedOffset: Pick<OverlayPosition, 'offsetX' | 'offsetY'>;
 
 	private readonly handlePointerDown = (event: PointerEvent) => this.onPointerDown(event);
 	private readonly handlePointerMove = (event: PointerEvent) => this.onPointerMove(event);
@@ -58,6 +59,7 @@ export class PositionService {
 		this.position = saved
 			? { mode: 'custom', offsetX: saved.offsetX, offsetY: saved.offsetY }
 			: { mode: 'auto', offsetX: DEFAULT_OFFSET, offsetY: DEFAULT_OFFSET };
+		this.renderedOffset = { offsetX: this.position.offsetX, offsetY: this.position.offsetY };
 	}
 
 	getPosition(): Readonly<OverlayPosition> {
@@ -139,8 +141,8 @@ export class PositionService {
 			pointerId: event.pointerId,
 			startClientX: event.clientX,
 			startClientY: event.clientY,
-			startOffsetX: this.position.offsetX,
-			startOffsetY: this.position.offsetY,
+			startOffsetX: this.renderedOffset.offsetX,
+			startOffsetY: this.renderedOffset.offsetY,
 		};
 		this.surface.classList.add(overlayClasses.rootDragging);
 		this.dragHandle.addEventListener('pointermove', this.handlePointerMove);
@@ -191,7 +193,7 @@ export class PositionService {
 
 	private onKeyDown(event: KeyboardEvent): void {
 		const step = event.shiftKey ? KEYBOARD_LARGE_STEP : KEYBOARD_STEP;
-		const position = this.position;
+		const position = this.renderedOffset;
 
 		switch (event.key) {
 			case 'ArrowUp':
@@ -221,22 +223,15 @@ export class PositionService {
 
 	private update(): void {
 		this.animationFrameId = null;
+		if (this.host.style.display === 'none') {
+			return;
+		}
 		const canvasRect = this.modifier.canvas.getBoundingClientRect();
 		const next = this.clampToViewport(canvasRect, this.position.offsetX, this.position.offsetY);
 
 		this.host.style.top = `${canvasRect.top + window.scrollY + next.offsetY}px`;
 		this.host.style.left = `${canvasRect.left + window.scrollX + next.offsetX}px`;
-
-		if (next.offsetX !== this.position.offsetX || next.offsetY !== this.position.offsetY) {
-			this.position = {
-				...this.position,
-				offsetX: next.offsetX,
-				offsetY: next.offsetY,
-			};
-			if (this.position.mode === 'custom') {
-				this.storage.save(this.position.offsetX, this.position.offsetY);
-			}
-		}
+		this.renderedOffset = next;
 	}
 
 	private clampToViewport(

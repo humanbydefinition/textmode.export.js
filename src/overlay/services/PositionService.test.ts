@@ -164,8 +164,23 @@ describe('PositionService', () => {
 		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: 24, offsetY: 32 });
 	});
 
-	it('clamps custom placement to the viewport', () => {
+	it('clamps auto placement to the viewport without changing the logical default offset', () => {
 		const { host, service } = createHarness({
+			canvasRect: rect(40, 30, 200, 120),
+			surfaceRect: rect(0, 0, 236, 180),
+		});
+		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 260 });
+		Object.defineProperty(window, 'innerHeight', { configurable: true, value: 220 });
+
+		service.bind();
+
+		expect(host.style.left).toBe('16px');
+		expect(host.style.top).toBe('32px');
+		expect(service.getPosition()).toMatchObject({ mode: 'auto', offsetX: 8, offsetY: 8 });
+	});
+
+	it('clamps custom placement to the viewport without changing or persisting the logical offset', () => {
+		const { host, service, storageKey } = createHarness({
 			canvasRect: rect(40, 30, 200, 120),
 			surfaceRect: rect(0, 0, 236, 180),
 		});
@@ -177,7 +192,88 @@ describe('PositionService', () => {
 
 		expect(host.style.left).toBe('16px');
 		expect(host.style.top).toBe('32px');
-		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: -24, offsetY: 2 });
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: 1000, offsetY: 1000 });
+		expect(JSON.parse(window.localStorage.getItem(storageKey) ?? '{}')).toMatchObject({
+			version: 1,
+			offsetX: 1000,
+			offsetY: 1000,
+		});
+	});
+
+	it('preserves stored custom offsets after temporary viewport clamping clears', () => {
+		let canvasRect = rect(40, 30, 200, 120);
+		const { canvas, host, service, storageKey } = createHarness({
+			canvasRect,
+			surfaceRect: rect(0, 0, 236, 180),
+		});
+		service.bind();
+		service.setPosition({ offsetX: 420, offsetY: 32 });
+
+		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 260 });
+		window.dispatchEvent(new Event('resize'));
+
+		expect(host.style.left).toBe('16px');
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: 420, offsetY: 32 });
+		expect(JSON.parse(window.localStorage.getItem(storageKey) ?? '{}')).toMatchObject({
+			offsetX: 420,
+			offsetY: 32,
+		});
+
+		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 });
+		Object.defineProperty(window, 'scrollX', { configurable: true, value: 100 });
+		canvasRect = rect(90, 30, 200, 120);
+		canvas.getBoundingClientRect = () => canvasRect;
+		window.dispatchEvent(new Event('resize'));
+
+		expect(host.style.left).toBe('610px');
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: 420, offsetY: 32 });
+		expect(JSON.parse(window.localStorage.getItem(storageKey) ?? '{}')).toMatchObject({
+			offsetX: 420,
+			offsetY: 32,
+		});
+	});
+
+	it('starts drag and keyboard movement from the visible clamped offset', () => {
+		const { handle, service } = createHarness({
+			canvasRect: rect(40, 30, 200, 120),
+			surfaceRect: rect(0, 0, 236, 180),
+		});
+		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 260 });
+		Object.defineProperty(window, 'innerHeight', { configurable: true, value: 220 });
+		service.bind();
+		service.attachDragHandle(handle);
+		service.setPosition({ offsetX: 1000, offsetY: 1000 });
+
+		handle.dispatchEvent(pointerEvent('pointerdown', { clientX: 10, clientY: 12, pointerId: 7 }));
+		handle.dispatchEvent(pointerEvent('pointermove', { clientX: 26, clientY: 20, pointerId: 7 }));
+		handle.dispatchEvent(pointerEvent('pointerup', { clientX: 26, clientY: 20, pointerId: 7 }));
+
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: -8, offsetY: 10 });
+
+		handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: -16, offsetY: 2 });
+	});
+
+	it('skips measurement while hidden and remeasures when shown again', () => {
+		const { host, service } = createHarness({
+			canvasRect: rect(40, 30, 200, 120),
+			surfaceRect: rect(0, 0, 236, 180),
+		});
+		service.bind();
+
+		host.style.display = 'none';
+		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 260 });
+		service.setPosition({ offsetX: 1000, offsetY: 1000 });
+
+		expect(host.style.left).toBe('48px');
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: 1000, offsetY: 1000 });
+
+		host.style.display = '';
+		service.scheduleUpdate();
+
+		expect(host.style.left).toBe('16px');
+		expect(service.getPosition()).toMatchObject({ mode: 'custom', offsetX: 1000, offsetY: 1000 });
 	});
 
 	it('resets placement and clears remembered state', () => {
