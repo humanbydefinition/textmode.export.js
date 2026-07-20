@@ -56,13 +56,18 @@ export class TextBlade extends Blade<TXTExportOptions> {
 	}
 
 	getOptions(): TXTExportOptions {
-		const defaults = this._config.defaultOptions ?? {};
-		const value = this.emptyCharacter.value || defaults.emptyCharacter || ' ';
+		const defaults = this._config.defaultOptions;
+		const value = this.emptyCharacter.value || defaults.emptyCharacter;
 		return {
 			layer: this.layerTarget?.layer,
 			preserveTrailingSpaces: this.trailingSpaces.checked,
 			emptyCharacter: value,
 		};
+	}
+
+	setDefaults(values: Partial<TXTExportOptions>): void {
+		Object.assign(this._config.defaultOptions, values);
+		this.reset();
 	}
 
 	reset(): void {
@@ -79,7 +84,7 @@ export class TextBlade extends Blade<TXTExportOptions> {
 	}
 
 	private applyDefaults(): void {
-		const defaults = this._config.defaultOptions ?? {};
+		const defaults = this._config.defaultOptions;
 		this.trailingSpaces.checked = defaults.preserveTrailingSpaces ?? false;
 		this.emptyCharacter.value = defaults.emptyCharacter ?? ' ';
 	}

@@ -2,8 +2,98 @@ import type { ImageExportOptions } from './exporters/image';
 import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
-import type { VideoExportOptions } from './exporters/video';
+import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
+
+export type TXTOverlayDefaults = Pick<TXTExportOptions, 'preserveTrailingSpaces' | 'emptyCharacter'>;
+export type JSONOverlayDefaults = Pick<JSONExportOptions, 'target' | 'pretty' | 'includeMetadata' | 'colorMode'>;
+export type ImageOverlayDefaults = Pick<ImageExportOptions, 'format' | 'scale'>;
+export type SVGOverlayDefaults = Pick<SVGExportOptions, 'includeBackgroundRectangles' | 'drawMode' | 'strokeWidth'>;
+export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRate' | 'scale' | 'repeat'>;
+export type VideoOverlayDefaults = Pick<
+	VideoExportOptions,
+	| 'format'
+	| 'frameCount'
+	| 'frameRate'
+	| 'bitrateMode'
+	| 'latencyMode'
+	| 'hardwareAcceleration'
+	| 'keyFrameInterval'
+	| 'transparent'
+> & {
+	bitrate?: VideoBitratePreset;
+};
+
+/**
+ * Per-format default options used to seed the overlay UI inputs at mount time
+ * and after a {@link ExportOverlayController.resetDefaults} call.
+ *
+ * Each sub-object contains the library-chosen defaults for the fields that
+ * the overlay exposes.  Top-level `format` controls which export format is
+ * selected in the overlay. You can read and override them at runtime via
+ * {@link ExportOverlayController.getDefaults} and
+ * {@link ExportOverlayController.setDefaults}.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
+ */
+export type ExportDefaults = {
+	/**
+	 * Export format selected by default in the overlay.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
+	 */
+	format: 'txt' | 'json' | 'image' | 'gif' | 'video' | 'svg';
+	txt: TXTOverlayDefaults;
+	json: JSONOverlayDefaults;
+	image: ImageOverlayDefaults;
+	svg: SVGOverlayDefaults;
+	gif: GIFOverlayDefaults;
+	video: VideoOverlayDefaults;
+};
+
+/**
+ * Partial patch accepted by {@link ExportOverlayController.setDefaults}.
+ *
+ * Every supplied per-format sub-object is deep-merged into the corresponding
+ * format's curated defaults. Top-level `format` changes the overlay's selected
+ * format. Omitted keys keep their current value.
+ *
+ * @example
+ * ```ts
+ * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
+ * ```
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaultsPatch | ExportDefaultsPatch API reference}
+ */
+export type ExportDefaultsPatch = {
+	format?: ExportDefaults['format'];
+} & {
+	[K in Exclude<keyof ExportDefaults, 'format'>]?: Partial<ExportDefaults[K]>;
+};
+
+/**
+ * Current canvas-relative placement state for the export overlay UI.
+ *
+ * `auto` means the overlay is using the library default offset from the
+ * textmode canvas. `custom` means the user or runtime API has moved it.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPosition | ExportOverlayPosition API reference}
+ */
+export interface ExportOverlayPosition {
+	mode: 'auto' | 'custom';
+	offsetX: number;
+	offsetY: number;
+}
+
+/**
+ * Canvas-relative placement coordinates for the export overlay UI.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPositionInput | ExportOverlayPositionInput API reference}
+ */
+export interface ExportOverlayPositionInput {
+	offsetX: number;
+	offsetY: number;
+}
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
@@ -58,10 +148,114 @@ export interface ExportOverlayController {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/isVisible | ExportOverlayController.isVisible API reference}
 	 */
 	isVisible(): boolean;
+
+	/**
+	 * Restores the export overlay to its default canvas-relative placement and
+	 * clears any remembered placement.
+	 *
+	 * @example
+	 * ```ts
+	 * t.exportOverlay.resetPosition();
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/resetPosition | ExportOverlayController.resetPosition API reference}
+	 */
+	resetPosition(): void;
+
+	/**
+	 * Reads the current export overlay placement.
+	 *
+	 * @returns The current canvas-relative overlay placement state.
+	 *
+	 * @example
+	 * ```ts
+	 * const position = t.exportOverlay.getPosition();
+	 * console.log(position.mode, position.offsetX, position.offsetY);
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/getPosition | ExportOverlayController.getPosition API reference}
+	 */
+	getPosition(): Readonly<ExportOverlayPosition>;
+
+	/**
+	 * Moves the export overlay to a custom canvas-relative placement and
+	 * remembers that placement for future sessions on the same origin.
+	 *
+	 * @param position Canvas-relative overlay offsets in CSS pixels.
+	 *
+	 * @example
+	 * ```ts
+	 * t.exportOverlay.setPosition({ offsetX: 24, offsetY: 24 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setPosition | ExportOverlayController.setPosition API reference}
+	 */
+	setPosition(position: ExportOverlayPositionInput): void;
+
+	/**
+	 * Override the curated overlay defaults at runtime.
+	 *
+	 * Merges the supplied patch into the internal defaults store. Per-format
+	 * option patches are pushed into mounted blades; top-level `format` updates
+	 * the overlay's selected export format immediately.
+	 *
+	 * @param patch Partial defaults to merge per format.
+	 *
+	 * @example
+	 * ```ts
+	 * // Select image export by default, set image scale to 2×, and GIF to 30 fps
+	 * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setDefaults | ExportOverlayController.setDefaults API reference}
+	 */
+	setDefaults(patch: ExportDefaultsPatch): void;
+
+	/**
+	 * Read the current effective defaults for every format.
+	 *
+	 * The returned object reflects the library's curated defaults merged
+	 * with any runtime overrides applied via {@link setDefaults}.
+	 *
+	 * @returns The current per-format defaults.
+	 *
+	 * @example
+	 * ```ts
+	 * const defaults = t.exportOverlay.getDefaults();
+	 * console.log(defaults.image.scale); // 1 (or whatever was set)
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/getDefaults | ExportOverlayController.getDefaults API reference}
+	 */
+	getDefaults(): Readonly<ExportDefaults>;
+
+	/**
+	 * Restore one or all formats to the library's curated defaults.
+	 *
+	 * If a format is specified, only that format is reset; otherwise all
+	 * formats are restored.
+	 *
+	 * @param format Optional format to reset. Omit to reset all.
+	 *
+	 * @example
+	 * ```ts
+	 * // Reset image defaults
+	 * t.exportOverlay.resetDefaults('image');
+	 *
+	 * // Reset the overlay's selected default export format
+	 * t.exportOverlay.resetDefaults('format');
+	 *
+	 * // Reset all formats
+	 * t.exportOverlay.resetDefaults();
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/resetDefaults | ExportOverlayController.resetDefaults API reference}
+	 */
+	resetDefaults(format?: keyof ExportDefaults): void;
 }
 
 /**
- * Runtime export helpers that `createExportPlugin` attaches to the `Textmodifier` instance.
+ * Runtime export helpers that `ExportPlugin` attaches to the `Textmodifier` instance.
  *
  * @example
  * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
@@ -245,25 +439,4 @@ export interface TextmodeExportAPI {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveVideo | TextmodeExportAPI.saveVideo API reference}
 	 */
 	saveVideo(options?: VideoExportOptions): Promise<void>;
-}
-
-/**
- * Options for configuring the export plugin.
- *
- * @deprecated This interface is only used by the deprecated `createTextmodeExportPlugin` function.
- * Use {@link ExportPlugin} directly instead, and control overlay visibility at runtime via
- * {@link ExportOverlayController}.
- *
- * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportPluginOptions | TextmodeExportPluginOptions API reference}
- */
-export interface TextmodeExportPluginOptions {
-	/**
-	 * Controls whether the export overlay UI should be created.
-	 * Defaults to `true`.
-	 *
-	 * @deprecated Use runtime overlay controls instead: `textmodifier.exportOverlay.show()` / `.hide()`
-	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportPluginOptions#overlay | TextmodeExportPluginOptions.overlay API reference}
-	 */
-	overlay?: boolean;
 }

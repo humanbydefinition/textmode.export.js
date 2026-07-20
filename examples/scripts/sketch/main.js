@@ -46,7 +46,6 @@ if (!examplePath || !isValidPath(examplePath)) {
 	window.textmode = textmodeModule.textmode;
 	window.TextmodeErrorLevel = textmodeModule.TextmodeErrorLevel;
 	window.ExportPlugin = exportModule.ExportPlugin;
-	window.createTextmodeExportPlugin = exportModule.createTextmodeExportPlugin;
 
 	document.title = `textmode.export.js - ${examplePath}`;
 	const base = document.createElement('base');

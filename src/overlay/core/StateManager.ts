@@ -13,6 +13,20 @@ export class StateManager<TState extends object> {
 	}
 
 	public $set(partial: Partial<TState>): void {
+		const keys = Object.keys(partial) as Array<keyof TState>;
+		if (keys.length === 0) {
+			return;
+		}
+		let changed = false;
+		for (const key of keys) {
+			if (this._state[key] !== partial[key]) {
+				changed = true;
+				break;
+			}
+		}
+		if (!changed) {
+			return;
+		}
 		this._state = Object.assign({}, this._state, partial);
 		const snapshot = this.snapshot;
 		for (const listener of [...this._listeners]) {
