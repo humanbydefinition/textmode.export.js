@@ -5,11 +5,46 @@ import type { GIFExportOptions } from './exporters/gif';
 import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
+/**
+ * Default TXT export fields controlled by the export overlay.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/TXTOverlayDefaults | TXTOverlayDefaults API reference}
+ */
 export type TXTOverlayDefaults = Pick<TXTExportOptions, 'preserveTrailingSpaces' | 'emptyCharacter'>;
+
+/**
+ * Default JSON export fields controlled by the export overlay.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONOverlayDefaults | JSONOverlayDefaults API reference}
+ */
 export type JSONOverlayDefaults = Pick<JSONExportOptions, 'target' | 'pretty' | 'includeMetadata' | 'colorMode'>;
+
+/**
+ * Default image export fields controlled by the export overlay.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageOverlayDefaults | ImageOverlayDefaults API reference}
+ */
 export type ImageOverlayDefaults = Pick<ImageExportOptions, 'format' | 'scale'>;
+
+/**
+ * Default SVG export fields controlled by the export overlay.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/SVGOverlayDefaults | SVGOverlayDefaults API reference}
+ */
 export type SVGOverlayDefaults = Pick<SVGExportOptions, 'includeBackgroundRectangles' | 'drawMode' | 'strokeWidth'>;
+
+/**
+ * Default GIF export fields controlled by the export overlay.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFOverlayDefaults | GIFOverlayDefaults API reference}
+ */
 export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRate' | 'scale' | 'repeat'>;
+
+/**
+ * Default video export fields controlled by the export overlay.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoOverlayDefaults | VideoOverlayDefaults API reference}
+ */
 export type VideoOverlayDefaults = Pick<
 	VideoExportOptions,
 	| 'format'
@@ -40,7 +75,7 @@ export type ExportDefaults = {
 	/**
 	 * Export format selected by default in the overlay.
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults#format | ExportDefaults.format API reference}
 	 */
 	format: 'txt' | 'json' | 'image' | 'gif' | 'video' | 'svg';
 	txt: TXTOverlayDefaults;
