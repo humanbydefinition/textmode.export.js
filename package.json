@@ -38,7 +38,7 @@
 		"test:coverage": "vitest --coverage --passWithNoTests",
 		"format": "prettier --write . --ignore-path node_modules/@textmode/tooling-scripts/src/prettierignore",
 		"check:format": "prettier --check . --ignore-path node_modules/@textmode/tooling-scripts/src/prettierignore",
-		"check:types": "tsc --noEmit",
+		"check:types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
 		"lint:md": "markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2",
 		"lint:md:fix": "markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2 --fix",
 		"lint": "eslint --config ./node_modules/@textmode/eslint-config/index.js src",
