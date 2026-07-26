@@ -91,7 +91,7 @@ export class RangeInput extends Component<RangeInputProps> {
 		});
 
 		this.input.addEventListener('focus', () => {
-			let allowFocusTooltip = false;
+			let allowFocusTooltip: boolean;
 			try {
 				allowFocusTooltip = this.input.matches(':focus-visible');
 			} catch {
