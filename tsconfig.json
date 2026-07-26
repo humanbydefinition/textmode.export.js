@@ -1,6 +1,7 @@
 {
 	"extends": ["@textmode/tsconfig/base.json", "@textmode/tsconfig/build.json"],
 	"compilerOptions": {
+		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
 			"mediabunny": ["src/types/mediabunny.d.ts"]
@@ -8,5 +9,6 @@
 		"rootDir": "./src",
 		"outDir": "./dist/types"
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"exclude": ["src/**/*.test.ts"]
 }
