@@ -20,6 +20,21 @@
 
 Besides exporting programatically, `textmode.export.js` also provides an overlay UI for users to easily export their creations.
 
+## Try it online first
+
+Open [editor.textmode.art](https://editor.textmode.art/), a browser-based live-coding environment for the
+complete official `textmode.js` ecosystem. Sketches run as you edit, with no local toolchain required.
+
+The editor includes `textmode.js` and all four official add-ons: `textmode.export.js`, `textmode.filters.js`,
+`textmode.figlet.js`, and `textmode.synth.js`.
+
+- Write with Monaco-powered completions, hover documentation, and diagnostics.
+- Start with a blank sketch, an included example, or a community gallery sketch.
+- Keep code and preferences saved in the browser, then share sketches through URL-based links.
+- Use microphone or line-input analysis for audio-reactive work, and create on desktop or mobile.
+
+Use it to experiment with export functionality while your sketch is running.
+
 ## Installation
 
 Follow the [official installation guide](https://code.textmode.art/docs/installation) to install
