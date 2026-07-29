@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { VideoExportError, VideoFrameDriver } from '.';
 
 type PostDrawHook = Parameters<TextmodePluginContext['registerPostDrawHook']>[0];
@@ -12,13 +12,13 @@ interface FakeTextmodifier extends Partial<Textmodifier> {
 	millis: number;
 	secs: number;
 	looping: boolean;
-	noLoop: ReturnType<typeof vi.fn>;
-	loop: ReturnType<typeof vi.fn>;
-	redraw: ReturnType<typeof vi.fn>;
-	isLooping: ReturnType<typeof vi.fn>;
-	deltaTime: ReturnType<typeof vi.fn>;
-	frameRate: ReturnType<typeof vi.fn>;
-	resizeCanvas: ReturnType<typeof vi.fn>;
+	noLoop: Mock<() => void>;
+	loop: Mock<() => void>;
+	redraw: Mock<(frames?: number) => void>;
+	isLooping: Mock<() => boolean>;
+	deltaTime: Mock<() => number>;
+	frameRate: Mock<(fps?: number) => number | void>;
+	resizeCanvas: Mock<(width: number, height: number) => void>;
 }
 
 function createCanvas(width = 800, height = 600): HTMLCanvasElement {

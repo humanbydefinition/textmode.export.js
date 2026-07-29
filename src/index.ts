@@ -41,7 +41,18 @@ import type { TextmodeExportAPI, ExportOverlayController, ExportDefaults, Export
 import { TEXTMODE_EXPORT_VERSION } from './version';
 
 // Re-export all types for consumers
-export type { ExportDefaults, ExportDefaultsPatch, ExportOverlayPosition, ExportOverlayPositionInput } from './types';
+export type {
+	ExportDefaults,
+	ExportDefaultsPatch,
+	ExportOverlayPosition,
+	ExportOverlayPositionInput,
+	GIFOverlayDefaults,
+	ImageOverlayDefaults,
+	JSONOverlayDefaults,
+	SVGOverlayDefaults,
+	TXTOverlayDefaults,
+	VideoOverlayDefaults,
+} from './types';
 export type { TextmodeExportAPI, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
