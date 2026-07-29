@@ -24,12 +24,12 @@
 		"logo": "default",
 		"labels": {
 			"brandName": "textmode.export.js",
-			"mainTopRight": "EXPORT ADD-ON",
+			"mainTopRight": "TEXTMODE.JS ADD-ON",
 			"mainHeadlinePrefix": "SAVE",
 			"mainHeadlineEmphasis": "TEXTMODE",
 			"mainHeadlineSecondLine": "IN EVERY FORMAT",
 			"mainBottomLeft": "TXT / SVG / PNG / GIF / VIDEO",
-			"mainBottomRight": "TEXTMODE.JS ADD-ON"
+			"mainBottomRight": "CODE.TEXTMODE.ART"
 		}
 	}
 }
