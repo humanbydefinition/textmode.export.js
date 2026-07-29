@@ -22,103 +22,12 @@ Besides exporting programatically, `textmode.export.js` also provides an overlay
 
 ## Installation
 
-### Prerequisites
+Follow the [official installation guide](https://code.textmode.art/docs/installation) to install
+`textmode.export.js` alongside `textmode.js` with npm or browser-ready UMD bundles.
 
-- The latest `textmode.export.js` version requires `textmode.js` v0.7.0 or later.
-
-### UMD
-
-To use `textmode.export.js` in a UMD environment, download the latest `umd` build from the [**GitHub releases page**](https://github.com/humanbydefinition/textmode.export.js/releases/) or import it directly from a CDN like [**jsDelivr**](https://www.jsdelivr.com/package/npm/textmode.export.js). The library is distributed as a single JavaScript file, which you can include in your project by adding the following script tag to your HTML file:
-
-```html
-<!-- index.html -->
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>textmode.js sketch</title>
-
-		<!-- Import textmode.js from jsDelivr CDN -->
-		<script src="https://cdn.jsdelivr.net/npm/textmode.js@latest/dist/textmode.umd.js"></script>
-
-		<!-- Import textmode.export.js from jsDelivr CDN -->
-		<script src="https://cdn.jsdelivr.net/npm/textmode.export.js@latest/dist/textmode.export.umd.js"></script>
-	</head>
-	<body>
-		<script src="sketch.js"></script>
-	</body>
-</html>
-```
+## Quick start
 
 ```javascript
-// sketch.js
-const t = textmode.create({
-	width: window.innerWidth,
-	height: window.innerHeight,
-	fontSize: 16,
-	frameRate: 60,
-	plugins: [ExportPlugin],
-});
-
-t.setup(() => {
-	// Optional setup code here (e.g., load fonts/shaders, initialize variables that access 't')
-});
-
-t.draw(() => {
-	t.background(32); // Dark gray background
-
-	t.char('A');
-	t.charColor(255, 0, 0); // Cover the top-left quarter of the grid with a rectangle of red 'A's
-	t.rect(0, 0, t.grid.cols / 2, t.grid.rows / 2);
-
-	// ...add your drawing code here!
-
-	if (t.frameCount === 60) {
-		t.saveCanvas({
-			format: 'png',
-			filename: 'my-sketch',
-		});
-	}
-});
-
-// Control the export overlay UI at runtime
-// t.exportOverlay.hide();   // Hide the overlay
-// t.exportOverlay.show();   // Show the overlay
-// t.exportOverlay.toggle(); // Toggle visibility
-
-// Override input defaults at runtime
-// t.exportOverlay.setDefaults({ image: { scale: 2 } });
-
-t.windowResized(() => {
-	t.resizeCanvas(window.innerWidth, window.innerHeight);
-});
-```
-
-#### ESM
-
-To use `textmode.export.js` in an ESM environment, you can install it via `npm`:
-
-```bash
-npm install textmode.export.js
-```
-
-Then, you can import it in your JavaScript or TypeScript files:
-
-```html
-<!-- index.html -->
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<title>textmode.js sketch</title>
-	</head>
-	<body>
-		<script type="module" src="./sketch.js"></script>
-	</body>
-</html>
-```
-
-```javascript
-// sketch.js
 import { textmode } from 'textmode.js';
 import { ExportPlugin } from 'textmode.export.js';
 
@@ -126,42 +35,30 @@ const t = textmode.create({
 	width: window.innerWidth,
 	height: window.innerHeight,
 	fontSize: 16,
-	frameRate: 60,
 	plugins: [ExportPlugin],
 });
 
-t.setup(() => {
-	// Optional setup code here (e.g., load fonts/shaders, initialize variables that access 't')
-});
-
 t.draw(() => {
-	t.background(32); // Dark gray background
-
+	t.background(32);
 	t.char('A');
-	t.charColor(255, 0, 0); // Cover the top-left quarter of the grid with a rectangle of red 'A's
-	t.rect(0, 0, t.grid.cols / 2, t.grid.rows / 2);
-
-	// ...add your drawing code here!
+	t.charColor(255, 0, 0);
+	t.rect(t.grid.cols / 2, t.grid.rows / 2);
 
 	if (t.frameCount === 60) {
-		t.saveCanvas({
+		void t.saveCanvas({
 			format: 'png',
 			filename: 'my-sketch',
 		});
 	}
 });
+```
 
-// Control the export overlay UI at runtime
-// t.exportOverlay.hide();   // Hide the overlay
-// t.exportOverlay.show();   // Show the overlay
-// t.exportOverlay.toggle(); // Toggle visibility
+The plugin also exposes `t.exportOverlay` for showing, hiding, and configuring the built-in export controls:
 
-// Override input defaults at runtime
-// t.exportOverlay.setDefaults({ image: { scale: 2 } });
-
-t.windowResized(() => {
-	t.resizeCanvas(window.innerWidth, window.innerHeight);
-});
+```javascript
+t.exportOverlay.hide();
+t.exportOverlay.show();
+t.exportOverlay.setDefaults({ image: { scale: 2 } });
 ```
 
 ## Next steps
