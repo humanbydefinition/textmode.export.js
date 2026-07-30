@@ -130,9 +130,9 @@ t.exportOverlay.setDefaults({ image: { scale: 2 } });
 
 ## Acknowledgements
 
-`textmode.export.js` packages [`mediabunny`](https://github.com/Vanilagy/mediabunny) by [**Vanilagy**](https://github.com/Vanilagy) to provide WebM and MP4 video export support via WebCodecs. `mediabunny` is distributed under the [**MPL-2.0**](https://www.mozilla.org/en-US/MPL/2.0/) license.
+- **[mediabunny](https://github.com/Vanilagy/mediabunny)** — WebM and MP4 video export support via WebCodecs, by [Vanilagy](https://github.com/Vanilagy). License: [MPL-2.0](https://github.com/Vanilagy/mediabunny/blob/main/LICENSE).
 
-Animated GIF export relies on [`gifenc`](https://github.com/mattdesl/gifenc) by [**Matt DesLauriers**](https://github.com/mattdesl), available under the [**MIT License**](https://opensource.org/licenses/MIT).
+- **[gifenc](https://github.com/mattdesl/gifenc)** — Animated GIF encoding by [Matt DesLauriers](https://github.com/mattdesl). License: [MIT License](https://github.com/mattdesl/gifenc/blob/main/LICENSE.md).
 
 ---
 
