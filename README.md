@@ -9,16 +9,19 @@
 
 </div>
 
-`textmode.export.js` is an add-on library for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that adds various export options to your `Textmodifier` instance, including:
+`textmode.export.js` is a free, lightweight export add-on for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that adds flexible output workflows. It supports plain text and JSON data, raster images, animated GIFs, WebM and MP4 video, and scalable vector graphics through a consistent browser-based API.
 
-- Plain text (`.txt`)
-- JSON document data (`.json`)
-- Image files (`.png`, `.jpg`, `.webp`)
-- Animated image files (`.gif`)
-- Video files (`.webm`, `.mp4`)
-- Scalable vector graphics (`.svg`)
+The add-on is designed to make saving and sharing textmode creations straightforward for developers and end users alike. Whether you need a single still image, structured document data, or a complete animation, `textmode.export.js` provides both programmatic controls and an optional overlay UI.
 
-Besides exporting programatically, `textmode.export.js` also provides an overlay UI for users to easily export their creations.
+## Features
+
+- **Plain text** - Export creations as `.txt` files
+- **Structured data** - Save document data as `.json` files
+- **Raster images** - Create `.png`, `.jpg`, and `.webp` image files
+- **Animated images** - Encode animated `.gif` files
+- **Video** - Export `.webm` and `.mp4` video files
+- **Vector graphics** - Generate scalable `.svg` files
+- **Overlay UI** - Export through programmatic controls or an optional user interface
 
 ## Try it online first
 
