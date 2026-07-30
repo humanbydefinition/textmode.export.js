@@ -88,42 +88,6 @@ Contribution details and profile links are maintained on the [textmode.js contri
 <!-- prettier-ignore-end -->
 <!-- TEXTMODE-CONTRIBUTORS:END -->
 
-## Quick start
-
-```javascript
-import { textmode } from 'textmode.js';
-import { ExportPlugin } from 'textmode.export.js';
-
-const t = textmode.create({
-	width: window.innerWidth,
-	height: window.innerHeight,
-	fontSize: 16,
-	plugins: [ExportPlugin],
-});
-
-t.draw(() => {
-	t.background(32);
-	t.char('A');
-	t.charColor(255, 0, 0);
-	t.rect(t.grid.cols / 2, t.grid.rows / 2);
-
-	if (t.frameCount === 60) {
-		void t.saveCanvas({
-			format: 'png',
-			filename: 'my-sketch',
-		});
-	}
-});
-```
-
-The plugin also exposes `t.exportOverlay` for showing, hiding, and configuring the built-in export controls:
-
-```javascript
-t.exportOverlay.hide();
-t.exportOverlay.show();
-t.exportOverlay.setDefaults({ image: { scale: 2 } });
-```
-
 ## License
 
 `textmode.export.js` is licensed under the [MIT License](./LICENSE).
