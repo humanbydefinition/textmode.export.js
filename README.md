@@ -84,8 +84,22 @@ Now that you have `textmode.export.js` set up, you can explore the following res
 
 🔍 **[Browse the TypeDoc API reference](docs/README.md)** hosted right here in the repository for in-depth API details.
 
+## License
+
+`textmode.export.js` is licensed under the [MIT License](./LICENSE).
+
 ## Acknowledgements
 
 `textmode.export.js` packages [`mediabunny`](https://github.com/Vanilagy/mediabunny) by [**Vanilagy**](https://github.com/Vanilagy) to provide WebM and MP4 video export support via WebCodecs. `mediabunny` is distributed under the [**MPL-2.0**](https://www.mozilla.org/en-US/MPL/2.0/) license.
 
 Animated GIF export relies on [`gifenc`](https://github.com/mattdesl/gifenc) by [**Matt DesLauriers**](https://github.com/mattdesl), available under the [**MIT License**](https://opensource.org/licenses/MIT).
+
+---
+
+<div align="center">
+
+<br />
+
+**[↑ back to top](#textmodeexportjs-%E2%80%BF%EF%BE%89)**
+
+</div>
