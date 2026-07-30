@@ -130,9 +130,13 @@ t.exportOverlay.setDefaults({ image: { scale: 2 } });
 
 ## Acknowledgements
 
-- **[mediabunny](https://github.com/Vanilagy/mediabunny)** — WebM and MP4 video export support via WebCodecs, by [Vanilagy](https://github.com/Vanilagy). License: [MPL-2.0](https://github.com/Vanilagy/mediabunny/blob/main/LICENSE).
+- **[mediabunny](https://github.com/Vanilagy/mediabunny)**
+  - WebM and MP4 video export support via WebCodecs, by [Vanilagy](https://github.com/Vanilagy).
+  - License: [MPL-2.0](https://github.com/Vanilagy/mediabunny/blob/main/LICENSE).
 
-- **[gifenc](https://github.com/mattdesl/gifenc)** — Animated GIF encoding by [Matt DesLauriers](https://github.com/mattdesl). License: [MIT License](https://github.com/mattdesl/gifenc/blob/main/LICENSE.md).
+- **[gifenc](https://github.com/mattdesl/gifenc)**
+  - Animated GIF encoding by [Matt DesLauriers](https://github.com/mattdesl).
+  - License: [MIT License](https://github.com/mattdesl/gifenc/blob/main/LICENSE.md).
 
 ---
 
