@@ -40,6 +40,13 @@ Use it to experiment with export functionality while your sketch is running.
 Follow the [official installation guide](https://code.textmode.art/docs/installation) to install
 `textmode.export.js` alongside `textmode.js` with npm or browser-ready UMD bundles.
 
+## Next steps
+
+- **[Read the exporting documentation](https://code.textmode.art/docs/exporting.html)** for supported formats and workflows.
+- **[Browse the API reference](https://code.textmode.art/api/textmode.export.js/)** for the complete typed API.
+- **[Explore the examples](./examples/)** to see export plugins and options in action.
+- **[Try the live editor](https://editor.textmode.art/)** to experiment with exports in the browser.
+
 ## Contributing
 
 Thank you for considering contributing to this project! (✿◠‿◠)
@@ -82,14 +89,6 @@ t.exportOverlay.show();
 t.exportOverlay.setDefaults({ image: { scale: 2 } });
 ```
 
-## Next steps
-
-Now that you have `textmode.export.js` set up, you can explore the following resources to learn more about its features and capabilities:
-
-📚 **[Visit the Official Documentation](https://code.textmode.art/docs/exporting.html)** for a detailed guide on how to use the `textmode.export.js` and all its features.
-
-🔍 **[Browse the TypeDoc API reference](docs/README.md)** hosted right here in the repository for in-depth API details.
-
 ## License
 
 `textmode.export.js` is licensed under the [MIT License](./LICENSE).
@@ -106,6 +105,6 @@ Animated GIF export relies on [`gifenc`](https://github.com/mattdesl/gifenc) by 
 
 <br />
 
-**[↑ back to top](#textmodeexportjs-%E2%80%BF%EF%BE%89)**
+**[↑ back to top](#textmodeexportjs)**
 
 </div>
