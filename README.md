@@ -15,13 +15,13 @@ The add-on is designed to make saving and sharing textmode creations straightfor
 
 ## Features
 
-- **Plain text** - Export creations as `.txt` files
-- **Structured data** - Save document data as `.json` files
-- **Raster images** - Create `.png`, `.jpg`, and `.webp` image files
-- **Animated images** - Encode animated `.gif` files
-- **Video** - Export `.webm` and `.mp4` video files
-- **Vector graphics** - Generate scalable `.svg` files
-- **Overlay UI** - Export through programmatic controls or an optional user interface
+- **Six output families** - TXT, structured JSON, SVG, PNG/JPEG/WebP, animated GIF, and MP4/WebM video
+- **Exact canvas capture** - Preserve the final presented result, including compositing, shaders, filters, and post-processing
+- **Layer-aware documents** - Export selected layers to TXT/SVG/JSON or preserve the complete descriptive layer stack in JSON
+- **Programmatic exports** - Return text, SVG, and JSON in memory or save them directly as files
+- **Interactive overlay** - Built-in format controls, live layer selectors, runtime defaults, visibility controls, and remembered placement
+- **Clipboard workflows** - Copy text, JSON, SVG, and raster output without downloading files
+- **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
 
 ## Try it online first
 
@@ -58,7 +58,7 @@ Please read the [Contributing Guide](https://github.com/humanbydefinition/textmo
 
 <!-- TEXTMODE-CONTRIBUTORS:START -->
 <!-- prettier-ignore-start -->
-<!-- Generated from https://github.com/humanbydefinition/code.textmode.art/blob/main/.vitepress/data/contributors.json. Do not edit this section directly. -->
+<!-- Generated from https://github.com/humanbydefinition/code.textmode.art/blob/main/.vitepress/data/contributors.json and https://github.com/humanbydefinition/code.textmode.art/blob/main/.vitepress/data/contribution-types.json. Do not edit this section directly. -->
 ## Contributors
 
 Thanks to the people who contribute code, documentation, design, examples, ideas, infrastructure, and care
