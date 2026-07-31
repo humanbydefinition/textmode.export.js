@@ -4,7 +4,6 @@ export default defineDocs({
 	memberPageKinds: ['method'],
 	checks: {
 		docstrings: ['function', 'method', 'accessor'],
-		examples: ['function', 'method', 'accessor'],
 	},
 	examples: {
 		checkSketches: false,
