@@ -1,4 +1,4 @@
-import type { Textmodifier, TextmodeFramebuffer, TextmodeGrid } from 'textmode.js';
+import { LayerBlendMode, type Textmodifier, type TextmodeFramebuffer, type TextmodeGrid } from 'textmode.js';
 import type { TextmodeFont, TextmodeTileset } from 'textmode.js';
 import type { TextmodeLayer } from 'textmode.js';
 
@@ -30,7 +30,7 @@ export interface ResolvedLayerExportTarget {
 export interface ResolvedLayerStackExportTarget extends ResolvedLayerExportTarget {
 	visible: boolean;
 	opacity: number;
-	blendMode: string;
+	blendMode: LayerBlendMode;
 	offsetX: number;
 	offsetY: number;
 	rotationZ: number;
@@ -117,7 +117,7 @@ export function resolveLayerStackExportTargets(textmodifier: Textmodifier): Reso
 		const internals = layer as {
 			_visible?: boolean;
 			_opacity?: number;
-			_blendMode?: string;
+			_blendMode?: LayerBlendMode;
 			_offsetX?: number;
 			_offsetY?: number;
 			_rotation?: number;
@@ -127,7 +127,7 @@ export function resolveLayerStackExportTargets(textmodifier: Textmodifier): Reso
 			...target,
 			visible: internals._visible ?? true,
 			opacity: internals._opacity ?? 1,
-			blendMode: internals._blendMode ?? 'normal',
+			blendMode: internals._blendMode ?? LayerBlendMode.NORMAL,
 			offsetX: internals._offsetX ?? 0,
 			offsetY: internals._offsetY ?? 0,
 			rotationZ: internals._rotation ?? 0,

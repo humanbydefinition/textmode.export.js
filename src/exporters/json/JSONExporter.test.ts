@@ -1,15 +1,14 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Textmodifier } from 'textmode.js';
-import type { TextmodeLayer } from 'textmode.js';
+import { LayerBlendMode, type Textmodifier, type TextmodeLayer } from 'textmode.js';
 import { JSONExporter } from './JSONExporter';
 import type { TextmodeAllDocumentJSON, TextmodeDocumentJSON, TextmodeSelectedDocumentJSON } from './types';
 
 type LayerMockOptions = {
 	visible?: boolean;
 	opacity?: number;
-	blendMode?: string;
+	blendMode?: LayerBlendMode;
 	offsetX?: number;
 	offsetY?: number;
 	rotationZ?: number;
@@ -80,7 +79,9 @@ function createLayerMock(
 	} as unknown as TextmodeLayer;
 }
 
-function createTextmodifierMock(): Textmodifier & { testLayer: TextmodeLayer } {
+function createTextmodifierMock(
+	userBlendMode: LayerBlendMode = LayerBlendMode.SCREEN
+): Textmodifier & { testLayer: TextmodeLayer } {
 	const characters = [
 		{ character: 'A', color: [65 / 255, 0, 0] as [number, number, number] },
 		{ character: 'B', color: [66 / 255, 0, 0] as [number, number, number] },
@@ -101,7 +102,7 @@ function createTextmodifierMock(): Textmodifier & { testLayer: TextmodeLayer } {
 		{
 			visible: false,
 			opacity: 0.5,
-			blendMode: 'screen',
+			blendMode: userBlendMode,
 			offsetX: 3,
 			offsetY: 4,
 			rotationZ: 15,
@@ -297,6 +298,34 @@ describe('JSONExporter', () => {
 			foreground: '#28323cff',
 			background: '#646e78ff',
 		});
+	});
+
+	it.each([
+		[LayerBlendMode.NORMAL, 'normal'],
+		[LayerBlendMode.ADDITIVE, 'additive'],
+		[LayerBlendMode.MULTIPLY, 'multiply'],
+		[LayerBlendMode.SCREEN, 'screen'],
+		[LayerBlendMode.SUBTRACT, 'subtract'],
+		[LayerBlendMode.DARKEN, 'darken'],
+		[LayerBlendMode.LIGHTEN, 'lighten'],
+		[LayerBlendMode.OVERLAY, 'overlay'],
+		[LayerBlendMode.SOFT_LIGHT, 'softLight'],
+		[LayerBlendMode.HARD_LIGHT, 'hardLight'],
+		[LayerBlendMode.COLOR_DODGE, 'colorDodge'],
+		[LayerBlendMode.COLOR_BURN, 'colorBurn'],
+		[LayerBlendMode.DIFFERENCE, 'difference'],
+		[LayerBlendMode.EXCLUSION, 'exclusion'],
+	] as const)('serializes LayerBlendMode.%s as %s', (mode, expectedName) => {
+		const exporter = new JSONExporter();
+		const document = expectLayerStackDocument(
+			exporter.$generateJSONData(createTextmodifierMock(mode), {
+				target: 'all',
+				includeMetadata: false,
+			})
+		);
+
+		expect(document.formatVersion).toBe('2.0.0');
+		expect(document.layers[1].blendMode).toBe(expectedName);
 	});
 
 	it('applies color mode and metadata options to all layer entries', () => {
