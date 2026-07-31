@@ -5,7 +5,4 @@ export default defineDocs({
 	checks: {
 		docstrings: ['function', 'method', 'accessor'],
 	},
-	examples: {
-		checkSketches: false,
-	},
 });
