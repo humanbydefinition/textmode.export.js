@@ -1,13 +1,17 @@
+blank_issues_enabled: true
 contact_links:
-    - name: Export Docs
-      url: https://code.textmode.art/docs/exporting.html
-      about: Start with the export guide, package README, and API surface before opening a usage question.
-    - name: API Reference
+    - name: Contribution guide
+      url: https://code.textmode.art/docs/contributing/code
+      about: Read the shared workflow before proposing or implementing a change.
+    - name: Export documentation
+      url: https://code.textmode.art/docs/exporting
+      about: Check the export guide before opening a usage question.
+    - name: API reference
       url: https://code.textmode.art/api/textmode.export.js/
-      about: Check the generated API reference for available methods, options, and types.
-    - name: textmode.js Core Repository
+      about: Check the generated API reference for methods, options, and types.
+    - name: textmode.js core repository
       url: https://github.com/humanbydefinition/textmode.js/issues
-      about: File issues there for core textmode.js engine, rendering, font, or editor problems.
+      about: Report core engine, rendering, font, or editor problems in the core repository.
     - name: Discord
       url: https://discord.gg/sjrw8QXNks
-      about: Ask usage questions, sanity-check export ideas, or discuss behavior before filing an issue.
+      about: Ask usage questions or discuss export behavior before filing an issue.
