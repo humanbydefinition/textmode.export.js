@@ -104,6 +104,14 @@ export class VideoFrameDriver {
 				this._throwIfAborted(options.signal);
 				this._syntheticFrameCount = originalFrameCount + frameIndex + 1;
 				this._syntheticMillis = (frameIndex * 1000) / frameRate;
+				await options.prepareFrame?.({
+					frameIndex,
+					frameCount,
+					timeSeconds: frameIndex / frameRate,
+					frameRate,
+					signal: options.signal,
+				});
+				this._throwIfAborted(options.signal);
 
 				await this._renderOneFrame(frameIndex, options.signal);
 				this._throwIfAborted(options.signal);

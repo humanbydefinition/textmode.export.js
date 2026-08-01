@@ -5,6 +5,8 @@ import type { TextmodeLayer } from 'textmode.js';
 /**
  * Shared option for exporters that read layer framebuffer data.
  *
+ * @category Layer data export
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/LayerExportOptions | LayerExportOptions API reference}
  */
 export interface LayerExportOptions {

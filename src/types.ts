@@ -5,8 +5,16 @@ import type { GIFExportOptions } from './exporters/gif';
 import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
+/** Installation options for the textmode export plugin. */
+export interface ExportPluginOptions {
+	/** Mount the built-in export overlay. Defaults to true. */
+	overlay?: boolean;
+}
+
 /**
  * Default TXT export fields controlled by the export overlay.
+ *
+ * @category Overlay
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/TXTOverlayDefaults | TXTOverlayDefaults API reference}
  */
@@ -15,12 +23,16 @@ export type TXTOverlayDefaults = Pick<TXTExportOptions, 'preserveTrailingSpaces'
 /**
  * Default JSON export fields controlled by the export overlay.
  *
+ * @category Overlay
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONOverlayDefaults | JSONOverlayDefaults API reference}
  */
 export type JSONOverlayDefaults = Pick<JSONExportOptions, 'target' | 'pretty' | 'includeMetadata' | 'colorMode'>;
 
 /**
  * Default image export fields controlled by the export overlay.
+ *
+ * @category Overlay
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageOverlayDefaults | ImageOverlayDefaults API reference}
  */
@@ -29,6 +41,8 @@ export type ImageOverlayDefaults = Pick<ImageExportOptions, 'format' | 'scale'>;
 /**
  * Default SVG export fields controlled by the export overlay.
  *
+ * @category Overlay
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/SVGOverlayDefaults | SVGOverlayDefaults API reference}
  */
 export type SVGOverlayDefaults = Pick<SVGExportOptions, 'includeBackgroundRectangles' | 'drawMode' | 'strokeWidth'>;
@@ -36,12 +50,16 @@ export type SVGOverlayDefaults = Pick<SVGExportOptions, 'includeBackgroundRectan
 /**
  * Default GIF export fields controlled by the export overlay.
  *
+ * @category Overlay
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFOverlayDefaults | GIFOverlayDefaults API reference}
  */
 export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRate' | 'scale' | 'repeat'>;
 
 /**
  * Default video export fields controlled by the export overlay.
+ *
+ * @category Overlay
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoOverlayDefaults | VideoOverlayDefaults API reference}
  */
@@ -69,6 +87,8 @@ export type VideoOverlayDefaults = Pick<
  * {@link ExportOverlayController.getDefaults} and
  * {@link ExportOverlayController.setDefaults}.
  *
+ * @category Overlay
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ExportDefaults | ExportDefaults API reference}
  */
 export type ExportDefaults = {
@@ -93,6 +113,8 @@ export type ExportDefaults = {
  * format's curated defaults. Top-level `format` changes the overlay's selected
  * format. Omitted keys keep their current value.
  *
+ * @category Overlay
+ *
  * @example
  * ```ts
  * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
@@ -112,6 +134,8 @@ export type ExportDefaultsPatch = {
  * `auto` means the overlay is using the library default offset from the
  * textmode canvas. `custom` means the user or runtime API has moved it.
  *
+ * @category Overlay
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPosition | ExportOverlayPosition API reference}
  */
 export interface ExportOverlayPosition {
@@ -123,6 +147,8 @@ export interface ExportOverlayPosition {
 /**
  * Canvas-relative placement coordinates for the export overlay UI.
  *
+ * @category Overlay
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayPositionInput | ExportOverlayPositionInput API reference}
  */
 export interface ExportOverlayPositionInput {
@@ -132,6 +158,8 @@ export interface ExportOverlayPositionInput {
 
 /**
  * Controller for managing the export overlay UI visibility at runtime.
+ *
+ * @category Overlay
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController | ExportOverlayController API reference}
  */
@@ -292,6 +320,8 @@ export interface ExportOverlayController {
 /**
  * Runtime export helpers that `ExportPlugin` attaches to the `Textmodifier` instance.
  *
+ * @category Workflow
+ *
  * @example
  * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
  *
@@ -318,6 +348,18 @@ export interface TextmodeExportAPI {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savecanvas | TextmodeExportAPI.saveCanvas API reference}
 	 */
 	saveCanvas(options?: ImageExportOptions): Promise<void>;
+
+	/**
+	 * Generates the current canvas as an image blob without downloading it.
+	 *
+	 * @example
+	 * ```ts
+	 * const blob = await t.toImageBlob({ format: 'webp', scale: 2 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#toimageblob | TextmodeExportAPI.toImageBlob API reference}
+	 */
+	toImageBlob(options?: ImageExportOptions): Promise<Blob>;
 
 	/**
 	 * Copies the current canvas to the user's clipboard as an image.
@@ -453,6 +495,18 @@ export interface TextmodeExportAPI {
 	saveGIF(options?: GIFExportOptions): Promise<void>;
 
 	/**
+	 * Generates an animated GIF blob without downloading it.
+	 *
+	 * @example
+	 * ```ts
+	 * const blob = await t.toGIFBlob({ frameCount: 90, frameRate: 30 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#togifblob | TextmodeExportAPI.toGIFBlob API reference}
+	 */
+	toGIFBlob(options?: GIFExportOptions): Promise<Blob>;
+
+	/**
 	 * Captures a video and saves it to disk *(`'mp4'` by default)*.
 	 *
 	 * @param options Export options.
@@ -474,4 +528,16 @@ export interface TextmodeExportAPI {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savevideo | TextmodeExportAPI.saveVideo API reference}
 	 */
 	saveVideo(options?: VideoExportOptions): Promise<void>;
+
+	/**
+	 * Generates a video blob without downloading it.
+	 *
+	 * @example
+	 * ```ts
+	 * const blob = await t.toVideoBlob({ format: 'webm', frameCount: 120, frameRate: 30 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tovideoblob | TextmodeExportAPI.toVideoBlob API reference}
+	 */
+	toVideoBlob(options?: VideoExportOptions): Promise<Blob>;
 }

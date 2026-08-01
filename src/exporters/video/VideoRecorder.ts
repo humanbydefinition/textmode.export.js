@@ -129,6 +129,7 @@ export class VideoRecorder {
 				frameCount: plan.frameCount,
 				frameRate: plan.frameRate,
 				signal: options.signal,
+				prepareFrame: options.prepareFrame,
 				onFrame: async ({ frameIndex }) => {
 					this._throwIfAborted(options.signal);
 					encodeQueue.enqueue(frameIndex);

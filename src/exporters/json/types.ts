@@ -3,6 +3,8 @@ import type { LayerExportOptions } from '../base';
 /**
  * Target scope for JSON export.
  *
+ * @category JSON document data
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportTarget | JSONExportTarget API reference}
  */
 export type JSONExportTarget = 'selected' | 'all';
@@ -23,6 +25,8 @@ export type JSONDocumentVersion = '2.0.0';
 
 /**
  * Supported JSON color output modes.
+ *
+ * @category JSON document data
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportColorMode | JSONExportColorMode API reference}
  */
@@ -180,12 +184,16 @@ export interface TextmodeAllDocumentJSON {
 /**
  * JSON document exported by the JSON exporter.
  *
+ * @category JSON document data
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/TextmodeDocumentJSON | TextmodeDocumentJSON API reference}
  */
 export type TextmodeDocumentJSON = TextmodeSelectedDocumentJSON | TextmodeAllDocumentJSON;
 
 /**
  * Options for exporting the textmode content to JSON format.
+ *
+ * @category JSON document data
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportOptions | JSONExportOptions API reference}
  */
