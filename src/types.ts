@@ -144,7 +144,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.show();
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/show | ExportOverlayController.show API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#show | ExportOverlayController.show API reference}
 	 */
 	show(): void;
 
@@ -156,7 +156,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.hide();
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/hide | ExportOverlayController.hide API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#hide | ExportOverlayController.hide API reference}
 	 */
 	hide(): void;
 
@@ -168,7 +168,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.toggle();
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/toggle | ExportOverlayController.toggle API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#toggle | ExportOverlayController.toggle API reference}
 	 */
 	toggle(): void;
 
@@ -180,7 +180,7 @@ export interface ExportOverlayController {
 	 * const visible = t.exportOverlay.isVisible();
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/isVisible | ExportOverlayController.isVisible API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#isvisible | ExportOverlayController.isVisible API reference}
 	 */
 	isVisible(): boolean;
 
@@ -193,7 +193,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.resetPosition();
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/resetPosition | ExportOverlayController.resetPosition API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#resetposition | ExportOverlayController.resetPosition API reference}
 	 */
 	resetPosition(): void;
 
@@ -208,7 +208,7 @@ export interface ExportOverlayController {
 	 * console.log(position.mode, position.offsetX, position.offsetY);
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/getPosition | ExportOverlayController.getPosition API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#getposition | ExportOverlayController.getPosition API reference}
 	 */
 	getPosition(): Readonly<ExportOverlayPosition>;
 
@@ -223,7 +223,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.setPosition({ offsetX: 24, offsetY: 24 });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setPosition | ExportOverlayController.setPosition API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#setposition | ExportOverlayController.setPosition API reference}
 	 */
 	setPosition(position: ExportOverlayPositionInput): void;
 
@@ -242,7 +242,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/setDefaults | ExportOverlayController.setDefaults API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#setdefaults | ExportOverlayController.setDefaults API reference}
 	 */
 	setDefaults(patch: ExportDefaultsPatch): void;
 
@@ -260,7 +260,7 @@ export interface ExportOverlayController {
 	 * console.log(defaults.image.scale); // 1 (or whatever was set)
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/getDefaults | ExportOverlayController.getDefaults API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#getdefaults | ExportOverlayController.getDefaults API reference}
 	 */
 	getDefaults(): Readonly<ExportDefaults>;
 
@@ -284,7 +284,7 @@ export interface ExportOverlayController {
 	 * t.exportOverlay.resetDefaults();
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController/methods/resetDefaults | ExportOverlayController.resetDefaults API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#resetdefaults | ExportOverlayController.resetDefaults API reference}
 	 */
 	resetDefaults(format?: keyof ExportDefaults): void;
 }
@@ -315,7 +315,7 @@ export interface TextmodeExportAPI {
 	 * await t.saveCanvas({ format: 'png', filename: 'frame-001' });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveCanvas | TextmodeExportAPI.saveCanvas API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savecanvas | TextmodeExportAPI.saveCanvas API reference}
 	 */
 	saveCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -329,7 +329,7 @@ export interface TextmodeExportAPI {
 	 * await t.copyCanvas({ format: 'png' });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/copyCanvas | TextmodeExportAPI.copyCanvas API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#copycanvas | TextmodeExportAPI.copyCanvas API reference}
 	 */
 	copyCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -343,7 +343,7 @@ export interface TextmodeExportAPI {
 	 * t.saveSVG({ filename: 'poster', layer: t.layers.base, includeBackgroundRectangles: true });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveSVG | TextmodeExportAPI.saveSVG API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savesvg | TextmodeExportAPI.saveSVG API reference}
 	 */
 	saveSVG(options?: SVGExportOptions): void;
 
@@ -357,7 +357,7 @@ export interface TextmodeExportAPI {
 	 * t.saveStrings({ filename: 'frame', layer: t.layers.base, preserveTrailingSpaces: true });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveStrings | TextmodeExportAPI.saveStrings API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savestrings | TextmodeExportAPI.saveStrings API reference}
 	 */
 	saveStrings(options?: TXTExportOptions): void;
 
@@ -372,7 +372,7 @@ export interface TextmodeExportAPI {
 	 * const svg = t.toSVG({ layer: t.layers.base, drawMode: 'stroke', strokeWidth: 1.5 });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toSVG | TextmodeExportAPI.toSVG API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tosvg | TextmodeExportAPI.toSVG API reference}
 	 */
 	toSVG(options?: SVGExportOptions): string;
 
@@ -387,7 +387,7 @@ export interface TextmodeExportAPI {
 	 * const text = t.toString({ layer: t.layers.base, preserveTrailingSpaces: false });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toString | TextmodeExportAPI.toString API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tostring | TextmodeExportAPI.toString API reference}
 	 */
 	toString(options?: TXTExportOptions): string;
 
@@ -403,7 +403,7 @@ export interface TextmodeExportAPI {
 	 * const stack = t.toJSON({ target: 'all' });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toJSON | TextmodeExportAPI.toJSON API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojson | TextmodeExportAPI.toJSON API reference}
 	 */
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
@@ -419,7 +419,7 @@ export interface TextmodeExportAPI {
 	 * const stackJson = t.toJSONString({ target: 'all' });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/toJSONString | TextmodeExportAPI.toJSONString API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonstring | TextmodeExportAPI.toJSONString API reference}
 	 */
 	toJSONString(options?: JSONExportOptions): string;
 
@@ -434,7 +434,7 @@ export interface TextmodeExportAPI {
 	 * t.saveJSON({ filename: 'stack', target: 'all' });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveJSON | TextmodeExportAPI.saveJSON API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejson | TextmodeExportAPI.saveJSON API reference}
 	 */
 	saveJSON(options?: JSONExportOptions): void;
 
@@ -448,7 +448,7 @@ export interface TextmodeExportAPI {
 	 * await t.saveGIF({ frameCount: 120, frameRate: 30, filename: 'loop' });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveGIF | TextmodeExportAPI.saveGIF API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savegif | TextmodeExportAPI.saveGIF API reference}
 	 */
 	saveGIF(options?: GIFExportOptions): Promise<void>;
 
@@ -471,7 +471,7 @@ export interface TextmodeExportAPI {
 	 * });
 	 * ```
 	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI/methods/saveVideo | TextmodeExportAPI.saveVideo API reference}
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savevideo | TextmodeExportAPI.saveVideo API reference}
 	 */
 	saveVideo(options?: VideoExportOptions): Promise<void>;
 }
