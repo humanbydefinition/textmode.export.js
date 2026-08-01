@@ -50,11 +50,11 @@ export class SelectInput<TValue extends string = string> extends Component<Selec
 		this.props.defaultValue = next;
 	}
 
-	protected _onUnmount(): void {
+	protected override _onUnmount(): void {
 		this.select.removeEventListener('change', this.handleChange);
 	}
 
-	protected onUpdate(props: SelectInputProps<TValue>): void {
+	protected override onUpdate(props: SelectInputProps<TValue>): void {
 		this.props = props;
 		this.populateOptions();
 		if (props.defaultValue) {
@@ -62,7 +62,7 @@ export class SelectInput<TValue extends string = string> extends Component<Selec
 		}
 	}
 
-	update(partial: Partial<SelectInputProps<TValue>>): void {
+	override update(partial: Partial<SelectInputProps<TValue>>): void {
 		this.props = { ...this.props, ...partial };
 		if (!this.select) {
 			return;

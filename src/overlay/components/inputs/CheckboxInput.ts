@@ -54,11 +54,11 @@ export class CheckboxInput extends Component<CheckboxInputProps> {
 		this.checkbox.checked = value;
 	}
 
-	protected _onUnmount(): void {
+	protected override _onUnmount(): void {
 		this.checkbox.removeEventListener('change', this.handleChange);
 	}
 
-	protected onUpdate(props: CheckboxInputProps): void {
+	protected override onUpdate(props: CheckboxInputProps): void {
 		this.props = props;
 		if (props.id) {
 			this.checkbox.id = props.id;

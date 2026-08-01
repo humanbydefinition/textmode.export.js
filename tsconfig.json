@@ -1,14 +1,9 @@
 {
-	"extends": ["@textmode/tsconfig/base.json", "@textmode/tsconfig/build.json"],
+	"extends": "@textmode/tsconfig/browser-library.json",
 	"compilerOptions": {
-		"ignoreDeprecations": "6.0",
-		"baseUrl": ".",
 		"paths": {
-			"mediabunny": ["src/types/mediabunny.d.ts"]
-		},
-		"rootDir": "./src",
-		"outDir": "./dist/types"
+			"mediabunny": ["./src/types/mediabunny.d.ts"]
+		}
 	},
-	"include": ["src"],
-	"exclude": ["src/**/*.test.ts"]
+	"include": ["src", "typedoc-entrypoints", "vite.config.ts"]
 }
