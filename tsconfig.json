@@ -5,5 +5,5 @@
 			"mediabunny": ["./src/types/mediabunny.d.ts"]
 		}
 	},
-	"include": ["src", "typedoc-entrypoints", "vite.config.ts"]
+	"include": ["src", "vite.config.ts"]
 }

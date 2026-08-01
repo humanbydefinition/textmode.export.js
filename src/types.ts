@@ -5,12 +5,6 @@ import type { GIFExportOptions } from './exporters/gif';
 import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
-/** Installation options for the textmode export plugin. */
-export interface ExportPluginOptions {
-	/** Mount the built-in export overlay. Defaults to true. */
-	overlay?: boolean;
-}
-
 /**
  * Default TXT export fields controlled by the export overlay.
  *
