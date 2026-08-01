@@ -337,6 +337,13 @@ export function createExportPlugin(options: ExportPluginOptions = {}): TextmodeP
 	};
 }
 
+/**
+ * Default export plugin instance for the standard textmode.js workflow.
+ *
+ * @category Workflow
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/variables/ExportPlugin | ExportPlugin API reference}
+ */
 export const ExportPlugin: TextmodePlugin = createExportPlugin();
 
 declare global {
