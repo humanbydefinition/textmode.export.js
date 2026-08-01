@@ -9,9 +9,9 @@
 
 </div>
 
-`textmode.export.js` is a free, lightweight export add-on for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that adds flexible output workflows. It supports plain text and JSON data, raster images, animated GIFs, WebM and MP4 video, and scalable vector graphics through a consistent browser-based API.
+`textmode.export.js` is an export add-on for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that turns a sketch into shareable files and data. Through one consistent browser-based API, it produces plain text and JSON, raster images, animated GIFs, WebM and MP4 video, and scalable vector graphics.
 
-The add-on is designed to make saving and sharing textmode creations straightforward for developers and end users alike. Whether you need a single still image, structured document data, or a complete animation, `textmode.export.js` provides both programmatic controls and an optional overlay UI.
+Choose a compact still, structured document data, or a complete animation to suit the way your work will be used. `textmode.export.js` offers programmatic controls for automated workflows and an optional overlay UI for people saving and sharing directly from a sketch.
 
 ## Features
 
