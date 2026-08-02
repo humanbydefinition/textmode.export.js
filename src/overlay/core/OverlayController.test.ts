@@ -97,6 +97,7 @@ function createExportAPI(): TextmodeExportAPI {
 			resetDefaults: vi.fn(),
 		},
 		saveCanvas: vi.fn(async () => undefined),
+		toImageBlob: vi.fn(async () => new Blob()),
 		copyCanvas: vi.fn(async () => undefined),
 		saveSVG: vi.fn(),
 		saveStrings: vi.fn(),
@@ -106,7 +107,9 @@ function createExportAPI(): TextmodeExportAPI {
 		toJSONString: vi.fn(() => ''),
 		saveJSON: vi.fn(),
 		saveGIF: vi.fn(async () => undefined),
+		toGIFBlob: vi.fn(async () => new Blob()),
 		saveVideo: vi.fn(async () => undefined),
+		toVideoBlob: vi.fn(async () => new Blob()),
 	};
 }
 

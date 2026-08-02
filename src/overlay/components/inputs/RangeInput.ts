@@ -74,7 +74,7 @@ export class RangeInput extends Component<RangeInputProps> {
 		this.updateTooltip();
 	}
 
-	protected _onDestroy(): void {
+	protected override _onDestroy(): void {
 		this.disabledObserver?.disconnect();
 		this.resizeObserver?.disconnect();
 	}
@@ -91,7 +91,7 @@ export class RangeInput extends Component<RangeInputProps> {
 		});
 
 		this.input.addEventListener('focus', () => {
-			let allowFocusTooltip = false;
+			let allowFocusTooltip: boolean;
 			try {
 				allowFocusTooltip = this.input.matches(':focus-visible');
 			} catch {

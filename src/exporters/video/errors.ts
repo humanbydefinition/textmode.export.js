@@ -2,7 +2,7 @@ import type { VideoExportErrorCode } from './types';
 
 export class VideoExportError extends Error {
 	public readonly code: VideoExportErrorCode;
-	public readonly cause?: unknown;
+	public override readonly cause?: unknown;
 
 	constructor(code: VideoExportErrorCode, message: string, cause?: unknown) {
 		super(message);

@@ -42,10 +42,14 @@ export class VideoExporter {
 	 * @param options Export options
 	 */
 	public async $saveVideo(options: VideoExportOptions = {}): Promise<void> {
-		await this._saveVideo(options.format ?? 'mp4', options);
+		const format = options.format ?? 'mp4';
+		const blob = await this.$generateVideoBlob(options);
+		new FileHandler().$downloadFile(blob, this._withExtension(options.filename, `.${format}`));
 	}
 
-	private async _saveVideo(format: VideoExportFormat, options: VideoExportOptions): Promise<void> {
+	/** Generates a deterministic video without initiating a download. */
+	public async $generateVideoBlob(options: VideoExportOptions = {}): Promise<Blob> {
+		const format = options.format ?? 'mp4';
 		const generationOptions = this._applyDefaultOptions(format, options);
 		const frameDriver = new VideoFrameDriver(
 			this._textmodifier,
@@ -55,8 +59,7 @@ export class VideoExporter {
 		);
 
 		try {
-			const blob = await this._recorder.$record(generationOptions, frameDriver, options.onProgress);
-			new FileHandler().$downloadFile(blob, this._withExtension(generationOptions.filename, `.${format}`));
+			return await this._recorder.$record(generationOptions, frameDriver, options.onProgress);
 		} catch (error) {
 			options.onProgress?.({
 				state: 'error',
@@ -90,6 +93,7 @@ export class VideoExporter {
 			transparent: Boolean(options.transparent),
 			debugLogging: Boolean(options.debugLogging),
 			signal: options.signal,
+			prepareFrame: options.prepareFrame,
 		};
 	}
 

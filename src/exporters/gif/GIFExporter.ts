@@ -1,115 +1,128 @@
-import type { Textmodifier } from 'textmode.js';
-import type { TextmodePluginContext } from 'textmode.js';
-import { GIFRecorder } from './GIFRecorder';
-import type { GIFExportOptions, GIFGenerationOptions } from './types';
-import { FileHandler } from '../base';
+import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
 import { applyPalette, GIFEncoder, quantize, type GIFPalette } from 'gifenc';
+import { FileHandler } from '../base';
+import { VideoFrameDriver } from '../video/VideoFrameDriver';
+import { GIFWorkerClient } from './GIFWorkerClient';
+import type { GIFExportOptions, GIFGenerationOptions } from './types';
 
-/**
- * Main GIF exporter for the textmode.js library.
- * Orchestrates the GIF export process by coordinating canvas capture,
- * frame processing, and file handling.
- */
+/** Deterministic, bounded-memory GIF exporter. */
 export class GIFExporter {
-	private readonly _recorder: GIFRecorder;
-	private readonly _textmodifier: Textmodifier;
-	private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'];
+	constructor(
+		private readonly _textmodifier: Textmodifier,
+		private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook']
+	) {}
 
-	/**
-	 * Creates an instance of GIFExporter.
-	 *
-	 * @param textmodifier The Textmodifier instance to capture frames from
-	 * @param registerPostDrawHook Function to register post-draw hooks
-	 */
-	constructor(textmodifier: Textmodifier, registerPostDrawHook: TextmodePluginContext['registerPostDrawHook']) {
-		this._recorder = new GIFRecorder();
-		this._textmodifier = textmodifier;
-		this._registerPostDrawHook = registerPostDrawHook;
+	public async $saveGIF(options: GIFExportOptions = {}): Promise<void> {
+		const blob = await this.$generateGIFBlob(options);
+		new FileHandler().$downloadFile(blob, options.filename);
 	}
 
-	/**
-	 * Captures frames and saves them as a GIF file
-	 *
-	 * @param options Export options
-	 */
-	public async $saveGIF(options: GIFExportOptions = {}): Promise<void> {
-		const canvas = this._textmodifier.canvas as HTMLCanvasElement;
+	/** Generates a GIF blob without initiating a download. */
+	public async $generateGIFBlob(options: GIFExportOptions = {}): Promise<Blob> {
 		const generationOptions = this._applyDefaultOptions(options);
-		const progress = options.onProgress;
+		const liveCanvas = this._textmodifier.canvas;
+		const width = Math.max(1, Math.round(liveCanvas.width * generationOptions.scale));
+		const height = Math.max(1, Math.round(liveCanvas.height * generationOptions.scale));
+		const frameDriver = new VideoFrameDriver(this._textmodifier, this._registerPostDrawHook, width, height);
+		const context = frameDriver.canvas.getContext('2d', { willReadFrequently: true });
 
+		if (!context) {
+			throw new Error('GIF export requires a 2D canvas context.');
+		}
+
+		const encoder = typeof Worker === 'undefined' ? GIFEncoder() : null;
+		const worker =
+			typeof Worker === 'undefined'
+				? null
+				: new GIFWorkerClient(
+						width,
+						height,
+						generationOptions.frameRate,
+						generationOptions.repeat,
+						generationOptions.signal
+					);
 		try {
-			const frames = await this._recorder.$record(
-				canvas,
-				generationOptions,
-				this._registerPostDrawHook,
-				progress
-			);
-
-			const encoder = GIFEncoder();
-			const { repeat } = options;
-
-			for (let i = 0; i < frames.length; i++) {
-				const frame = frames[i];
-				const { width, height, imageData, delayMs } = frame;
-				const rgbaBuffer = new Uint32Array(imageData.data.buffer);
-
-				const palette: GIFPalette = quantize(rgbaBuffer, 256, {});
-
-				const indexedPixels = applyPalette(rgbaBuffer, palette);
-
-				encoder.writeFrame(indexedPixels, width, height, {
-					palette,
-					delay: delayMs,
-					repeat: i === 0 ? repeat : -1,
-				});
-
-				if (i % 2 === 0 || i === frames.length - 1) {
-					progress?.({
+			this._throwIfAborted(generationOptions.signal);
+			await frameDriver.$render({
+				frameCount: generationOptions.frameCount,
+				frameRate: generationOptions.frameRate,
+				signal: generationOptions.signal,
+				prepareFrame: generationOptions.prepareFrame,
+				onFrame: async ({ frameIndex, canvas }) => {
+					this._throwIfAborted(generationOptions.signal);
+					const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+					if (worker) {
+						await worker.encodeFrame(imageData.data.buffer as ArrayBuffer, frameIndex);
+					} else if (encoder) {
+						const rgbaBuffer = imageData.data;
+						const palette: GIFPalette = quantize(rgbaBuffer, 256, {});
+						const indexedPixels = applyPalette(rgbaBuffer, palette);
+						encoder.writeFrame(indexedPixels, canvas.width, canvas.height, {
+							palette,
+							delay: Math.round(1000 / generationOptions.frameRate),
+							repeat: frameIndex === 0 ? generationOptions.repeat : -1,
+						});
+					}
+					options.onProgress?.({
 						state: 'encoding',
-						frameIndex: i + 1,
-						totalFrames: frames.length,
+						frameIndex: frameIndex + 1,
+						totalFrames: generationOptions.frameCount,
 					});
-					await new Promise((resolve) => setTimeout(resolve, 0));
-				}
-			}
-
-			encoder.finish();
-			const bytes = encoder.bytes();
-			const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-
-			new FileHandler().$downloadFile(new Blob([buffer], { type: 'image/gif' }), generationOptions.filename);
-
-			progress?.({
-				state: 'completed',
-				totalFrames: generationOptions.frameCount,
+					if ((frameIndex + 1) % 2 === 0) {
+						await this._yieldToBrowser(generationOptions.signal);
+					}
+				},
 			});
+
+			this._throwIfAborted(generationOptions.signal);
+			let buffer: ArrayBuffer;
+			if (worker) {
+				buffer = await worker.finish();
+			} else if (encoder) {
+				encoder.finish();
+				const bytes = encoder.bytes();
+				buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+			} else {
+				throw new Error('No GIF encoder is available.');
+			}
+			options.onProgress?.({ state: 'completed', totalFrames: generationOptions.frameCount });
+			return new Blob([buffer], { type: 'image/gif' });
 		} catch (error) {
-			progress?.({
+			options.onProgress?.({
 				state: 'error',
 				message: error instanceof Error ? error.message : 'GIF export failed',
 			});
 			throw error;
+		} finally {
+			worker?.dispose();
 		}
 	}
 
-	/**
-	 * Applies default values to the provided export options
-	 *
-	 * @param options User-provided options
-	 * @returns Complete options with defaults applied
-	 */
 	private _applyDefaultOptions(options: GIFExportOptions): GIFGenerationOptions {
-		const frameCount = Math.abs(Math.round(options.frameCount ?? 300));
-		const frameRate = Math.abs(options.frameRate ?? 60);
-		const scale = Math.abs(options.scale ?? 1.0);
-		const repeat = Math.max(-1, Math.round(options.repeat ?? 0));
-
 		return {
 			filename: options.filename,
-			frameCount,
-			frameRate,
-			scale,
-			repeat,
+			frameCount: Math.max(1, Math.abs(Math.round(options.frameCount ?? 300))),
+			frameRate: Math.max(1, Math.abs(options.frameRate ?? 60)),
+			scale: Math.max(Number.EPSILON, Math.abs(options.scale ?? 1)),
+			repeat: Math.max(-1, Math.round(options.repeat ?? 0)),
+			signal: options.signal,
+			prepareFrame: options.prepareFrame,
 		};
+	}
+
+	private _throwIfAborted(signal?: AbortSignal): void {
+		if (signal?.aborted) {
+			throw new DOMException('GIF export was cancelled.', 'AbortError');
+		}
+	}
+
+	private _yieldToBrowser(signal?: AbortSignal): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (signal?.aborted) {
+				reject(new DOMException('GIF export was cancelled.', 'AbortError'));
+				return;
+			}
+			setTimeout(resolve, 0);
+		});
 	}
 }

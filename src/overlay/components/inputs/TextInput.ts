@@ -48,11 +48,11 @@ export class TextInput extends Component<TextInputProps> {
 		this.input.value = next;
 	}
 
-	protected _onUnmount(): void {
+	protected override _onUnmount(): void {
 		this.input.removeEventListener('input', this.handleInput);
 	}
 
-	protected onUpdate(props: TextInputProps): void {
+	protected override onUpdate(props: TextInputProps): void {
 		this.props = props;
 		if (props.id) {
 			this.input.id = props.id;

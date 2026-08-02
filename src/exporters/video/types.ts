@@ -1,5 +1,9 @@
+import type { PrepareExportFrame } from '../base';
+
 /**
  * Lifecycle state reported while a video export is being prepared, recorded, encoded, or completed.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoRecordingState | VideoRecordingState API reference}
  */
@@ -9,6 +13,8 @@ export type VideoRecordingState = 'idle' | 'recording' | 'encoding' | 'completed
  * More granular phase information for progress UIs that need to distinguish setup, rendering, and finalization.
  *
  * `rendering` is retained for 1.5.x compatibility. Current deterministic video capture emits `capturing`.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportPhase | VideoExportPhase API reference}
  */
@@ -22,12 +28,16 @@ export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
  * Higher presets produce larger files with more detail. For exact control, pass a numeric
  * `bitrate` value in bits per second instead.
  *
+ * @category Animation export
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoBitratePreset | VideoBitratePreset API reference}
  */
 export type VideoBitratePreset = 'low' | 'medium' | 'high';
 
 /**
  * Video container format written by `saveVideo`.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportFormat | VideoExportFormat API reference}
  */
@@ -41,6 +51,8 @@ export type VideoExportFormat = 'webm' | 'mp4';
  * - `'constant'`: asks the encoder to keep the bitrate steadier throughout the export. This can make file size
  *   more predictable, but may waste bits on simple frames or reduce detail on complex frames.
  *
+ * @category Animation export
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoBitrateMode | VideoBitrateMode API reference}
  */
 export type VideoBitrateMode = 'variable' | 'constant';
@@ -51,6 +63,8 @@ export type VideoBitrateMode = 'variable' | 'constant';
  * - `'quality'`: prioritizes complete, stable export output. Mediabunny notes that this mode prevents dropped frames.
  * - `'realtime'`: prioritizes low-latency encoding. It is intended for live streams and may drop frames when overloaded,
  *   so it is usually not recommended for frame-perfect exports.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoLatencyMode | VideoLatencyMode API reference}
  */
@@ -64,6 +78,8 @@ export type VideoLatencyMode = 'quality' | 'realtime';
  * - `'prefer-hardware'`: prefer GPU/ASIC encoding when available, often faster and more power-efficient, but codec
  *   availability and output characteristics vary by device.
  * - `'prefer-software'`: prefer CPU encoding, often more consistent across machines, but usually slower.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoHardwareAcceleration | VideoHardwareAcceleration API reference}
  */
@@ -79,6 +95,8 @@ export type VideoExportErrorCode =
 
 /**
  * Progress information emitted during the video export process.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress | VideoExportProgress API reference}
  */
@@ -129,6 +147,8 @@ export type VideoExportProgress = {
 
 /**
  * Options for exporting the textmode content to video format.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions | VideoExportOptions API reference}
  */
@@ -217,6 +237,12 @@ export type VideoExportOptions = {
 	 */
 	signal?: AbortSignal;
 	/**
+	 * Prepares external media before each deterministic frame is redrawn.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#prepareframe | VideoExportOptions.prepareFrame API reference}
+	 */
+	prepareFrame?: PrepareExportFrame;
+	/**
 	 * When true, attempts to preserve alpha data in WebM recordings. MP4 exports reject this option.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#transparent | VideoExportOptions.transparent API reference}
@@ -252,6 +278,7 @@ export interface VideoGenerationOptions {
 	transparent: boolean;
 	debugLogging: boolean;
 	signal?: AbortSignal;
+	prepareFrame?: PrepareExportFrame;
 }
 
 export interface VideoEncodingPlan {
@@ -275,6 +302,7 @@ export interface VideoRenderFrameOptions {
 	frameCount: number;
 	frameRate: number;
 	signal?: AbortSignal;
+	prepareFrame?: PrepareExportFrame;
 	onFrame(frame: { frameIndex: number; canvas: HTMLCanvasElement }): Promise<void> | void;
 }
 

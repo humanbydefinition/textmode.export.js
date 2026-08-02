@@ -50,7 +50,7 @@ export class Button extends Component<ButtonProps> {
 		this.button.disabled = disabled;
 	}
 
-	protected onUpdate(props: ButtonProps): void {
+	protected override onUpdate(props: ButtonProps): void {
 		this.props = props;
 		this.button.textContent = props.label;
 		this.button.disabled = Boolean(props.disabled);

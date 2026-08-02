@@ -1,12 +1,9 @@
 {
-	"extends": ["@textmode/tsconfig/base.json", "@textmode/tsconfig/build.json"],
+	"extends": "@textmode/tsconfig/browser-library.json",
 	"compilerOptions": {
-		"baseUrl": ".",
 		"paths": {
-			"mediabunny": ["src/types/mediabunny.d.ts"]
-		},
-		"rootDir": "./src",
-		"outDir": "./dist/types"
+			"mediabunny": ["./src/types/mediabunny.d.ts"]
+		}
 	},
-	"include": ["src"]
+	"include": ["src", "vite.config.ts"]
 }
