@@ -15,3 +15,4 @@ export type {
 	ResolvedLayerExportTarget,
 	ResolvedLayerStackExportTarget,
 } from './LayerTarget';
+export type { ExportFrameContext, PrepareExportFrame } from './FramePreparation';

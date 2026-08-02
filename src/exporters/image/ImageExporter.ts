@@ -81,9 +81,16 @@ export class ImageExporter {
 		const _options = this._applyDefaultOptions(options);
 		this._validateOptions(_options);
 
-		const imageBlob = await this.$generateImageBlob(canvas, _options);
+		const imageBlob = await this.$toImageBlob(canvas, options);
 
 		new FileHandler().$downloadFile(imageBlob, _options.filename);
+	}
+
+	/** Generates an image blob using the public export options. */
+	public async $toImageBlob(canvas: HTMLCanvasElement, options: ImageExportOptions = {}): Promise<Blob> {
+		const generationOptions = this._applyDefaultOptions(options);
+		this._validateOptions(generationOptions);
+		return this.$generateImageBlob(canvas, generationOptions);
 	}
 
 	/**

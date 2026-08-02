@@ -1,29 +1,19 @@
 /**
  * @packageDocumentation
  *
- * Export plugin for textmode.js - save artworks as images, videos, SVG, JSON, and text.
+ * Export finished textmode.js artworks without leaving the sketch.
  *
- * This plugin adds comprehensive export capabilities to textmode.js instances,
- * allowing you to save your generative artworks in multiple formats with a
- * convenient overlay UI for quick access to all export options.
+ * ## Choose an output
  *
- * ## Available export formats
+ * Use **canvas capture** for the exact image on screen: PNG, JPEG, WebP, GIF,
+ * or video preserve compositing, filters, shaders, and post-processing. Use
+ * **layer data export** when the artwork should stay editable or machine
+ * readable: TXT, SVG, and JSON read from the selected layer, while JSON can
+ * also describe the full layer stack.
  *
- * ### Image formats
- * - {@link ImageExportOptions | PNG/JPEG/WebP} - Save canvas as raster image
- *
- * ### Vector formats
- * - {@link SVGExportOptions | SVG} - Save as scalable vector graphics
- *
- * ### Text formats
- * - {@link TXTExportOptions | TXT} - Save text content as plain text
- * - {@link JSONExportOptions | JSON} - Save document data as structured JSON
- *
- * ### Animation formats
- * - {@link GIFExportOptions | GIF} - Save as animated GIF
- * - {@link VideoExportOptions | Video} - Save as WebM or MP4 video
- *
- * @module textmode.export.js
+ * Start with {@link ExportPlugin}, then call the helpers added to your sketch
+ * or use the built-in export overlay. For recipes and format trade-offs, read
+ * the [Exporting guide](/docs/exporting).
  */
 
 import type { Textmodifier } from 'textmode.js';
@@ -57,31 +47,11 @@ export type { TextmodeExportAPI, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
-export type {
-	JSONCellCollection,
-	JSONCellTransform,
-	JSONColorValue,
-	JSONDocumentFormat,
-	JSONDocumentVersion,
-	JSONExportColorMode,
-	JSONExportMetadata,
-	JSONExportOptions,
-	JSONExportTarget,
-	JSONLayerGrid,
-	JSONObjectRowCell,
-	JSONObjectRowsCellCollection,
-	JSONRGBAColor,
-	TextmodeAllDocumentJSON,
-	TextmodeDocumentJSON,
-	TextmodeDocumentLayer,
-	TextmodeSelectedDocumentJSON,
-	TextmodeSelectedDocumentLayer,
-} from './exporters/json';
+export type { JSONExportColorMode, JSONExportOptions, JSONExportTarget, TextmodeDocumentJSON } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type {
 	VideoBitrateMode,
 	VideoBitratePreset,
-	VideoExportErrorCode,
 	VideoExportFormat,
 	VideoExportOptions,
 	VideoExportPhase,
@@ -94,10 +64,15 @@ export type { LayerExportOptions } from './exporters/base';
 
 // Module-level WeakMap to store the overlay controller without leaking
 // private keys onto the user's Textmodifier instance.
-const _controllers = new WeakMap<Textmodifier, ReturnType<typeof createExportOverlay>>();
+interface InstalledExportPlugin {
+	disposeOverlay: () => void;
+}
+
+const _controllers = new WeakMap<Textmodifier, InstalledExportPlugin>();
 const _apiKeys: ReadonlyArray<keyof TextmodeExportAPI> = [
 	'exportOverlay',
 	'saveCanvas',
+	'toImageBlob',
 	'copyCanvas',
 	'saveSVG',
 	'saveStrings',
@@ -107,18 +82,15 @@ const _apiKeys: ReadonlyArray<keyof TextmodeExportAPI> = [
 	'toJSONString',
 	'saveJSON',
 	'saveGIF',
+	'toGIFBlob',
 	'saveVideo',
+	'toVideoBlob',
 ];
 
 /**
- * Export plugin for textmode.js.
+ * Default export plugin instance for the standard textmode.js workflow.
  *
- * Add this plugin to your textmode.js instance to enable exporting artworks
- * as images, videos, SVG, JSON, and text files. Includes an overlay UI for quick
- * access to all export options, which can be controlled at runtime.
- *
- * @example
- * {@includeCode ../examples/ExportPlugin/init/sketch.js}
+ * @category Workflow
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/variables/ExportPlugin | ExportPlugin API reference}
  */
@@ -155,6 +127,10 @@ export const ExportPlugin: TextmodePlugin = {
 			 */
 			copyCanvas: async (options: ImageExportOptions = {}) => {
 				return new ImageExporter().$copyImageToClipboard(textmodifier.canvas, options);
+			},
+
+			toImageBlob: async (options: ImageExportOptions = {}) => {
+				return new ImageExporter().$toImageBlob(textmodifier.canvas, options);
 			},
 
 			/**
@@ -234,6 +210,10 @@ export const ExportPlugin: TextmodePlugin = {
 				return new GIFExporter(textmodifier, api.registerPostDrawHook).$saveGIF(options);
 			},
 
+			toGIFBlob: async (options: GIFExportOptions = {}) => {
+				return new GIFExporter(textmodifier, api.registerPostDrawHook).$generateGIFBlob(options);
+			},
+
 			/**
 			 * Saves the current canvas as an MP4/H.264 video file
 			 *
@@ -243,15 +223,18 @@ export const ExportPlugin: TextmodePlugin = {
 			saveVideo: async (options: VideoExportOptions = {}) => {
 				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveVideo(options);
 			},
+
+			toVideoBlob: async (options: VideoExportOptions = {}) => {
+				return new VideoExporter(textmodifier, api.registerPostDrawHook).$generateVideoBlob(options);
+			},
 		};
 
-		// Create overlay controller
 		const overlayController = createExportOverlay(
 			textmodifier,
 			exportMethods as TextmodeExportAPI,
 			createLayerTargetProvider(textmodifier)
 		);
-		api.registerPostDrawHook(() => {
+		const stopOverlayRefresh = api.registerPostDrawHook(() => {
 			if (overlayController.isVisible()) {
 				overlayController.refreshLayerTargets();
 			}
@@ -279,12 +262,17 @@ export const ExportPlugin: TextmodePlugin = {
 
 		// Attach methods to textmodifier and store controller reference
 		Object.assign(textmodifier, exportAPI);
-		_controllers.set(textmodifier, overlayController);
+		_controllers.set(textmodifier, {
+			disposeOverlay: () => {
+				stopOverlayRefresh();
+				overlayController.$dispose();
+			},
+		});
 	},
 
 	async uninstall(textmodifier: Textmodifier) {
-		const overlayController = _controllers.get(textmodifier);
-		overlayController?.$dispose();
+		const installed = _controllers.get(textmodifier);
+		installed?.disposeOverlay();
 		_controllers.delete(textmodifier);
 
 		for (const key of _apiKeys) {

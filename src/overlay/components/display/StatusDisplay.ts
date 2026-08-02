@@ -54,7 +54,7 @@ export class StatusDisplay extends Component<StatusDisplayProps> {
 		this.applyVariant(variant);
 	}
 
-	protected onUpdate(props: StatusDisplayProps): void {
+	protected override onUpdate(props: StatusDisplayProps): void {
 		this.props = props;
 		this.setMessage(props.message, props.variant ?? 'neutral');
 	}

@@ -1,7 +1,11 @@
+import type { PrepareExportFrame } from '../base';
+
 export type GIFRecordingState = 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 
 /**
  * Progress information emitted during the GIF export process.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportProgress | GIFExportProgress API reference}
  */
@@ -34,6 +38,8 @@ export type GIFExportProgress = {
 
 /**
  * Options for exporting the textmode content to GIF format.
+ *
+ * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportOptions | GIFExportOptions API reference}
  */
@@ -73,6 +79,18 @@ export type GIFExportOptions = {
 	 */
 	repeat?: number;
 	/**
+	 * Abort signal for cancelling capture or encoding.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportOptions#signal | GIFExportOptions.signal API reference}
+	 */
+	signal?: AbortSignal;
+	/**
+	 * Prepares external media before each deterministic frame is redrawn.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportOptions#prepareframe | GIFExportOptions.prepareFrame API reference}
+	 */
+	prepareFrame?: PrepareExportFrame;
+	/**
 	 * Progress callback invoked throughout the recording lifecycle.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportOptions#onprogress | GIFExportOptions.onProgress API reference}
@@ -86,6 +104,8 @@ export interface GIFGenerationOptions {
 	frameRate: number;
 	scale: number;
 	repeat: number;
+	signal?: AbortSignal;
+	prepareFrame?: PrepareExportFrame;
 }
 
 export interface GIFFrame {

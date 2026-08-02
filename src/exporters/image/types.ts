@@ -10,6 +10,8 @@ export type ImageFormat = 'png' | 'jpg' | 'webp';
 /**
  * Options for exporting the textmode content to image format.
  *
+ * @category Canvas capture
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ImageExportOptions | ImageExportOptions API reference}
  */
 export type ImageExportOptions = {

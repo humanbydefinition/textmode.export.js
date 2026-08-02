@@ -1,108 +1,97 @@
 /**
  * @title ExportPlugin.defaults
  * @author humanbydefinition
- * @description Shows how to override overlay defaults at runtime.
+ * @description Changes overlay defaults and restores them with a key press.
  */
 const t = textmode.create({
 	width: window.innerWidth,
 	height: window.innerHeight,
-	fontSize: 32,
+	fontSize: 16,
 	plugins: [ExportPlugin],
 });
 
-// Override every default value that can be controlled in the overlay
-t.exportOverlay.setDefaults({
-	format: 'image',
-	txt: {
-		preserveTrailingSpaces: false,
-		emptyCharacter: ' ',
-	},
-	json: {
-		target: 'selected',
-		pretty: true,
-		includeMetadata: true,
-		colorMode: 'hex',
-	},
-	image: {
-		format: 'png',
-		scale: 2,
-	},
-	svg: {
-		includeBackgroundRectangles: true,
-		drawMode: 'fill',
-		strokeWidth: 1,
-	},
-	gif: {
-		frameCount: 120,
-		frameRate: 30,
-		scale: 1,
-		repeat: 0,
-	},
-	video: {
-		format: 'mp4',
-		frameCount: 240,
-		frameRate: 30,
-		bitrate: 'low',
-		bitrateMode: 'variable',
-		latencyMode: 'quality',
-		hardwareAcceleration: 'no-preference',
-		keyFrameInterval: 2,
-		transparent: false,
-	},
-});
+const labelLayer = t.layers.add();
+t.exportOverlay.setDefaults({ format: 'image', image: { format: 'png', scale: 2 } });
+t.exportOverlay.show();
+const presets = [
+	['1', 'txt', '1 TXT', '='],
+	['2', 'image', '2 IMAGE', '@'],
+	['3', 'svg', '3 SVG', '#'],
+	['4', 'gif', '4 GIF', '*'],
+	['5', 'json', '5 JSON', '{'],
+	['6', 'video', '6 VIDEO', '~'],
+];
+function applyPreset(value) {
+	if (value === 'txt') t.exportOverlay.setDefaults({ format: value, txt: { preserveTrailingSpaces: true } });
+	if (value === 'image') t.exportOverlay.setDefaults({ format: value, image: { scale: 2 } });
+	if (value === 'svg') t.exportOverlay.setDefaults({ format: value, svg: { drawMode: 'stroke' } });
+	if (value === 'gif') t.exportOverlay.setDefaults({ format: value, gif: { frameRate: 24 } });
+	if (value === 'json') t.exportOverlay.setDefaults({ format: value, json: { target: 'all' } });
+	if (value === 'video') t.exportOverlay.setDefaults({ format: value, video: { frameRate: 30 } });
+}
 
-console.log('Current overlay defaults:', t.exportOverlay.getDefaults());
+function drawText(text, x, y, color = '#a9b7d0') {
+	t.push();
+	t.printAlign('left', 'top');
+	t.charColor(color);
+	t.print(text, x, y);
+	t.pop();
+}
 
 t.draw(() => {
-	t.background(0);
+	t.background('#0a0712');
+	const active = t.exportOverlay.getDefaults().format;
+	const span = Math.max(8, Math.min(18, Math.floor(t.grid.cols / 4)));
+	const pulse = 0.5 + 0.5 * Math.sin(t.frameCount * 0.06);
 
-	const time = t.frameCount * 0.01;
-	const step = 3;
-
-	t.translate(-t.grid.cols / 2, -t.grid.rows / 2, 0);
-
-	for (let y = 0; y < t.grid.rows; y += step) {
-		for (let x = 0; x < t.grid.cols; x += step) {
+	for (let i = 0; i < presets.length; i++) {
+		const item = presets[i];
+		const x = ((i % 3) - 1) * span;
+		const y = Math.floor(i / 3) * 8 - 4;
+		const selected = active === item[1];
+		t.push();
+		t.translate(x, y, 0);
+		t.char(item[3]);
+		t.charColor(selected ? '#fff4cf' : '#b99bca');
+		t.cellColor(selected ? '#51273a' : '#171022');
+		t.rect(10, 4);
+		t.pop();
+		t.push();
+		t.printAlign('center', 'center');
+		t.charColor(selected ? '#fff4cf' : '#d0bddb');
+		t.print(item[2], x, y);
+		t.pop();
+		if (selected) {
 			t.push();
-
-			const distance = Math.sqrt(x ** 2 + y ** 2);
-
-			const wave = Math.sin(distance * 0.3 - time * 8) * 0.5 + 0.5;
-
-			const wave2 = Math.sin(x * 0.2 + time * 4) * Math.sin(y * 0.15 + time * 3);
-			const combined = (wave + wave2 * 0.3) / 1.3;
-
-			if (combined > 0.7) {
-				t.char('#');
-				t.charColor(255, 200, 100);
-			} else if (combined > 0.5) {
-				t.char('@');
-				t.charColor(200, 150, 255);
-			} else if (combined > 0.3) {
-				t.char('%');
-				t.charColor(100, 255, 200);
-			} else if (combined > 0.1) {
-				t.char('.');
-				t.charColor(150, 100, 255);
-			} else {
-				t.char(' ');
-			}
-
-			t.cellColor(0, 0, 0);
-			t.translate(x, y, 0);
-			t.rect(step, step);
-
+			t.char('>');
+			t.charColor('#ff6b9d');
+			t.translate(x + 6, y - 2 + pulse, 0);
+			t.point();
 			t.pop();
 		}
 	}
 });
 
-// Press 'r' to reset default values
-t.keyPressed(() => {
-	if (t.key === 'r') {
-		t.exportOverlay.resetDefaults();
-		console.log('Defaults reset to library values');
-	}
+t.keyPressed((data) => {
+	if (data.key === 'r') t.exportOverlay.resetDefaults();
+	const preset = presets.find((item) => item[0] === data.key);
+	if (preset) applyPreset(preset[1]);
+});
+
+labelLayer.draw(() => {
+	t.clear();
+	const left = -Math.floor(t.grid.cols / 2),
+		top = -Math.floor(t.grid.rows / 2);
+	const x = left + 3;
+	let y = top + 3;
+	drawText('EXPORTPLUGIN.DEFAULTS', x, y++, '#64f2c2');
+	drawText('------------------------------------', x, y++, '#5b3f76');
+	drawText('CONCEPT: DEFAULT VALUES', x, y++, '#d3a6f2');
+	drawText('Keys apply a format preset.', x, y++);
+	drawText('R restores curated values.', x, y++);
+	drawText('------------------------------------', x, y++, '#5b3f76');
+	drawText('ACTIVE FORMAT:', x, y, '#ffcf70');
+	drawText(t.exportOverlay.getDefaults().format.toUpperCase(), x + 15, y, '#fff4cf');
 });
 
 t.windowResized(() => {

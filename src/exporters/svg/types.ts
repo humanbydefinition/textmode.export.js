@@ -61,6 +61,8 @@ export interface FramebufferData {
 /**
  * Options for exporting the textmode content to SVG format.
  *
+ * @category Layer data export
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/SVGExportOptions | SVGExportOptions API reference}
  */
 export type SVGExportOptions = LayerExportOptions & {

@@ -94,7 +94,7 @@ export class NumberInput extends Component<NumberInputProps> {
 		this.updateDisplay();
 	}
 
-	protected _onDestroy(): void {
+	protected override _onDestroy(): void {
 		this.clearHoldTimers();
 		this.disabledObserver?.disconnect();
 	}

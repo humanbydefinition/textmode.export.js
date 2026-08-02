@@ -65,12 +65,12 @@ export class LayerTargetSelect extends Component<void> {
 		this.select.value = nextValue;
 	}
 
-	protected _onUnmount(): void {
+	protected override _onUnmount(): void {
 		this.select.unmount();
 		this.field.unmount();
 	}
 
-	protected _onDestroy(): void {
+	protected override _onDestroy(): void {
 		this.select.destroy();
 		this.field.destroy();
 	}

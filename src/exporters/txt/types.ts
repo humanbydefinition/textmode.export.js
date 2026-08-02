@@ -3,6 +3,8 @@ import type { LayerExportOptions } from '../base';
 /**
  * Options for exporting the textmode content to TXT format.
  *
+ * @category Layer data export
+ *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/TXTExportOptions | TXTExportOptions API reference}
  */
 export type TXTExportOptions = LayerExportOptions & {

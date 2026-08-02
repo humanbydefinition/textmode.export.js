@@ -40,16 +40,18 @@ declare module 'gifenc' {
 		useSqrt?: boolean;
 	}
 
-	export function quantize(data: Uint32Array, maxColors: number, options?: QuantizeOptions): GIFPalette;
+	type GIFRGBAData = Uint8Array | Uint8ClampedArray;
+
+	export function quantize(data: GIFRGBAData, maxColors: number, options?: QuantizeOptions): GIFPalette;
 
 	export function applyPalette(
-		data: Uint32Array,
+		data: GIFRGBAData,
 		palette: GIFPalette,
 		format?: 'rgb565' | 'rgb444' | 'rgba4444'
 	): Uint8Array;
 
 	export function prequantize(
-		data: Uint32Array,
+		data: GIFRGBAData,
 		options?: {
 			roundRGB?: number;
 			roundAlpha?: number;

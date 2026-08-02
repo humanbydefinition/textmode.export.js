@@ -43,12 +43,12 @@ export class Field extends Component<FieldProps> {
 		this.root.appendChild(controlElement);
 	}
 
-	update(props: FieldProps): void {
+	override update(props: FieldProps): void {
 		this.props = props;
 		super.update(props);
 	}
 
-	protected onUpdate(props: FieldProps): void {
+	protected override onUpdate(props: FieldProps): void {
 		const element = this.root;
 		while (element.firstChild) {
 			element.removeChild(element.firstChild);

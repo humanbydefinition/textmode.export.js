@@ -1,4 +1,5 @@
 import type { Textmodifier } from 'textmode.js';
+import { LayerBlendMode } from 'textmode.js';
 import {
 	FileHandler,
 	resolveLayerExportTarget,
@@ -23,6 +24,22 @@ import type {
 
 const TEXTMODE_DOCUMENT_FORMAT = 'textmode.document' as const;
 const TEXTMODE_DOCUMENT_FORMAT_VERSION = '2.0.0' as const;
+const JSON_BLEND_MODE_NAMES: Readonly<Record<LayerBlendMode, string>> = {
+	[LayerBlendMode.NORMAL]: 'normal',
+	[LayerBlendMode.ADDITIVE]: 'additive',
+	[LayerBlendMode.MULTIPLY]: 'multiply',
+	[LayerBlendMode.SCREEN]: 'screen',
+	[LayerBlendMode.SUBTRACT]: 'subtract',
+	[LayerBlendMode.DARKEN]: 'darken',
+	[LayerBlendMode.LIGHTEN]: 'lighten',
+	[LayerBlendMode.OVERLAY]: 'overlay',
+	[LayerBlendMode.SOFT_LIGHT]: 'softLight',
+	[LayerBlendMode.HARD_LIGHT]: 'hardLight',
+	[LayerBlendMode.COLOR_DODGE]: 'colorDodge',
+	[LayerBlendMode.COLOR_BURN]: 'colorBurn',
+	[LayerBlendMode.DIFFERENCE]: 'difference',
+	[LayerBlendMode.EXCLUSION]: 'exclusion',
+};
 
 /**
  * Main JSON exporter for the textmode.js library.
@@ -141,7 +158,7 @@ export class JSONExporter {
 			id: target.id,
 			visible: target.visible,
 			opacity: target.opacity,
-			blendMode: target.blendMode,
+			blendMode: JSON_BLEND_MODE_NAMES[target.blendMode],
 			offsetX: target.offsetX,
 			offsetY: target.offsetY,
 			rotationZ: target.rotationZ,
