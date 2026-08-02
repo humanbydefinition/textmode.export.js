@@ -3,6 +3,18 @@
 	"version": "1.6.0-beta.1",
 	"description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, JSON, and plain text.",
 	"type": "module",
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "^24.0.0",
+			"onFail": "error"
+		},
+		"packageManager": {
+			"name": "npm",
+			"version": "^11.0.0",
+			"onFail": "error"
+		}
+	},
 	"main": "./dist/textmode.export.umd.js",
 	"module": "./dist/textmode.export.esm.js",
 	"types": "./dist/types/index.d.ts",
@@ -63,7 +75,7 @@
 		"@textmode/tooling-scripts": "^0.5.0",
 		"@textmode/tsconfig": "^0.2.0",
 		"@textmode/vite-config": "^0.1.0",
-		"@types/node": "^26.1.1",
+		"@types/node": "^24.0.0",
 		"@vitest/ui": "^4.1.10",
 		"eslint": "^10.6.0",
 		"jsdom": "^30.0.0",
