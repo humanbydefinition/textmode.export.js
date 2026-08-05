@@ -74,7 +74,7 @@ export class RangeInput extends Component<RangeInputProps> {
 		this.updateTooltip();
 	}
 
-	protected _onDestroy(): void {
+	protected override _onDestroy(): void {
 		this.disabledObserver?.disconnect();
 		this.resizeObserver?.disconnect();
 	}

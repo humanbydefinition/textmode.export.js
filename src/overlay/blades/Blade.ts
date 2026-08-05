@@ -47,13 +47,13 @@ export abstract class Blade<TOptions> extends Component<void> {
 		return component;
 	}
 
-	protected _onUnmount(): void {
+	protected override _onUnmount(): void {
 		for (const component of this._managedComponents) {
 			component.unmount();
 		}
 	}
 
-	protected _onDestroy(): void {
+	protected override _onDestroy(): void {
 		for (const component of this._managedComponents) {
 			component.destroy();
 		}

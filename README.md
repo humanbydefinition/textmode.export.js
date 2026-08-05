@@ -1,177 +1,106 @@
-# textmode.export.js (✿◕‿◕)ﾉ
+# textmode.export.js
 
 <div align="center">
 
-| [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) | [![API](https://img.shields.io/badge/API-typedoc-3178c6?logo=typescript&logoColor=white)](docs/README.md) [![docs](https://img.shields.io/badge/docs-vitepress-646cff?logo=vitepress&logoColor=white)](https://code.textmode.art/docs/exporting.html) [![Discord](https://img.shields.io/discord/1357070706181017691?color=5865F2&label=Discord&logo=discord&logoColor=white)](https://discord.gg/sjrw8QXNks) | [![ko-fi](https://shields.io/badge/ko--fi-donate-ff5f5f?logo=ko-fi)](https://ko-fi.com/V7V8JG2FY) [![GitHub-sponsors](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/humanbydefinition) |
-| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+<img alt="textmode.export.js — save textmode in every format" src=".github/assets/readme-og.png" />
+
+| [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) | [![API](https://img.shields.io/badge/API-typedoc-3178c6?logo=typescript&logoColor=white)](https://code.textmode.art/api/textmode.export.js/) [![docs](https://img.shields.io/badge/docs-vitepress-646cff?logo=vitepress&logoColor=white)](https://code.textmode.art/docs/exporting.html) [![Discord](https://img.shields.io/discord/1357070706181017691?color=5865F2&label=Discord&logo=discord&logoColor=white)](https://discord.gg/sjrw8QXNks) | [![ko-fi](https://shields.io/badge/ko--fi-donate-ff5f5f?logo=ko-fi)](https://ko-fi.com/V7V8JG2FY) [![GitHub-sponsors](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/humanbydefinition) |
+|:---|:---|:---|
 
 </div>
 
-`textmode.export.js` is an add-on library for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that adds various export options to your `Textmodifier` instance, including:
+`textmode.export.js` is an export add-on for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that turns a sketch into shareable files and data. Through one consistent browser-based API, it produces plain text and JSON, raster images, animated GIFs, WebM and MP4 video, and scalable vector graphics.
 
-- Plain text (`.txt`)
-- JSON document data (`.json`)
-- Image files (`.png`, `.jpg`, `.webp`)
-- Animated image files (`.gif`)
-- Video files (`.webm`, `.mp4`)
-- Scalable vector graphics (`.svg`)
+Choose a compact still, structured document data, or a complete animation to suit the way your work will be used. `textmode.export.js` offers programmatic controls for automated workflows and an optional overlay UI for people saving and sharing directly from a sketch.
 
-Besides exporting programatically, `textmode.export.js` also provides an overlay UI for users to easily export their creations.
+## Features
+
+- **Six output families** - TXT, structured JSON, SVG, PNG/JPEG/WebP, animated GIF, and MP4/WebM video
+- **Exact canvas capture** - Preserve the final presented result, including compositing, shaders, filters, and post-processing
+- **Layer-aware documents** - Export selected layers to TXT/SVG/JSON or preserve the complete descriptive layer stack in JSON
+- **Programmatic exports** - Return text, SVG, and JSON in memory or save them directly as files
+- **Interactive overlay** - Built-in format controls, live layer selectors, runtime defaults, visibility controls, and remembered placement
+- **Clipboard workflows** - Copy text, JSON, SVG, and raster output without downloading files
+- **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
+
+## Try it online first
+
+Open [editor.textmode.art](https://editor.textmode.art/), a browser-based live-coding environment for the
+complete official `textmode.js` ecosystem. Sketches run as you edit, with no local toolchain required.
+
+The editor includes `textmode.js` and all four official add-ons: `textmode.export.js`, `textmode.filters.js`,
+`textmode.figlet.js`, and `textmode.synth.js`.
+
+- Write with Monaco-powered completions, hover documentation, and diagnostics.
+- Start with a blank sketch, an included example, or a community gallery sketch.
+- Keep code and preferences saved in the browser, then share sketches through URL-based links.
+- Use microphone or line-input analysis for audio-reactive work, and create on desktop or mobile.
+
+Use it to experiment with export functionality while your sketch is running.
 
 ## Installation
 
-### Prerequisites
-
-- The latest `textmode.export.js` version requires `textmode.js` v0.7.0 or later.
-
-### UMD
-
-To use `textmode.export.js` in a UMD environment, download the latest `umd` build from the [**GitHub releases page**](https://github.com/humanbydefinition/textmode.export.js/releases/) or import it directly from a CDN like [**jsDelivr**](https://www.jsdelivr.com/package/npm/textmode.export.js). The library is distributed as a single JavaScript file, which you can include in your project by adding the following script tag to your HTML file:
-
-```html
-<!-- index.html -->
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>textmode.js sketch</title>
-
-		<!-- Import textmode.js from jsDelivr CDN -->
-		<script src="https://cdn.jsdelivr.net/npm/textmode.js@latest/dist/textmode.umd.js"></script>
-
-		<!-- Import textmode.export.js from jsDelivr CDN -->
-		<script src="https://cdn.jsdelivr.net/npm/textmode.export.js@latest/dist/textmode.export.umd.js"></script>
-	</head>
-	<body>
-		<script src="sketch.js"></script>
-	</body>
-</html>
-```
-
-```javascript
-// sketch.js
-const t = textmode.create({
-	width: window.innerWidth,
-	height: window.innerHeight,
-	fontSize: 16,
-	frameRate: 60,
-	plugins: [ExportPlugin],
-});
-
-t.setup(() => {
-	// Optional setup code here (e.g., load fonts/shaders, initialize variables that access 't')
-});
-
-t.draw(() => {
-	t.background(32); // Dark gray background
-
-	t.char('A');
-	t.charColor(255, 0, 0); // Cover the top-left quarter of the grid with a rectangle of red 'A's
-	t.rect(0, 0, t.grid.cols / 2, t.grid.rows / 2);
-
-	// ...add your drawing code here!
-
-	if (t.frameCount === 60) {
-		t.saveCanvas({
-			format: 'png',
-			filename: 'my-sketch',
-		});
-	}
-});
-
-// Control the export overlay UI at runtime
-// t.exportOverlay.hide();   // Hide the overlay
-// t.exportOverlay.show();   // Show the overlay
-// t.exportOverlay.toggle(); // Toggle visibility
-
-// Override input defaults at runtime
-// t.exportOverlay.setDefaults({ image: { scale: 2 } });
-
-t.windowResized(() => {
-	t.resizeCanvas(window.innerWidth, window.innerHeight);
-});
-```
-
-#### ESM
-
-To use `textmode.export.js` in an ESM environment, you can install it via `npm`:
-
-```bash
-npm install textmode.export.js
-```
-
-Then, you can import it in your JavaScript or TypeScript files:
-
-```html
-<!-- index.html -->
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<title>textmode.js sketch</title>
-	</head>
-	<body>
-		<script type="module" src="./sketch.js"></script>
-	</body>
-</html>
-```
-
-```javascript
-// sketch.js
-import { textmode } from 'textmode.js';
-import { ExportPlugin } from 'textmode.export.js';
-
-const t = textmode.create({
-	width: window.innerWidth,
-	height: window.innerHeight,
-	fontSize: 16,
-	frameRate: 60,
-	plugins: [ExportPlugin],
-});
-
-t.setup(() => {
-	// Optional setup code here (e.g., load fonts/shaders, initialize variables that access 't')
-});
-
-t.draw(() => {
-	t.background(32); // Dark gray background
-
-	t.char('A');
-	t.charColor(255, 0, 0); // Cover the top-left quarter of the grid with a rectangle of red 'A's
-	t.rect(0, 0, t.grid.cols / 2, t.grid.rows / 2);
-
-	// ...add your drawing code here!
-
-	if (t.frameCount === 60) {
-		t.saveCanvas({
-			format: 'png',
-			filename: 'my-sketch',
-		});
-	}
-});
-
-// Control the export overlay UI at runtime
-// t.exportOverlay.hide();   // Hide the overlay
-// t.exportOverlay.show();   // Show the overlay
-// t.exportOverlay.toggle(); // Toggle visibility
-
-// Override input defaults at runtime
-// t.exportOverlay.setDefaults({ image: { scale: 2 } });
-
-t.windowResized(() => {
-	t.resizeCanvas(window.innerWidth, window.innerHeight);
-});
-```
+Follow the [official installation guide](https://code.textmode.art/docs/installation) to install
+`textmode.export.js` alongside `textmode.js` with npm or browser-ready UMD bundles.
 
 ## Next steps
 
-Now that you have `textmode.export.js` set up, you can explore the following resources to learn more about its features and capabilities:
+- **[Read the exporting documentation](https://code.textmode.art/docs/exporting.html)** for supported formats and workflows.
+- **[Browse the API reference](https://code.textmode.art/api/textmode.export.js/)** for the complete typed API.
+- **[Explore the examples](./examples/)** to see export plugins and options in action.
+- **[Try the live editor](https://editor.textmode.art/)** to experiment with exports in the browser.
 
-📚 **[Visit the Official Documentation](https://code.textmode.art/docs/exporting.html)** for a detailed guide on how to use the `textmode.export.js` and all its features.
+## Contributing
 
-🔍 **[Browse the TypeDoc API reference](docs/README.md)** hosted right here in the repository for in-depth API details.
+Thank you for considering contributing to this project! (✿◠‿◠)
+
+Please read the [Contributing Guide](./CONTRIBUTING.md) to get started.
+
+<!-- TEXTMODE-CONTRIBUTORS:START -->
+<!-- prettier-ignore-start -->
+<!-- Generated from https://github.com/humanbydefinition/code.textmode.art/blob/main/.vitepress/data/contributors.json and https://github.com/humanbydefinition/code.textmode.art/blob/main/.vitepress/data/contribution-types.json. Do not edit this section directly. -->
+## Contributors
+
+Thanks to the people who contribute code, documentation, design, examples, ideas, infrastructure, and care
+across the textmode.js ecosystem.
+
+<!-- markdownlint-disable MD033 -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/humanbydefinition">
+          <img src="https://github.com/humanbydefinition.png?s=100" width="100px" alt="humanbydefinition avatar" />
+          <br /><sub><b>humanbydefinition</b></sub>
+        </a>
+        <br /><span title="Code: Commits and pull requests" aria-label="Code: Commits and pull requests">💻</span> <span title="Documentation: README, guides, and API documentation" aria-label="Documentation: README, guides, and API documentation">📖</span> <span title="Design: User experience, branding, and visual design" aria-label="Design: User experience, branding, and visual design">🎨</span> <span title="Examples: Usage examples and creative sketches" aria-label="Examples: Usage examples and creative sketches">💡</span> <span title="Ideas and planning: Feature proposals, planning, and feedback" aria-label="Ideas and planning: Feature proposals, planning, and feedback">🤔</span> <span title="Maintenance: Refactoring and project upkeep" aria-label="Maintenance: Refactoring and project upkeep">🚧</span> <span title="Infrastructure: Continuous integration, hosting, and build systems" aria-label="Infrastructure: Continuous integration, hosting, and build systems">🚇</span> <span title="Tools: Developer and community tooling" aria-label="Tools: Developer and community tooling">🔧</span> <span title="Plugins and libraries: Plugin and utility library development" aria-label="Plugins and libraries: Plugin and utility library development">🔌</span> <span title="Code review: Reviewing pull requests" aria-label="Code review: Reviewing pull requests">👀</span>
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/trintlermint">
+          <img src="https://github.com/trintlermint.png?s=100" width="100px" alt="trintlermint avatar" />
+          <br /><sub><b>trintlermint</b></sub>
+        </a>
+        <br /><span title="Design: User experience, branding, and visual design" aria-label="Design: User experience, branding, and visual design">🎨</span> <span title="Examples: Usage examples and creative sketches" aria-label="Examples: Usage examples and creative sketches">💡</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<!-- markdownlint-enable MD033 -->
+
+Contribution details and profile links are maintained on the [textmode.js contributors page](https://code.textmode.art/docs/contributors).
+<!-- prettier-ignore-end -->
+<!-- TEXTMODE-CONTRIBUTORS:END -->
+
+## License
+
+`textmode.export.js` is licensed under the [MIT License](./LICENSE).
 
 ## Acknowledgements
 
-`textmode.export.js` packages [`mediabunny`](https://github.com/Vanilagy/mediabunny) by [**Vanilagy**](https://github.com/Vanilagy) to provide WebM and MP4 video export support via WebCodecs. `mediabunny` is distributed under the [**MPL-2.0**](https://www.mozilla.org/en-US/MPL/2.0/) license.
+- **[mediabunny](https://github.com/Vanilagy/mediabunny)**
+  - WebM and MP4 video export support via WebCodecs, by [Vanilagy](https://github.com/Vanilagy).
+  - License: [MPL-2.0](https://github.com/Vanilagy/mediabunny/blob/main/LICENSE).
 
-Animated GIF export relies on [`gifenc`](https://github.com/mattdesl/gifenc) by [**Matt DesLauriers**](https://github.com/mattdesl), available under the [**MIT License**](https://opensource.org/licenses/MIT).
+- **[gifenc](https://github.com/mattdesl/gifenc)**
+  - Animated GIF encoding by [Matt DesLauriers](https://github.com/mattdesl).
+  - License: [MIT License](https://github.com/mattdesl/gifenc/blob/main/LICENSE.md).
