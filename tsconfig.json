@@ -2,6 +2,7 @@
 	"extends": "@textmode/tsconfig/browser-library.json",
 	"compilerOptions": {
 		"paths": {
+			"textmode.js": ["../textmode.js-dev/dist/types/index.d.ts"],
 			"mediabunny": ["./src/types/mediabunny.d.ts"]
 		}
 	},

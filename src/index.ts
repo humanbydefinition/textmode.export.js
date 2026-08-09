@@ -69,8 +69,7 @@ interface InstalledExportPlugin {
 }
 
 const _controllers = new WeakMap<Textmodifier, InstalledExportPlugin>();
-const _apiKeys: ReadonlyArray<keyof TextmodeExportAPI> = [
-	'exportOverlay',
+const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOverlay'>> = [
 	'saveCanvas',
 	'toImageBlob',
 	'copyCanvas',
@@ -254,14 +253,19 @@ export const ExportPlugin: TextmodePlugin = {
 			resetDefaults: (format?: keyof ExportDefaults) => overlayController.resetDefaults(format),
 		};
 
-		// Combine into full export API
-		const exportAPI: TextmodeExportAPI = {
-			...exportMethods,
-			exportOverlay: exportOverlayAPI,
-		};
+		// Register the export API as Textmodifier extensions so the plugin runtime
+		// handles conflict detection and uninstall cleanup uniformly. The export
+		// methods are registered as value extensions; the overlay controller is
+		// exposed through a getter.
+		for (const key of _apiMethodKeys) {
+			api.defineExtension('textmodifier', key, {
+				value: exportMethods[key],
+			});
+		}
+		api.defineExtension('textmodifier', 'exportOverlay', {
+			get: () => exportOverlayAPI,
+		});
 
-		// Attach methods to textmodifier and store controller reference
-		Object.assign(textmodifier, exportAPI);
 		_controllers.set(textmodifier, {
 			disposeOverlay: () => {
 				stopOverlayRefresh();
@@ -275,9 +279,8 @@ export const ExportPlugin: TextmodePlugin = {
 		installed?.disposeOverlay();
 		_controllers.delete(textmodifier);
 
-		for (const key of _apiKeys) {
-			delete (textmodifier as unknown as Record<string, unknown>)[key];
-		}
+		// Extension properties and hooks are removed by the plugin runtime's
+		// extension registry and hook registry when the plugin is uninstalled.
 	},
 };
 
