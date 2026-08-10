@@ -25,8 +25,9 @@ export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
 /**
  * Subjective bitrate preset used when an exact bits-per-second value is not supplied.
  *
- * Higher presets produce larger files with more detail. For exact control, pass a numeric
- * `bitrate` value in bits per second instead.
+ * Higher presets produce larger files with more detail. Each preset maps to a fixed bits-per-pixel budget
+ * (bits per pixel per second), so a given preset resolves to the same bitrate regardless of the export
+ * frame rate. For exact control, pass a numeric `bitrate` value in bits per second instead.
  *
  * @category Animation export
  *
@@ -178,11 +179,12 @@ export type VideoExportOptions = {
 	 */
 	frameRate?: number;
 	/**
-	 * Target bitrate in bits per second or a bitrate preset. Defaults to `'medium'`.
+	 * Target bitrate in bits per second or a quality preset. Defaults to `'medium'`.
 	 *
 	 * Bitrate controls how much encoded data is available per second of video. Higher values can preserve more detail
-	 * in noisy or fast-changing sketches, but create larger files. Presets are resolved from the export dimensions and
-	 * frame rate; numeric values are passed directly to the encoder.
+	 * in noisy or fast-changing sketches, but create larger files. Presets resolve to a fixed bits-per-pixel budget
+	 * from the export dimensions only, so a given preset targets the same bitrate regardless of the frame rate.
+	 * Numeric values are passed directly to the encoder.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#bitrate | VideoExportOptions.bitrate API reference}
 	 */
