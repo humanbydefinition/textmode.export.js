@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
-import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileHandler } from '../base';
 import { VideoExporter, VideoRecorder, type VideoGenerationOptions } from '.';
+import type { PostDrawSubscription } from './VideoFrameDriver';
 
 function createTextmodifier(): Textmodifier {
 	const canvas = document.createElement('canvas');
@@ -16,7 +17,7 @@ function createTextmodifier(): Textmodifier {
 	} as unknown as Textmodifier;
 }
 
-const registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'] = () => () => undefined;
+const registerPostDrawHook: PostDrawSubscription = () => () => undefined;
 
 describe('VideoExporter', () => {
 	const context = {

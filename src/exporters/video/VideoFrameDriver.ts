@@ -1,9 +1,11 @@
-import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
 import { createAbortError } from './errors';
 import type { VideoRenderFrameOptions } from './types';
 import { withAbortableTimeout } from './withAbortableTimeout';
 
 const FRAME_RENDER_TIMEOUT_MS = 30_000;
+
+export type PostDrawSubscription = (callback: () => void) => () => void;
 
 type VideoTextmodifier = Textmodifier & {
 	frameCount: number;
@@ -49,19 +51,14 @@ export class VideoFrameDriver {
 	public readonly canvas: HTMLCanvasElement;
 
 	private readonly _textmodifier: VideoTextmodifier;
-	private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'];
+	private readonly _registerPostDrawHook: PostDrawSubscription;
 	private readonly _context: CanvasRenderingContext2D;
 	private readonly _sourceCanvas: HTMLCanvasElement;
 	private _pendingFrame: FrameRenderRequest | null = null;
 	private _syntheticFrameCount: number = 0;
 	private _syntheticMillis: number = 0;
 
-	constructor(
-		textmodifier: Textmodifier,
-		registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'],
-		width: number,
-		height: number
-	) {
+	constructor(textmodifier: Textmodifier, registerPostDrawHook: PostDrawSubscription, width: number, height: number) {
 		this._textmodifier = textmodifier as VideoTextmodifier;
 		this._registerPostDrawHook = registerPostDrawHook;
 		this._sourceCanvas = textmodifier.canvas;

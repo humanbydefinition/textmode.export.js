@@ -1,7 +1,7 @@
-import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
 import { applyPalette, GIFEncoder, quantize, type GIFPalette } from 'gifenc';
 import { FileHandler } from '../base';
-import { VideoFrameDriver } from '../video/VideoFrameDriver';
+import { VideoFrameDriver, type PostDrawSubscription } from '../video/VideoFrameDriver';
 import { GIFWorkerClient } from './GIFWorkerClient';
 import type { GIFExportOptions, GIFGenerationOptions } from './types';
 
@@ -9,7 +9,7 @@ import type { GIFExportOptions, GIFGenerationOptions } from './types';
 export class GIFExporter {
 	constructor(
 		private readonly _textmodifier: Textmodifier,
-		private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook']
+		private readonly _registerPostDrawHook: PostDrawSubscription
 	) {}
 
 	public async $saveGIF(options: GIFExportOptions = {}): Promise<void> {

@@ -102,9 +102,9 @@ export const ExportPlugin: TextmodePlugin = {
 	 *
 	 * @param textmodifier The Textmodifier instance
 	 * @param api The plugin API
-	 * @returns Promise that resolves when installation is complete
 	 */
-	async install(textmodifier: Textmodifier, api: TextmodePluginContext) {
+	install(textmodifier: Textmodifier, api: TextmodePluginContext) {
+		const onPostDraw = (callback: () => void): (() => void) => api.on('postDraw', callback);
 		// Create export API methods first
 		const exportMethods = {
 			/**
@@ -206,11 +206,11 @@ export const ExportPlugin: TextmodePlugin = {
 			 * @returns Promise that resolves when the file is saved
 			 */
 			saveGIF: async (options: GIFExportOptions = {}) => {
-				return new GIFExporter(textmodifier, api.registerPostDrawHook).$saveGIF(options);
+				return new GIFExporter(textmodifier, onPostDraw).$saveGIF(options);
 			},
 
 			toGIFBlob: async (options: GIFExportOptions = {}) => {
-				return new GIFExporter(textmodifier, api.registerPostDrawHook).$generateGIFBlob(options);
+				return new GIFExporter(textmodifier, onPostDraw).$generateGIFBlob(options);
 			},
 
 			/**
@@ -220,11 +220,11 @@ export const ExportPlugin: TextmodePlugin = {
 			 * @returns Promise that resolves when the file is saved
 			 */
 			saveVideo: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveVideo(options);
+				return new VideoExporter(textmodifier, onPostDraw).$saveVideo(options);
 			},
 
 			toVideoBlob: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, api.registerPostDrawHook).$generateVideoBlob(options);
+				return new VideoExporter(textmodifier, onPostDraw).$generateVideoBlob(options);
 			},
 		};
 
@@ -233,7 +233,7 @@ export const ExportPlugin: TextmodePlugin = {
 			exportMethods as TextmodeExportAPI,
 			createLayerTargetProvider(textmodifier)
 		);
-		const stopOverlayRefresh = api.registerPostDrawHook(() => {
+		const stopOverlayRefresh = onPostDraw(() => {
 			if (overlayController.isVisible()) {
 				overlayController.refreshLayerTargets();
 			}
@@ -274,7 +274,7 @@ export const ExportPlugin: TextmodePlugin = {
 		});
 	},
 
-	async uninstall(textmodifier: Textmodifier) {
+	uninstall(textmodifier: Textmodifier) {
 		const installed = _controllers.get(textmodifier);
 		installed?.disposeOverlay();
 		_controllers.delete(textmodifier);
