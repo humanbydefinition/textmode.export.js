@@ -37,7 +37,7 @@
 		"build:bundle": "textmode-build build",
 		"build:types": "textmode-types build",
 		"build": "npm run build:bundle && npm run build:types",
-		"check": "textmode-release check",
+		"check": "npm run format:check && npm run lint && npm run lint:markdown && npm run typecheck && npm run docs:check && npm run test && npm run build && npm run types:verify",
 		"docs:links:add": "textmode-docs links add",
 		"docs:api:check": "textmode-docs api-check",
 		"docs:dev": "textmode-docs watch",
@@ -54,7 +54,7 @@
 		"lint:markdown:fix": "textmode-lint lint:markdown --fix",
 		"lint": "textmode-lint lint src",
 		"prepare": "textmode-release hooks",
-		"prepack": "textmode-release prepack",
+		"prepack": "npm run build && npm run types:verify",
 		"release": "textmode-release release"
 	},
 	"peerDependencies": {
