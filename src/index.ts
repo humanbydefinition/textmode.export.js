@@ -28,7 +28,7 @@ import { JSONExporter, type JSONExportOptions } from './exporters/json';
 import { createExportOverlay } from './overlay';
 import { createLayerTargetProvider } from './exporters/base';
 import type { TextmodeExportAPI, ExportOverlayController, ExportDefaults, ExportDefaultsPatch } from './types';
-import { TEXTMODE_EXPORT_VERSION } from './version';
+import packageJson from '../package.json';
 
 // Re-export all types for consumers
 export type {
@@ -95,7 +95,7 @@ const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOver
  */
 export const ExportPlugin: TextmodePlugin = {
 	name: 'textmode.export',
-	version: TEXTMODE_EXPORT_VERSION,
+	version: packageJson.version,
 
 	/**
 	 * Installs the export plugin into a Textmodifier instance
