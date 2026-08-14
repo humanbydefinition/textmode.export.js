@@ -1,4 +1,4 @@
-import { defineTextmodeLibrary } from '@textmode/vite-config';
+import { defineTextmodeLibrary } from '@textmode/build';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
 export default defineTextmodeLibrary({

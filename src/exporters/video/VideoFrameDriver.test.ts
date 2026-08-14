@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 
-import type { Textmodifier, TextmodePluginContext } from 'textmode.js';
+import type { Textmodifier } from 'textmode.js';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { VideoExportError, VideoFrameDriver } from '.';
+import type { PostDrawSubscription } from './VideoFrameDriver';
 
-type PostDrawHook = Parameters<TextmodePluginContext['registerPostDrawHook']>[0];
+type PostDrawHook = Parameters<PostDrawSubscription>[0];
 
 interface FakeTextmodifier extends Partial<Textmodifier> {
 	canvas: HTMLCanvasElement;
@@ -59,7 +60,7 @@ function createHarness({ autoPostDraw = true }: { autoPostDraw?: boolean } = {})
 		resizeCanvas: vi.fn(),
 	};
 
-	const registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'] = (callback) => {
+	const registerPostDrawHook: PostDrawSubscription = (callback) => {
 		postDrawHook = callback;
 		return () => {
 			if (postDrawHook === callback) {

@@ -8,7 +8,7 @@ import {
 	type ResolvedLayerStackExportTarget,
 } from '../base';
 import { JSONDataExtractor } from './JSONDataExtractor';
-import { TEXTMODE_EXPORT_VERSION } from '../../version';
+import packageJson from '../../../package.json';
 import type {
 	JSONCellData,
 	JSONCellCollection,
@@ -69,7 +69,7 @@ export class JSONExporter {
 					createdAt: new Date().toISOString(),
 					generator: {
 						name: 'textmode.export.js',
-						version: TEXTMODE_EXPORT_VERSION,
+						version: packageJson.version,
 					},
 				}
 			: undefined;

@@ -252,7 +252,7 @@ export class VideoRecorder {
 
 		const width = Math.max(1, Math.round(options.width));
 		const height = Math.max(1, Math.round(options.height));
-		const bitrate = this._resolveBitrate(options.bitrate, width, height, options.frameRate);
+		const bitrate = this._resolveBitrate(options.bitrate, width, height);
 		const format = options.format === 'mp4' ? new Mp4OutputFormat() : new WebMOutputFormat();
 		const codecPreferences = options.format === 'mp4' ? MP4_CODEC_PREFERENCES : WEBM_CODEC_PREFERENCES;
 		const containableCodecs = format
@@ -304,22 +304,16 @@ export class VideoRecorder {
 		}
 	}
 
-	private _resolveBitrate(
-		bitrate: number | VideoBitratePreset,
-		width: number,
-		height: number,
-		frameRate: number
-	): number {
+	private _resolveBitrate(bitrate: number | VideoBitratePreset, width: number, height: number): number {
 		if (typeof bitrate === 'number' && Number.isFinite(bitrate) && bitrate > 0) {
 			return Math.round(bitrate);
 		}
 
 		const preset = typeof bitrate === 'string' ? bitrate : 'medium';
-		const pixels = width * height;
-		const rateFactor = Math.max(0.5, frameRate / 60);
+		const pixels = Math.max(1, width) * Math.max(1, height);
 		const bitsPerPixel = preset === 'high' ? 6 : preset === 'low' ? 1.5 : 3;
 
-		return Math.max(250_000, Math.round(pixels * rateFactor * bitsPerPixel));
+		return Math.max(250_000, Math.round(pixels * bitsPerPixel));
 	}
 
 	private _throwIfAborted(signal?: AbortSignal): void {
