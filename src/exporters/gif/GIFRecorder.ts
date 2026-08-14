@@ -1,4 +1,4 @@
-import type { TextmodePluginContext } from 'textmode.js';
+import type { PostDrawSubscription } from '../video/VideoFrameDriver';
 import type { GIFExportProgress, GIFFrame, GIFGenerationOptions } from './types';
 
 /**
@@ -25,7 +25,7 @@ export class GIFRecorder {
 	public async $record(
 		canvas: HTMLCanvasElement,
 		options: GIFGenerationOptions,
-		registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'],
+		registerPostDrawHook: PostDrawSubscription,
 		onProgress?: (progress: GIFExportProgress) => void
 	): Promise<GIFFrame[]> {
 		// Calculate frame timing parameters

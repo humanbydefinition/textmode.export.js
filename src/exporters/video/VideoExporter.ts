@@ -1,7 +1,6 @@
 import type { Textmodifier } from 'textmode.js';
-import type { TextmodePluginContext } from 'textmode.js';
 import { FileHandler } from '../base';
-import { VideoFrameDriver } from './VideoFrameDriver';
+import { VideoFrameDriver, type PostDrawSubscription } from './VideoFrameDriver';
 import { VideoRecorder } from './VideoRecorder';
 import type {
 	VideoBitrateMode,
@@ -28,9 +27,9 @@ const DEFAULT_KEYFRAME_INTERVAL = 2;
 export class VideoExporter {
 	private readonly _recorder: VideoRecorder;
 	private readonly _textmodifier: Textmodifier;
-	private readonly _registerPostDrawHook: TextmodePluginContext['registerPostDrawHook'];
+	private readonly _registerPostDrawHook: PostDrawSubscription;
 
-	constructor(textmodifier: Textmodifier, registerPostDrawHook: TextmodePluginContext['registerPostDrawHook']) {
+	constructor(textmodifier: Textmodifier, registerPostDrawHook: PostDrawSubscription) {
 		this._recorder = new VideoRecorder();
 		this._textmodifier = textmodifier;
 		this._registerPostDrawHook = registerPostDrawHook;
