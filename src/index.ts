@@ -94,7 +94,7 @@ const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOver
  * @see {@link https://code.textmode.art/api/textmode.export.js/variables/ExportPlugin | ExportPlugin API reference}
  */
 export const ExportPlugin: TextmodePlugin = {
-	name: 'textmode.export',
+	name: packageJson.name,
 	version: packageJson.version,
 
 	/**
