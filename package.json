@@ -58,7 +58,7 @@
 		"release": "textmode-release release"
 	},
 	"peerDependencies": {
-		"textmode.js": ">=0.17.2-beta.1 <0.20.0"
+		"textmode.js": "^0.17.2-beta.2"
 	},
 	"dependencies": {
 		"gifenc": "^1.0.1",
@@ -71,7 +71,7 @@
 		"@textmode/release": "^0.2.0",
 		"@textmode/tsconfig": "^0.2.0",
 		"@types/node": "^24.0.0",
-		"textmode.js": "^0.17.2-beta.1",
+		"textmode.js": "^0.17.2-beta.2",
 		"typescript": "^6.0.3",
 		"vite-plugin-css-injected-by-js": "^5.0.2",
 		"vitest": "^4.1.10"
