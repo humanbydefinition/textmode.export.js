@@ -28,7 +28,7 @@ import { JSONExporter, type JSONExportOptions } from './exporters/json';
 import { createExportOverlay } from './overlay';
 import { createLayerTargetProvider } from './exporters/base';
 import type { TextmodeExportAPI, ExportOverlayController, ExportDefaults, ExportDefaultsPatch } from './types';
-import { TEXTMODE_EXPORT_VERSION } from './version';
+import packageJson from '../package.json';
 
 // Re-export all types for consumers
 export type {
@@ -62,15 +62,9 @@ export type {
 } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
 
-// Module-level WeakMap to store the overlay controller without leaking
-// private keys onto the user's Textmodifier instance.
-interface InstalledExportPlugin {
-	disposeOverlay: () => void;
-}
-
-const _controllers = new WeakMap<Textmodifier, InstalledExportPlugin>();
-const _apiKeys: ReadonlyArray<keyof TextmodeExportAPI> = [
-	'exportOverlay',
+// Register the export methods that are exposed as Textmodifier extensions.
+// The overlay controller is exposed separately through a getter.
+const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOverlay'>> = [
 	'saveCanvas',
 	'toImageBlob',
 	'copyCanvas',
@@ -95,17 +89,17 @@ const _apiKeys: ReadonlyArray<keyof TextmodeExportAPI> = [
  * @see {@link https://code.textmode.art/api/textmode.export.js/variables/ExportPlugin | ExportPlugin API reference}
  */
 export const ExportPlugin: TextmodePlugin = {
-	name: 'textmode.export',
-	version: TEXTMODE_EXPORT_VERSION,
+	name: packageJson.name,
 
 	/**
 	 * Installs the export plugin into a Textmodifier instance
 	 *
 	 * @param textmodifier The Textmodifier instance
 	 * @param api The plugin API
-	 * @returns Promise that resolves when installation is complete
+	 * @returns A cleanup function that releases the mounted overlay and its post-draw subscription.
 	 */
-	async install(textmodifier: Textmodifier, api: TextmodePluginContext) {
+	install(textmodifier: Textmodifier, api: TextmodePluginContext): () => void {
+		const onPostDraw = (callback: () => void): (() => void) => api.on('postDraw', callback);
 		// Create export API methods first
 		const exportMethods = {
 			/**
@@ -207,11 +201,11 @@ export const ExportPlugin: TextmodePlugin = {
 			 * @returns Promise that resolves when the file is saved
 			 */
 			saveGIF: async (options: GIFExportOptions = {}) => {
-				return new GIFExporter(textmodifier, api.registerPostDrawHook).$saveGIF(options);
+				return new GIFExporter(textmodifier, onPostDraw).$saveGIF(options);
 			},
 
 			toGIFBlob: async (options: GIFExportOptions = {}) => {
-				return new GIFExporter(textmodifier, api.registerPostDrawHook).$generateGIFBlob(options);
+				return new GIFExporter(textmodifier, onPostDraw).$generateGIFBlob(options);
 			},
 
 			/**
@@ -221,11 +215,11 @@ export const ExportPlugin: TextmodePlugin = {
 			 * @returns Promise that resolves when the file is saved
 			 */
 			saveVideo: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, api.registerPostDrawHook).$saveVideo(options);
+				return new VideoExporter(textmodifier, onPostDraw).$saveVideo(options);
 			},
 
 			toVideoBlob: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, api.registerPostDrawHook).$generateVideoBlob(options);
+				return new VideoExporter(textmodifier, onPostDraw).$generateVideoBlob(options);
 			},
 		};
 
@@ -234,7 +228,7 @@ export const ExportPlugin: TextmodePlugin = {
 			exportMethods as TextmodeExportAPI,
 			createLayerTargetProvider(textmodifier)
 		);
-		const stopOverlayRefresh = api.registerPostDrawHook(() => {
+		const stopOverlayRefresh = onPostDraw(() => {
 			if (overlayController.isVisible()) {
 				overlayController.refreshLayerTargets();
 			}
@@ -254,30 +248,31 @@ export const ExportPlugin: TextmodePlugin = {
 			resetDefaults: (format?: keyof ExportDefaults) => overlayController.resetDefaults(format),
 		};
 
-		// Combine into full export API
-		const exportAPI: TextmodeExportAPI = {
-			...exportMethods,
-			exportOverlay: exportOverlayAPI,
-		};
-
-		// Attach methods to textmodifier and store controller reference
-		Object.assign(textmodifier, exportAPI);
-		_controllers.set(textmodifier, {
-			disposeOverlay: () => {
-				stopOverlayRefresh();
-				overlayController.$dispose();
-			},
-		});
-	},
-
-	async uninstall(textmodifier: Textmodifier) {
-		const installed = _controllers.get(textmodifier);
-		installed?.disposeOverlay();
-		_controllers.delete(textmodifier);
-
-		for (const key of _apiKeys) {
-			delete (textmodifier as unknown as Record<string, unknown>)[key];
+		// Register the export API as Textmodifier extensions so the plugin runtime
+		// handles conflict detection and cleanup uniformly. The export
+		// methods are registered as value extensions; the overlay controller is
+		// exposed through a getter.
+		try {
+			for (const key of _apiMethodKeys) {
+				api.defineExtension('textmodifier', key, {
+					value: exportMethods[key],
+				});
+			}
+			api.defineExtension('textmodifier', 'exportOverlay', {
+				get: () => exportOverlayAPI,
+			});
+		} catch (error) {
+			// Extension conflicts surface after the overlay is mounted; release the
+			// DOM and event resources the runtime cannot infer.
+			stopOverlayRefresh();
+			overlayController.$dispose();
+			throw error;
 		}
+
+		return () => {
+			stopOverlayRefresh();
+			overlayController.$dispose();
+		};
 	},
 };
 

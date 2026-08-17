@@ -207,6 +207,67 @@ describe('VideoRecorder', () => {
 		});
 	});
 
+	it('resolves quality presets to the same bitrate at every frame rate', async () => {
+		setWebCodecsAvailable(true);
+		const canvas = createCanvas();
+		const frameDriver: VideoFrameDriverLike = {
+			canvas,
+			$render: async ({ onFrame }) => {
+				await onFrame({ frameIndex: 0, canvas });
+			},
+		};
+
+		const bitrates = new Set<number>();
+		for (const frameRate of [12, 24, 30, 60, 120]) {
+			mediabunnyMock.canvasSourceConfigs.length = 0;
+			await new VideoRecorder().$record(createOptions({ frameRate }), frameDriver);
+			const bitrate = mediabunnyMock.canvasSourceConfigs[0]?.bitrate as number;
+			expect(bitrate).toBeGreaterThan(0);
+			bitrates.add(bitrate);
+		}
+
+		expect(bitrates.size).toBe(1);
+		expect([...bitrates][0]).toBe(230_400 * 3);
+	});
+
+	it('scales preset bitrates with output dimensions only, independent of frame rate', async () => {
+		setWebCodecsAvailable(true);
+		const canvas = createCanvas();
+		const frameDriver: VideoFrameDriverLike = {
+			canvas,
+			$render: async ({ onFrame }) => {
+				await onFrame({ frameIndex: 0, canvas });
+			},
+		};
+
+		const bitrateByPreset = new Map<string, number>();
+		for (const preset of ['low', 'medium', 'high'] as const) {
+			mediabunnyMock.canvasSourceConfigs.length = 0;
+			await new VideoRecorder().$record(createOptions({ bitrate: preset }), frameDriver);
+			bitrateByPreset.set(preset, mediabunnyMock.canvasSourceConfigs[0]?.bitrate as number);
+		}
+
+		expect(bitrateByPreset.get('low')).toBe(230_400 * 1.5);
+		expect(bitrateByPreset.get('medium')).toBe(230_400 * 3);
+		expect(bitrateByPreset.get('high')).toBe(230_400 * 6);
+	});
+
+	it('passes exact numeric bitrates through to the encoder unchanged', async () => {
+		setWebCodecsAvailable(true);
+		const canvas = createCanvas();
+		const frameDriver: VideoFrameDriverLike = {
+			canvas,
+			$render: async ({ onFrame }) => {
+				await onFrame({ frameIndex: 0, canvas });
+			},
+		};
+
+		await new VideoRecorder().$record(createOptions({ bitrate: 1_500_000 }), frameDriver);
+
+		expect(mediabunnyMock.canvasSourceConfigs).toHaveLength(1);
+		expect(mediabunnyMock.canvasSourceConfigs[0]).toMatchObject({ bitrate: 1_500_000 });
+	});
+
 	it('queues rendered frames before waiting for slow encoder backpressure', async () => {
 		setWebCodecsAvailable(true);
 		const canvas = createCanvas();
