@@ -62,13 +62,8 @@ export type {
 } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
 
-// Module-level WeakMap to store the overlay controller without leaking
-// private keys onto the user's Textmodifier instance.
-interface InstalledExportPlugin {
-	disposeOverlay: () => void;
-}
-
-const _controllers = new WeakMap<Textmodifier, InstalledExportPlugin>();
+// Register the export methods that are exposed as Textmodifier extensions.
+// The overlay controller is exposed separately through a getter.
 const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOverlay'>> = [
 	'saveCanvas',
 	'toImageBlob',
@@ -95,15 +90,15 @@ const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOver
  */
 export const ExportPlugin: TextmodePlugin = {
 	name: packageJson.name,
-	version: packageJson.version,
 
 	/**
 	 * Installs the export plugin into a Textmodifier instance
 	 *
 	 * @param textmodifier The Textmodifier instance
 	 * @param api The plugin API
+	 * @returns A cleanup function that releases the mounted overlay and its post-draw subscription.
 	 */
-	install(textmodifier: Textmodifier, api: TextmodePluginContext) {
+	install(textmodifier: Textmodifier, api: TextmodePluginContext): () => void {
 		const onPostDraw = (callback: () => void): (() => void) => api.on('postDraw', callback);
 		// Create export API methods first
 		const exportMethods = {
@@ -254,33 +249,30 @@ export const ExportPlugin: TextmodePlugin = {
 		};
 
 		// Register the export API as Textmodifier extensions so the plugin runtime
-		// handles conflict detection and uninstall cleanup uniformly. The export
+		// handles conflict detection and cleanup uniformly. The export
 		// methods are registered as value extensions; the overlay controller is
 		// exposed through a getter.
-		for (const key of _apiMethodKeys) {
-			api.defineExtension('textmodifier', key, {
-				value: exportMethods[key],
+		try {
+			for (const key of _apiMethodKeys) {
+				api.defineExtension('textmodifier', key, {
+					value: exportMethods[key],
+				});
+			}
+			api.defineExtension('textmodifier', 'exportOverlay', {
+				get: () => exportOverlayAPI,
 			});
+		} catch (error) {
+			// Extension conflicts surface after the overlay is mounted; release the
+			// DOM and event resources the runtime cannot infer.
+			stopOverlayRefresh();
+			overlayController.$dispose();
+			throw error;
 		}
-		api.defineExtension('textmodifier', 'exportOverlay', {
-			get: () => exportOverlayAPI,
-		});
 
-		_controllers.set(textmodifier, {
-			disposeOverlay: () => {
-				stopOverlayRefresh();
-				overlayController.$dispose();
-			},
-		});
-	},
-
-	uninstall(textmodifier: Textmodifier) {
-		const installed = _controllers.get(textmodifier);
-		installed?.disposeOverlay();
-		_controllers.delete(textmodifier);
-
-		// Extension properties and hooks are removed by the plugin runtime's
-		// extension registry and hook registry when the plugin is uninstalled.
+		return () => {
+			stopOverlayRefresh();
+			overlayController.$dispose();
+		};
 	},
 };
 
