@@ -1,21 +1,32 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { VideoExportError, VideoRecorder, type VideoFrameDriverLike, type VideoGenerationOptions } from '.';
+import { VideoRecorder } from './VideoRecorder';
+import type { VideoFrameDriverLike, VideoGenerationOptions } from './types';
 
 const mediabunnyMock = vi.hoisted(() => ({
 	canvasSourceConfigs: [] as Array<Record<string, unknown>>,
 	canvasSourceAdds: [] as Array<{ timestamp: number; duration: number }>,
+	trackMetadata: [] as Array<Record<string, unknown>>,
 	addImpl: vi.fn(async () => undefined as void),
 	outputStart: vi.fn(async () => undefined as void),
 	outputFinalize: vi.fn(async () => undefined as void),
 	outputCancel: vi.fn(async () => undefined as void),
-	getFirstEncodableVideoCodec: vi.fn(async (codecs: string[]) => codecs[0] ?? null),
+	canEncodeVideo: vi.fn(async () => true),
+	qualityOptions: [] as unknown[],
+	closed: 0,
 }));
 
 vi.mock('mediabunny', () => ({
 	BufferTarget: class BufferTarget {
 		public buffer = new Uint8Array([1, 2, 3]).buffer;
+	},
+	Quality: class Quality {
+		public readonly options: unknown;
+		constructor(options: unknown) {
+			this.options = options;
+			mediabunnyMock.qualityOptions.push(options);
+		}
 	},
 	CanvasSource: class CanvasSource {
 		constructor(_canvas: HTMLCanvasElement, config: Record<string, unknown>) {
@@ -26,39 +37,40 @@ vi.mock('mediabunny', () => ({
 			mediabunnyMock.canvasSourceAdds.push({ timestamp, duration });
 			return mediabunnyMock.addImpl();
 		}
+
+		public close(): void {
+			mediabunnyMock.closed += 1;
+		}
 	},
 	Mp4OutputFormat: class Mp4OutputFormat {
 		public mimeType = 'video/mp4';
-
 		public getSupportedVideoCodecs(): string[] {
 			return ['avc'];
 		}
 	},
+	WebMOutputFormat: class WebMOutputFormat {
+		public mimeType = 'video/webm';
+		public getSupportedVideoCodecs(): string[] {
+			return ['vp9', 'vp8'];
+		}
+	},
 	Output: class Output {
-		public addVideoTrack(): void {
-			return undefined;
+		public addVideoTrack(_source: unknown, metadata: Record<string, unknown>): void {
+			mediabunnyMock.trackMetadata.push(metadata);
 		}
 
 		public async start(): Promise<void> {
 			await mediabunnyMock.outputStart();
 		}
-
 		public async finalize(): Promise<void> {
 			await mediabunnyMock.outputFinalize();
 		}
-
 		public async cancel(): Promise<void> {
 			await mediabunnyMock.outputCancel();
 		}
 	},
-	WebMOutputFormat: class WebMOutputFormat {
-		public mimeType = 'video/webm';
-
-		public getSupportedVideoCodecs(): string[] {
-			return ['vp9', 'vp8'];
-		}
-	},
-	getFirstEncodableVideoCodec: mediabunnyMock.getFirstEncodableVideoCodec,
+	StreamTarget: class StreamTarget {},
+	canEncodeVideo: mediabunnyMock.canEncodeVideo,
 }));
 
 function setWebCodecsAvailable(available: boolean): void {
@@ -84,9 +96,10 @@ function createOptions(overrides: Partial<VideoGenerationOptions> = {}): VideoGe
 		filename: 'test-video',
 		format: 'webm',
 		frameRate: 60,
-		frameCount: 12,
+		frameCount: 3,
 		bitrate: 'medium',
 		bitrateMode: 'variable',
+		contentHint: 'text',
 		latencyMode: 'quality',
 		hardwareAcceleration: 'no-preference',
 		keyFrameInterval: 2,
@@ -95,95 +108,63 @@ function createOptions(overrides: Partial<VideoGenerationOptions> = {}): VideoGe
 		height: 360,
 		transparent: false,
 		debugLogging: false,
+		allowLargeInMemory: false,
 		...overrides,
 	};
 }
 
-function createFrameDriver(): VideoFrameDriverLike {
-	return {
-		canvas: createCanvas(),
-		$render: async () => {
-			throw new Error('frame driver should not be called');
-		},
-	};
+function createFrameDriver(onFrame?: VideoFrameDriverLike['$render']): VideoFrameDriverLike {
+	return { canvas: createCanvas(), $render: onFrame ?? (async () => undefined) };
 }
 
-function createDeferred(): {
-	promise: Promise<void>;
-	resolve: () => void;
-	reject: (error: unknown) => void;
-} {
-	let resolve!: () => void;
-	let reject!: (error: unknown) => void;
-	const promise = new Promise<void>((resolvePromise, rejectPromise) => {
-		resolve = resolvePromise;
-		reject = rejectPromise;
-	});
-	return { promise, resolve, reject };
-}
-
-async function waitFor(condition: () => boolean): Promise<void> {
-	for (let index = 0; index < 250; index++) {
-		if (condition()) return;
-		await Promise.resolve();
-	}
-	throw new Error('Timed out waiting for test condition.');
-}
-
-async function waitForMacrotask(condition: () => boolean): Promise<void> {
-	for (let index = 0; index < 50; index++) {
-		if (condition()) return;
-		await new Promise((resolve) => setTimeout(resolve, 10));
-	}
-	throw new Error('Timed out waiting for test condition.');
+function qualityOptions(): Record<string, unknown> {
+	return mediabunnyMock.qualityOptions.at(-1) as Record<string, unknown>;
 }
 
 describe('VideoRecorder', () => {
 	afterEach(() => {
-		vi.useRealTimers();
 		setWebCodecsAvailable(false);
 		mediabunnyMock.canvasSourceConfigs.length = 0;
 		mediabunnyMock.canvasSourceAdds.length = 0;
+		mediabunnyMock.trackMetadata.length = 0;
+		mediabunnyMock.qualityOptions.length = 0;
+		mediabunnyMock.closed = 0;
 		mediabunnyMock.addImpl.mockReset();
 		mediabunnyMock.addImpl.mockResolvedValue(undefined);
 		mediabunnyMock.outputStart.mockReset();
 		mediabunnyMock.outputStart.mockResolvedValue(undefined);
-		mediabunnyMock.outputFinalize.mockClear();
-		mediabunnyMock.outputCancel.mockClear();
-		mediabunnyMock.getFirstEncodableVideoCodec.mockClear();
+		mediabunnyMock.outputFinalize.mockReset();
+		mediabunnyMock.outputFinalize.mockResolvedValue(undefined);
+		mediabunnyMock.outputCancel.mockReset();
+		mediabunnyMock.outputCancel.mockResolvedValue(undefined);
+		mediabunnyMock.canEncodeVideo.mockReset();
+		mediabunnyMock.canEncodeVideo.mockResolvedValue(true);
 	});
 
 	it('fails before rendering when WebCodecs encoding is unavailable', async () => {
 		setWebCodecsAvailable(false);
-
-		await expect(new VideoRecorder().$record(createOptions(), createFrameDriver())).rejects.toMatchObject({
+		const render = vi.fn();
+		await expect(new VideoRecorder().$record(createOptions(), createFrameDriver(render))).rejects.toMatchObject({
 			code: 'VIDEO_EXPORT_UNSUPPORTED',
 		});
+		expect(render).not.toHaveBeenCalled();
 	});
 
-	it('rejects transparent MP4 exports before rendering', async () => {
+	it('rejects transparent MP4 and odd MP4 dimensions before rendering', async () => {
 		setWebCodecsAvailable(true);
-
+		const render = vi.fn();
 		await expect(
-			new VideoRecorder().$record(createOptions({ format: 'mp4', transparent: true }), createFrameDriver())
-		).rejects.toBeInstanceOf(VideoExportError);
+			new VideoRecorder().$record(createOptions({ format: 'mp4', transparent: true }), createFrameDriver(render))
+		).rejects.toMatchObject({ code: 'VIDEO_TRANSPARENCY_UNSUPPORTED' });
 		await expect(
-			new VideoRecorder().$record(createOptions({ format: 'mp4', transparent: true }), createFrameDriver())
-		).rejects.toMatchObject({
-			code: 'VIDEO_TRANSPARENCY_UNSUPPORTED',
-		});
+			new VideoRecorder().$record(createOptions({ format: 'mp4', width: 641 }), createFrameDriver(render))
+		).rejects.toMatchObject({ code: 'VIDEO_DIMENSIONS_UNSUPPORTED' });
+		expect(render).not.toHaveBeenCalled();
 	});
 
-	it('forwards curated Mediabunny encoder options to CanvasSource', async () => {
+	it('maps named presets to Mediabunny Quality and passes the complete source configuration', async () => {
 		setWebCodecsAvailable(true);
 		const canvas = createCanvas();
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ onFrame }) => {
-				await onFrame({ frameIndex: 0, canvas });
-			},
-		};
-
 		await new VideoRecorder().$record(
 			createOptions({
 				bitrate: 'high',
@@ -191,215 +172,95 @@ describe('VideoRecorder', () => {
 				latencyMode: 'realtime',
 				hardwareAcceleration: 'prefer-hardware',
 				keyFrameInterval: 0.5,
-				transparent: true,
 			}),
-			frameDriver
+			createFrameDriver(async ({ onFrame }) => onFrame?.({ frameIndex: 0, canvas }))
 		);
 
-		expect(mediabunnyMock.canvasSourceConfigs).toHaveLength(1);
+		expect(qualityOptions()).toBe('very-high');
 		expect(mediabunnyMock.canvasSourceConfigs[0]).toMatchObject({
-			alpha: 'keep',
-			bitrateMode: 'constant',
+			quality: expect.objectContaining({ options: 'very-high' }),
+			contentHint: 'text',
 			latencyMode: 'realtime',
 			hardwareAcceleration: 'prefer-hardware',
 			keyFrameInterval: 0.5,
 			sizeChangeBehavior: 'deny',
 		});
+		expect(mediabunnyMock.trackMetadata[0]).toEqual({ frameRate: 60 });
 	});
 
-	it('resolves quality presets to the same bitrate at every frame rate', async () => {
+	it('maps ultra to quantizer zero with a frame-rate-aware fallback', async () => {
 		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ onFrame }) => {
-				await onFrame({ frameIndex: 0, canvas });
-			},
-		};
-
-		const bitrates = new Set<number>();
-		for (const frameRate of [12, 24, 30, 60, 120]) {
-			mediabunnyMock.canvasSourceConfigs.length = 0;
-			await new VideoRecorder().$record(createOptions({ frameRate }), frameDriver);
-			const bitrate = mediabunnyMock.canvasSourceConfigs[0]?.bitrate as number;
-			expect(bitrate).toBeGreaterThan(0);
-			bitrates.add(bitrate);
-		}
-
-		expect(bitrates.size).toBe(1);
-		expect([...bitrates][0]).toBe(230_400 * 3);
-	});
-
-	it('scales preset bitrates with output dimensions only, independent of frame rate', async () => {
-		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ onFrame }) => {
-				await onFrame({ frameIndex: 0, canvas });
-			},
-		};
-
-		const bitrateByPreset = new Map<string, number>();
-		for (const preset of ['low', 'medium', 'high'] as const) {
-			mediabunnyMock.canvasSourceConfigs.length = 0;
-			await new VideoRecorder().$record(createOptions({ bitrate: preset }), frameDriver);
-			bitrateByPreset.set(preset, mediabunnyMock.canvasSourceConfigs[0]?.bitrate as number);
-		}
-
-		expect(bitrateByPreset.get('low')).toBe(230_400 * 1.5);
-		expect(bitrateByPreset.get('medium')).toBe(230_400 * 3);
-		expect(bitrateByPreset.get('high')).toBe(230_400 * 6);
-	});
-
-	it('passes exact numeric bitrates through to the encoder unchanged', async () => {
-		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ onFrame }) => {
-				await onFrame({ frameIndex: 0, canvas });
-			},
-		};
-
-		await new VideoRecorder().$record(createOptions({ bitrate: 1_500_000 }), frameDriver);
-
-		expect(mediabunnyMock.canvasSourceConfigs).toHaveLength(1);
-		expect(mediabunnyMock.canvasSourceConfigs[0]).toMatchObject({ bitrate: 1_500_000 });
-	});
-
-	it('queues rendered frames before waiting for slow encoder backpressure', async () => {
-		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
-		const deferreds = Array.from({ length: 4 }, () => createDeferred());
-		let addIndex = 0;
-		mediabunnyMock.addImpl.mockImplementation(() => deferreds[addIndex++]!.promise);
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ frameCount, onFrame }) => {
-				for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
-					await onFrame({ frameIndex, canvas });
-				}
-			},
-		};
-
-		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 4 }), frameDriver);
-
-		await waitFor(() => mediabunnyMock.canvasSourceAdds.length === 4);
-		expect(mediabunnyMock.outputFinalize).not.toHaveBeenCalled();
-
-		deferreds.forEach((deferred) => deferred.resolve());
-		await exportPromise;
-
-		expect(mediabunnyMock.outputFinalize).toHaveBeenCalledTimes(1);
-		expect(mediabunnyMock.canvasSourceAdds.map((entry) => entry.timestamp)).toEqual([0, 1 / 60, 2 / 60, 3 / 60]);
-	});
-
-	it('keeps unresolved encoder work bounded before accepting more frames', async () => {
-		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
-		const deferreds = Array.from({ length: 5 }, () => createDeferred());
-		let addIndex = 0;
-		mediabunnyMock.addImpl.mockImplementation(() => deferreds[addIndex++]!.promise);
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ frameCount, onFrame }) => {
-				for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
-					await onFrame({ frameIndex, canvas });
-				}
-			},
-		};
-
-		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 5 }), frameDriver);
-
-		await waitFor(() => mediabunnyMock.canvasSourceAdds.length === 4);
-		await Promise.resolve();
-		expect(mediabunnyMock.canvasSourceAdds).toHaveLength(4);
-		expect(mediabunnyMock.outputFinalize).not.toHaveBeenCalled();
-
-		deferreds[0]!.resolve();
-		await waitForMacrotask(() => mediabunnyMock.canvasSourceAdds.length === 5);
-		deferreds.slice(1).forEach((deferred) => deferred.resolve());
-		await exportPromise;
-
-		expect(mediabunnyMock.outputFinalize).toHaveBeenCalledTimes(1);
-	});
-
-	it('keeps frame progress monotonic while draining bounded encoder backpressure', async () => {
-		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
-		const progressFrames: number[] = [];
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ frameCount, onFrame }) => {
-				for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
-					await onFrame({ frameIndex, canvas });
-				}
-			},
-		};
-
-		const exportPromise = new VideoRecorder().$record(
-			createOptions({ frameCount: 33 }),
-			frameDriver,
-			(progress) => {
-				if (progress.frameIndex != null) {
-					progressFrames.push(progress.frameIndex);
-				}
-			}
+		await new VideoRecorder().$record(createOptions({ bitrate: 'ultra', frameRate: 30 }), createFrameDriver());
+		expect(qualityOptions()).toEqual({ bitrate: 3_456_000, bitrateMode: 'variable', quantizer: 0 });
+		expect(mediabunnyMock.canEncodeVideo).toHaveBeenCalledWith(
+			'vp9',
+			expect.objectContaining({ quality: expect.anything(), contentHint: 'text' })
 		);
+	});
 
-		await waitForMacrotask(() => mediabunnyMock.canvasSourceAdds.length === 33);
+	it('preserves numeric bitrates and bitrate mode through Quality', async () => {
+		setWebCodecsAvailable(true);
+		await new VideoRecorder().$record(
+			createOptions({ bitrate: 1_500_001, bitrateMode: 'constant' }),
+			createFrameDriver()
+		);
+		expect(qualityOptions()).toEqual({ bitrate: 1_500_001, bitrateMode: 'constant' });
+	});
+
+	it('awaits each source add before requesting the next rendered frame', async () => {
+		setWebCodecsAvailable(true);
+		let resolveFirst!: () => void;
+		mediabunnyMock.addImpl.mockImplementationOnce(
+			() =>
+				new Promise<void>((resolve) => {
+					resolveFirst = resolve;
+				})
+		);
+		const render = async ({
+			frameCount,
+			onFrame,
+		}: {
+			frameCount: number;
+			onFrame: NonNullable<Parameters<VideoFrameDriverLike['$render']>[0]['onFrame']>;
+		}) => {
+			for (let frameIndex = 0; frameIndex < frameCount; frameIndex++)
+				await onFrame({ frameIndex, canvas: createCanvas() });
+		};
+		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 2 }), createFrameDriver(render));
+		await vi.waitFor(() => expect(mediabunnyMock.canvasSourceAdds).toHaveLength(1));
+		resolveFirst();
 		await exportPromise;
-
-		expect(progressFrames).toEqual([...progressFrames].sort((a, b) => a - b));
-		expect(progressFrames.at(-1)).toBe(33);
+		expect(mediabunnyMock.canvasSourceAdds).toHaveLength(2);
+		expect(mediabunnyMock.canvasSourceAdds.map(({ timestamp }) => timestamp)).toEqual([0, 1 / 60]);
 	});
 
-	it('reports a typed timeout instead of hanging while draining encoder backpressure', async () => {
-		vi.useFakeTimers();
+	it('closes the source before finalizing and cancels once on an aborted add', async () => {
 		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
+		await new VideoRecorder().$record(createOptions({ frameCount: 1 }), createFrameDriver());
+		expect(mediabunnyMock.closed).toBe(1);
+		expect(mediabunnyMock.outputFinalize).toHaveBeenCalledTimes(1);
+
+		const controller = new AbortController();
 		mediabunnyMock.addImpl.mockImplementation(() => new Promise<void>(() => undefined));
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ onFrame }) => {
-				await onFrame({ frameIndex: 0, canvas });
-			},
-		};
-
-		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 1 }), frameDriver);
-		const expectation = expect(exportPromise).rejects.toMatchObject({
-			code: 'VIDEO_EXPORT_TIMEOUT',
-		});
-		await vi.advanceTimersByTimeAsync(0);
-		await waitFor(() => mediabunnyMock.canvasSourceAdds.length === 1);
-		await vi.advanceTimersByTimeAsync(30_000);
-
-		await expectation;
+		const exportPromise = new VideoRecorder().$record(
+			createOptions({ signal: controller.signal }),
+			createFrameDriver(async ({ onFrame }) => onFrame?.({ frameIndex: 0, canvas: createCanvas() }))
+		);
+		await vi.waitFor(() => expect(mediabunnyMock.canvasSourceAdds).toHaveLength(1));
+		controller.abort();
+		await expect(exportPromise).rejects.toMatchObject({ code: 'VIDEO_EXPORT_ABORTED' });
 		expect(mediabunnyMock.outputCancel).toHaveBeenCalledTimes(1);
 	});
 
-	it('reports a typed timeout instead of hanging while finalizing output', async () => {
+	it('times out during finalization and cancels the output', async () => {
 		vi.useFakeTimers();
 		setWebCodecsAvailable(true);
-		const canvas = createCanvas();
 		mediabunnyMock.outputFinalize.mockImplementation(() => new Promise<void>(() => undefined));
-		const frameDriver: VideoFrameDriverLike = {
-			canvas,
-			$render: async ({ onFrame }) => {
-				await onFrame({ frameIndex: 0, canvas });
-			},
-		};
-
-		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 1 }), frameDriver);
-		const expectation = expect(exportPromise).rejects.toMatchObject({
-			code: 'VIDEO_EXPORT_TIMEOUT',
-		});
-		await vi.advanceTimersByTimeAsync(0);
-		await waitFor(() => mediabunnyMock.outputFinalize.mock.calls.length === 1);
+		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 1 }), createFrameDriver());
+		const expectation = expect(exportPromise).rejects.toMatchObject({ code: 'VIDEO_EXPORT_TIMEOUT' });
 		await vi.advanceTimersByTimeAsync(30_000);
-
 		await expectation;
 		expect(mediabunnyMock.outputCancel).toHaveBeenCalledTimes(1);
+		vi.useRealTimers();
 	});
 });

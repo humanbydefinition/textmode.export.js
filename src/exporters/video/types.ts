@@ -18,22 +18,30 @@ export type VideoRecordingState = 'idle' | 'recording' | 'encoding' | 'completed
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportPhase | VideoExportPhase API reference}
  */
-export type VideoExportPhase = 'probing' | 'rendering' | 'capturing' | 'encoding' | 'draining' | 'finalizing';
+export type VideoExportPhase =
+	'probing' | 'rendering' | 'capturing' | 'encoding' | 'draining' | 'writing' | 'finalizing';
 
 export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
 
 /**
  * Subjective bitrate preset used when an exact bits-per-second value is not supplied.
  *
- * Higher presets produce larger files with more detail. Each preset maps to a fixed bits-per-pixel budget
- * (bits per pixel per second), so a given preset resolves to the same bitrate regardless of the export
- * frame rate. For exact control, pass a numeric `bitrate` value in bits per second instead.
+ * Higher presets request higher constant perceptual quality from Mediabunny. The `ultra` preset requests quantizer
+ * zero with a frame-rate-aware bitrate fallback and should be described as near-lossless, never mathematically
+ * lossless. For exact bitrate control, pass a numeric `bitrate` value in bits per second instead.
  *
  * @category Animation export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoBitratePreset | VideoBitratePreset API reference}
  */
-export type VideoBitratePreset = 'low' | 'medium' | 'high';
+export type VideoBitratePreset = 'low' | 'medium' | 'high' | 'ultra';
+
+/**
+ * Hint for the encoder's content-aware rate control.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoContentHint | VideoContentHint API reference}
+ */
+export type VideoContentHint = '' | 'motion' | 'detail' | 'text';
 
 /**
  * Video container format written by `saveVideo`.
@@ -92,7 +100,9 @@ export type VideoExportErrorCode =
 	| 'VIDEO_EXPORT_ABORTED'
 	| 'VIDEO_EXPORT_TIMEOUT'
 	| 'VIDEO_EXPORT_FAILED'
-	| 'VIDEO_TRANSPARENCY_UNSUPPORTED';
+	| 'VIDEO_TRANSPARENCY_UNSUPPORTED'
+	| 'VIDEO_DIMENSIONS_UNSUPPORTED'
+	| 'VIDEO_OUTPUT_TOO_LARGE';
 
 /**
  * Progress information emitted during the video export process.
@@ -144,6 +154,18 @@ export type VideoExportProgress = {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#message | VideoExportProgress.message API reference}
 	 */
 	message?: string;
+	/**
+	 * The rate-control path selected by the browser, when known.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#ratecontrol | VideoExportProgress.rateControl API reference}
+	 */
+	rateControl?: 'quantizer' | 'bitrate-fallback' | 'bitrate';
+	/**
+	 * Conservative output-size estimate in bytes, when available.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#estimatedbytes | VideoExportProgress.estimatedBytes API reference}
+	 */
+	estimatedBytes?: number;
 };
 
 /**
@@ -181,16 +203,15 @@ export type VideoExportOptions = {
 	/**
 	 * Target bitrate in bits per second or a quality preset. Defaults to `'medium'`.
 	 *
-	 * Bitrate controls how much encoded data is available per second of video. Higher values can preserve more detail
-	 * in noisy or fast-changing sketches, but create larger files. Presets resolve to a fixed bits-per-pixel budget
-	 * from the export dimensions only, so a given preset targets the same bitrate regardless of the frame rate.
-	 * Numeric values are passed directly to the encoder.
+	 * String values request constant-quality encoding through Mediabunny. `low`, `medium`, and `high` map to the
+	 * upstream `medium`, `high`, and `very-high` quality levels; `ultra` requests quantizer zero and may create very
+	 * large files. Numeric values remain exact bits-per-second targets and are wrapped in Mediabunny `Quality`.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#bitrate | VideoExportOptions.bitrate API reference}
 	 */
 	bitrate?: number | VideoBitratePreset;
 	/**
-	 * Encoder bitrate allocation mode. Defaults to `'variable'`.
+	 * Bitrate allocation mode for numeric bitrates and quality fallback paths. Defaults to `'variable'`.
 	 *
 	 * Use `'variable'` for most exports so simple frames can compress efficiently and complex frames can receive more
 	 * bits. Use `'constant'` only when a steadier data rate is more important than compression efficiency.
@@ -198,6 +219,12 @@ export type VideoExportOptions = {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#bitratemode | VideoExportOptions.bitrateMode API reference}
 	 */
 	bitrateMode?: VideoBitrateMode;
+	/**
+	 * Content hint passed to the native video encoder. Defaults to `'text'`.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#contenthint | VideoExportOptions.contentHint API reference}
+	 */
+	contentHint?: VideoContentHint;
 	/**
 	 * Encoder latency mode. Defaults to `'quality'`.
 	 *
@@ -227,7 +254,7 @@ export type VideoExportOptions = {
 	 */
 	keyFrameInterval?: number;
 	/**
-	 * Pixel density used during export. Defaults to `1` so video dimensions match the live canvas.
+	 * Pixel density used during export. Defaults to `1` so video dimensions match the logical canvas size.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#pixeldensity | VideoExportOptions.pixelDensity API reference}
 	 */
@@ -262,6 +289,12 @@ export type VideoExportOptions = {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#debuglogging | VideoExportOptions.debugLogging API reference}
 	 */
 	debugLogging?: boolean;
+	/**
+	 * Allows `toVideoBlob()` to retain its in-memory contract above the safe 100 MB default.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#allowlargeinmemory | VideoExportOptions.allowLargeInMemory API reference}
+	 */
+	allowLargeInMemory?: boolean;
 };
 
 export interface VideoGenerationOptions {
@@ -271,6 +304,7 @@ export interface VideoGenerationOptions {
 	frameCount: number;
 	bitrate: number | VideoBitratePreset;
 	bitrateMode: VideoBitrateMode;
+	contentHint?: VideoContentHint;
 	latencyMode: VideoLatencyMode;
 	hardwareAcceleration: VideoHardwareAcceleration;
 	keyFrameInterval: number;
@@ -279,6 +313,7 @@ export interface VideoGenerationOptions {
 	height: number;
 	transparent: boolean;
 	debugLogging: boolean;
+	allowLargeInMemory?: boolean;
 	signal?: AbortSignal;
 	prepareFrame?: PrepareExportFrame;
 }
@@ -290,6 +325,11 @@ export interface VideoEncodingPlan {
 	codec: VideoCodec;
 	bitrate: number;
 	bitrateMode: VideoBitrateMode;
+	qualityPreset: VideoBitratePreset | null;
+	rateControlIntent: 'bitrate' | 'constant-quality' | 'ultra';
+	qualityLevel?: 'medium' | 'high' | 'very-high';
+	contentHint: VideoContentHint;
+	estimatedBytes: number;
 	latencyMode: VideoLatencyMode;
 	hardwareAcceleration: VideoHardwareAcceleration;
 	keyFrameInterval: number;
