@@ -23,7 +23,8 @@ import { SVGExporter, type SVGExportOptions } from './exporters/svg';
 import { ImageExporter, type ImageExportOptions } from './exporters/image';
 import { TXTExporter, type TXTExportOptions } from './exporters/txt';
 import { GIFExporter, type GIFExportOptions } from './exporters/gif';
-import { VideoExporter, type VideoExportOptions } from './exporters/video';
+import { VideoExporter } from './exporters/video/VideoExporter';
+import type { VideoExportOptions } from './exporters/video';
 import { JSONExporter, type JSONExportOptions } from './exporters/json';
 import { createExportOverlay } from './overlay';
 import { createLayerTargetProvider } from './exporters/base';
@@ -52,6 +53,7 @@ export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type {
 	VideoBitrateMode,
 	VideoBitratePreset,
+	VideoContentHint,
 	VideoExportFormat,
 	VideoExportOptions,
 	VideoExportPhase,
