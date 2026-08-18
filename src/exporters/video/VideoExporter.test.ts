@@ -3,7 +3,9 @@
 import type { Textmodifier } from 'textmode.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileHandler } from '../base';
-import { VideoExporter, VideoRecorder, type VideoGenerationOptions } from '.';
+import { VideoExporter } from './VideoExporter';
+import { VideoRecorder } from './VideoRecorder';
+import type { VideoGenerationOptions } from './types';
 import type { PostDrawSubscription } from './VideoFrameDriver';
 
 function createTextmodifier(): Textmodifier {
@@ -28,7 +30,7 @@ describe('VideoExporter', () => {
 	let getContextSpy: { mockRestore(): void };
 	let downloadSpy: ReturnType<typeof vi.spyOn>;
 	let recordSpy: {
-		mock: { calls: Array<[VideoGenerationOptions]> };
+		mock: { calls: Array<[VideoGenerationOptions, unknown?, unknown?, unknown?]> };
 		mockRestore(): void;
 	};
 
@@ -45,6 +47,7 @@ describe('VideoExporter', () => {
 	});
 
 	afterEach(() => {
+		delete (globalThis as typeof globalThis & { showSaveFilePicker?: unknown }).showSaveFilePicker;
 		getContextSpy.mockRestore();
 		downloadSpy.mockRestore();
 		recordSpy.mockRestore();
@@ -77,5 +80,47 @@ describe('VideoExporter', () => {
 			keyFrameInterval: 1,
 		});
 		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture.webm');
+	});
+
+	it('streams saveVideo through the File System Access API when available', async () => {
+		const writable = new WritableStream();
+		const createWritable = vi.fn(async () => writable);
+		const showSaveFilePicker = vi.fn(async () => ({ createWritable }));
+		Object.defineProperty(globalThis, 'showSaveFilePicker', { value: showSaveFilePicker, configurable: true });
+
+		await new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
+			format: 'webm',
+			filename: 'streamed',
+		});
+
+		expect(showSaveFilePicker).toHaveBeenCalledWith(expect.objectContaining({ suggestedName: 'streamed.webm' }));
+		expect(createWritable).toHaveBeenCalledTimes(1);
+		expect(recordSpy.mock.calls[0]?.[3]).toMatchObject({ kind: 'stream', writable });
+		expect(downloadSpy).not.toHaveBeenCalled();
+	});
+
+	it('normalizes a cancelled save picker to VIDEO_EXPORT_ABORTED without rendering', async () => {
+		const showSaveFilePicker = vi.fn(async () => {
+			throw new DOMException('The user cancelled the picker.', 'AbortError');
+		});
+		Object.defineProperty(globalThis, 'showSaveFilePicker', { value: showSaveFilePicker, configurable: true });
+
+		await expect(new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo()).rejects.toMatchObject({
+			code: 'VIDEO_EXPORT_ABORTED',
+		});
+		expect(recordSpy.mock.calls).toHaveLength(0);
+	});
+
+	it('rejects an unsafe Blob fallback before rendering', async () => {
+		await expect(
+			new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
+				format: 'webm',
+				frameCount: 3_600,
+				frameRate: 60,
+				bitrate: 'ultra',
+				pixelDensity: 4,
+			})
+		).rejects.toMatchObject({ code: 'VIDEO_OUTPUT_TOO_LARGE' });
+		expect(recordSpy.mock.calls).toHaveLength(0);
 	});
 });
