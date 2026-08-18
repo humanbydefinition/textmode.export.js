@@ -135,6 +135,8 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 
 	private recordingState: VideoRecordingState = 'idle';
 
+	private resizeObserver?: ResizeObserver;
+
 	constructor(config: BladeConfig<VideoExportOptions>) {
 		super(config, { recording: true });
 	}
@@ -233,6 +235,10 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		this.estimate.mount(container);
 		this.status.mount(container);
 		this.syncOutputEstimate();
+		if (this._config.videoDimensionsTarget && typeof ResizeObserver !== 'undefined') {
+			this.resizeObserver = new ResizeObserver(() => this.syncOutputEstimate());
+			this.resizeObserver.observe(this._config.videoDimensionsTarget);
+		}
 
 		return container;
 	}
@@ -442,6 +448,8 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	}
 
 	protected override _onUnmount(): void {
+		this.resizeObserver?.disconnect();
+		this.resizeObserver = undefined;
 		this.bitrateSelect.selectElement.removeEventListener('change', this.handleBitrateChange);
 		this.formatSelect.selectElement.removeEventListener('change', this.handleFormatChange);
 		this.formatSelect.selectElement.removeEventListener('change', this.handleEstimateChange);

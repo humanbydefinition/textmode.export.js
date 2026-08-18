@@ -28,7 +28,8 @@ export function createExportOverlay(
 				width: Math.max(1, Math.round(textmodifier.canvas.width / density)),
 				height: Math.max(1, Math.round(textmodifier.canvas.height / density)),
 			};
-		}
+		},
+		textmodifier.canvas
 	);
 	const controller = new OverlayController(textmodifier, exportAPI, defaultsStore, definitions);
 	controller.$mount();

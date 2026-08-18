@@ -15,7 +15,8 @@ const createStandaloneDefaultsProvider = (): ExportDefaultsProvider => {
 export function getExportFormatDefinitions(
 	layerTargetProvider?: LayerTargetProvider,
 	getDefaults: ExportDefaultsProvider = createStandaloneDefaultsProvider(),
-	videoDimensionsProvider?: () => { width: number; height: number }
+	videoDimensionsProvider?: () => { width: number; height: number },
+	videoDimensionsTarget?: Element
 ): ReadonlyArray<FormatDefinition<ExportFormat>> {
 	return [
 		{
@@ -92,6 +93,7 @@ export function getExportFormatDefinitions(
 					supportsClipboard: false,
 					defaultOptions: getDefaults('video'),
 					videoDimensionsProvider,
+					videoDimensionsTarget,
 				}),
 		},
 	];
