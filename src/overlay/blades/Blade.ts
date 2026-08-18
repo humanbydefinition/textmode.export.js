@@ -19,6 +19,8 @@ export interface BladeConfig<TOptions> {
 	format: ExportFormat;
 	defaultOptions: TOptions;
 	layerTargetProvider?: LayerTargetProvider;
+	videoDimensionsProvider?: () => { width: number; height: number };
+	videoDimensionsTarget?: Element;
 }
 
 export abstract class Blade<TOptions> extends Component<void> {

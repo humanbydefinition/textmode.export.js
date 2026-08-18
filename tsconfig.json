@@ -1,9 +1,7 @@
 {
 	"extends": "@textmode/tsconfig/browser-library.json",
 	"compilerOptions": {
-		"paths": {
-			"mediabunny": ["./src/types/mediabunny.d.ts"]
-		}
+		"skipLibCheck": true
 	},
 	"include": ["src", "vite.config.ts"]
 }

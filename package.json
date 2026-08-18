@@ -1,6 +1,6 @@
 {
 	"name": "textmode.export.js",
-	"version": "1.7.1-beta.1",
+	"version": "1.7.2",
 	"description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, JSON, and plain text.",
 	"type": "module",
 	"devEngines": {
@@ -58,11 +58,11 @@
 		"release": "textmode-release release"
 	},
 	"peerDependencies": {
-		"textmode.js": ">=0.17.2-beta.1 <0.20.0"
+		"textmode.js": "^0.17.2"
 	},
 	"dependencies": {
 		"gifenc": "^1.0.1",
-		"mediabunny": "^1.45.4"
+		"mediabunny": "^1.52.3"
 	},
 	"devDependencies": {
 		"@textmode/build": "^0.1.0",
@@ -71,7 +71,7 @@
 		"@textmode/release": "^0.2.0",
 		"@textmode/tsconfig": "^0.2.0",
 		"@types/node": "^24.0.0",
-		"textmode.js": "^0.17.2-beta.1",
+		"textmode.js": "^0.17.2",
 		"typescript": "^6.0.3",
 		"vite-plugin-css-injected-by-js": "^5.0.2",
 		"vitest": "^4.1.10"

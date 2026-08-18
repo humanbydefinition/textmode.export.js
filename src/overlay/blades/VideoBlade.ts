@@ -4,10 +4,12 @@ import type {
 	VideoExportFormat,
 	VideoExportOptions,
 	VideoExportProgress,
+	VideoGenerationOptions,
 	VideoHardwareAcceleration,
 	VideoLatencyMode,
 	VideoRecordingState,
 } from '../../exporters/video';
+import { createVideoEncodingPlan } from '../../exporters/video/VideoEncodingPolicy';
 import { overlayClasses } from '../utils/classes';
 import { NumberInput } from '../components/inputs/NumberInput';
 import { SelectInput } from '../components/inputs/SelectInput';
@@ -42,6 +44,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				{ value: 'low', label: 'low' },
 				{ value: 'medium', label: 'medium' },
 				{ value: 'high', label: 'high' },
+				{ value: 'ultra', label: 'ultra (near-lossless)' },
 			],
 			defaultValue: 'medium',
 		})
@@ -121,7 +124,18 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		})
 	);
 
+	private estimate = this._manageComponent(
+		new StatusDisplay({
+			title: 'estimate',
+			message: 'logical dimensions · duration · size',
+			variant: 'neutral',
+			context: 'video',
+		})
+	);
+
 	private recordingState: VideoRecordingState = 'idle';
+
+	private resizeObserver?: ResizeObserver;
 
 	constructor(config: BladeConfig<VideoExportOptions>) {
 		super(config, { recording: true });
@@ -213,8 +227,18 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		this.transparencyInput.mount(container);
 		this.formatSelect.selectElement.addEventListener('change', this.handleFormatChange);
 		this.syncTransparencyAvailability();
+		this.bitrateSelect.selectElement.addEventListener('change', this.handleBitrateChange);
+		this.frameCountInput.inputElement.addEventListener('input', this.handleEstimateChange);
+		this.frameRateInput.inputElement.addEventListener('input', this.handleEstimateChange);
+		this.formatSelect.selectElement.addEventListener('change', this.handleEstimateChange);
 
+		this.estimate.mount(container);
 		this.status.mount(container);
+		this.syncOutputEstimate();
+		if (this._config.videoDimensionsTarget && typeof ResizeObserver !== 'undefined') {
+			this.resizeObserver = new ResizeObserver(() => this.syncOutputEstimate());
+			this.resizeObserver.observe(this._config.videoDimensionsTarget);
+		}
 
 		return container;
 	}
@@ -252,7 +276,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	reset(): void {
 		this.recordingState = 'idle';
 		this.applyDefaults();
-		this.status.setMessage('ready to record', 'neutral');
+		this.syncReadyStatus();
 	}
 
 	validate(): boolean {
@@ -310,7 +334,10 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				break;
 			}
 			case 'encoding': {
-				this.status.setMessage('finalizing video', 'active');
+				this.status.setMessage(
+					progress?.phase === 'writing' ? 'writing video to disk' : 'finalizing video',
+					'active'
+				);
 				break;
 			}
 			case 'completed': {
@@ -322,7 +349,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 				break;
 			}
 			default: {
-				this.status.setMessage('ready to record', 'neutral');
+				this.syncReadyStatus();
 				break;
 			}
 		}
@@ -353,12 +380,83 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	}
 
 	private resolveBitratePreset(value: VideoExportOptions['bitrate']): VideoBitratePreset {
-		return value === 'low' || value === 'medium' || value === 'high' ? value : 'medium';
+		return value === 'low' || value === 'medium' || value === 'high' || value === 'ultra' ? value : 'medium';
+	}
+
+	private readonly handleBitrateChange = () => {
+		if (!this.isRecording()) this.syncReadyStatus();
+		this.syncOutputEstimate();
+	};
+
+	private readonly handleEstimateChange = () => this.syncOutputEstimate();
+
+	private syncReadyStatus(): void {
+		if (this.bitrateSelect.value === 'ultra') {
+			this.status.setMessage('near-lossless; very large files and slower exports', 'alert');
+		} else {
+			this.status.setMessage('ready to record', 'neutral');
+		}
 	}
 
 	private readonly handleFormatChange = () => {
 		this.syncTransparencyAvailability();
+		this.syncOutputEstimate();
 	};
+
+	private syncOutputEstimate(): void {
+		if (!this.estimate.isMounted()) return;
+		const dimensions = this._config.videoDimensionsProvider?.();
+		const frameCount = Number.parseInt(this.frameCountInput.value, 10);
+		const frameRate = Number.parseFloat(this.frameRateInput.value);
+		if (!dimensions || !Number.isFinite(frameCount) || !Number.isFinite(frameRate) || frameRate <= 0) {
+			this.estimate.setMessage('logical dimensions · duration · size', 'neutral');
+			return;
+		}
+		const options: VideoGenerationOptions = {
+			format: this.formatSelect.value,
+			frameCount: Math.max(1, Math.round(frameCount)),
+			frameRate,
+			bitrate: this.bitrateSelect.value,
+			bitrateMode: this.bitrateModeSelect.value,
+			contentHint: 'text',
+			latencyMode: this.latencyModeSelect.value,
+			hardwareAcceleration: this.hardwareAccelerationSelect.value,
+			keyFrameInterval: Number.parseFloat(this.keyFrameIntervalInput.value) || 2,
+			pixelDensity: 1,
+			width: dimensions.width,
+			height: dimensions.height,
+			transparent: this.formatSelect.value === 'webm' && this.transparencyInput.checked,
+			debugLogging: false,
+		};
+		try {
+			const plan = createVideoEncodingPlan(options);
+			this.estimate.setMessage(
+				`${plan.width}×${plan.height} · ${(plan.frameCount / plan.frameRate).toFixed(1)}s · ~${this.formatBytes(plan.estimatedBytes)}`,
+				this.bitrateSelect.value === 'ultra' ? 'alert' : 'neutral'
+			);
+		} catch {
+			this.estimate.setMessage(
+				`${dimensions.width}×${dimensions.height} · MP4 requires even dimensions`,
+				'alert'
+			);
+		}
+	}
+
+	private formatBytes(bytes: number): string {
+		if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
+		return `${Math.max(1, Math.round(bytes / 1_000_000))} MB`;
+	}
+
+	protected override _onUnmount(): void {
+		this.resizeObserver?.disconnect();
+		this.resizeObserver = undefined;
+		this.bitrateSelect.selectElement.removeEventListener('change', this.handleBitrateChange);
+		this.formatSelect.selectElement.removeEventListener('change', this.handleFormatChange);
+		this.formatSelect.selectElement.removeEventListener('change', this.handleEstimateChange);
+		this.frameCountInput.inputElement.removeEventListener('input', this.handleEstimateChange);
+		this.frameRateInput.inputElement.removeEventListener('input', this.handleEstimateChange);
+		super._onUnmount();
+	}
 
 	private syncTransparencyAvailability(): void {
 		if (!this.transparencyInput.isMounted()) {

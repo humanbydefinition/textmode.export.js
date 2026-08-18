@@ -1,10 +1,8 @@
-export { VideoExporter } from './VideoExporter';
-export { VideoFrameDriver } from './VideoFrameDriver';
-export { VideoRecorder } from './VideoRecorder';
 export { VideoExportError } from './errors';
 export type {
 	VideoBitrateMode,
 	VideoBitratePreset,
+	VideoContentHint,
 	VideoEncodingPlan,
 	VideoExportErrorCode,
 	VideoExportFormat,

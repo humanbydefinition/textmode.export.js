@@ -14,7 +14,9 @@ const createStandaloneDefaultsProvider = (): ExportDefaultsProvider => {
 
 export function getExportFormatDefinitions(
 	layerTargetProvider?: LayerTargetProvider,
-	getDefaults: ExportDefaultsProvider = createStandaloneDefaultsProvider()
+	getDefaults: ExportDefaultsProvider = createStandaloneDefaultsProvider(),
+	videoDimensionsProvider?: () => { width: number; height: number },
+	videoDimensionsTarget?: Element
 ): ReadonlyArray<FormatDefinition<ExportFormat>> {
 	return [
 		{
@@ -90,6 +92,8 @@ export function getExportFormatDefinitions(
 					label: 'video (.webm / .mp4)',
 					supportsClipboard: false,
 					defaultOptions: getDefaults('video'),
+					videoDimensionsProvider,
+					videoDimensionsTarget,
 				}),
 		},
 	];
