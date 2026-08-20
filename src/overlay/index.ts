@@ -32,6 +32,11 @@ export function createExportOverlay(
 		textmodifier.canvas
 	);
 	const controller = new OverlayController(textmodifier, exportAPI, defaultsStore, definitions);
-	controller.$mount();
+	try {
+		controller.$mount();
+	} catch (error) {
+		controller.$dispose();
+		throw error;
+	}
 	return controller;
 }
