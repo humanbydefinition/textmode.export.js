@@ -81,6 +81,7 @@ function createTextmodifierMock(): Textmodifier & { testLayer: TextmodeLayer } {
 		layerSecondaryColorPixels: Uint8Array
 	): TextmodeLayer =>
 		({
+			isVisible: () => true,
 			grid,
 			font,
 			drawFramebuffer: {
