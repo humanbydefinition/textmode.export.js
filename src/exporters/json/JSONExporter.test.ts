@@ -46,6 +46,12 @@ function createLayerMock(
 	characters: Array<{ character: string; color: [number, number, number] }>,
 	options: LayerMockOptions = {}
 ): TextmodeLayer {
+	const visible = options.visible ?? true;
+	const opacity = options.opacity ?? 1;
+	const blendMode = options.blendMode ?? LayerBlendMode.NORMAL;
+	const offset = { x: options.offsetX ?? 0, y: options.offsetY ?? 0 };
+	const rotationZ = options.rotationZ ?? 0;
+
 	return {
 		grid: {
 			cols: 2,
@@ -70,12 +76,11 @@ function createLayerMock(
 				}
 			},
 		},
-		_visible: options.visible,
-		_opacity: options.opacity,
-		_blendMode: options.blendMode,
-		_offsetX: options.offsetX,
-		_offsetY: options.offsetY,
-		_rotation: options.rotationZ,
+		isVisible: () => visible,
+		opacity: () => opacity,
+		blendMode: () => blendMode,
+		offset: () => offset,
+		rotateZ: () => rotationZ,
 	} as unknown as TextmodeLayer;
 }
 

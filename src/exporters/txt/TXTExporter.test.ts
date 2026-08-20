@@ -12,6 +12,7 @@ function createLayerMock(characters: string): TextmodeLayer {
 	const colorPixels = Uint8Array.from(glyphs.flatMap(() => [255, 255, 255, 255]));
 
 	return {
+		isVisible: () => true,
 		grid: {
 			cols: glyphs.length,
 			rows: 1,

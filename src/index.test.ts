@@ -9,6 +9,7 @@ function createMockTextmodifier(): Textmodifier {
 	canvas.height = 480;
 
 	const mockLayer = {
+		isVisible: () => true,
 		charBuffer: new Uint8Array(80 * 30),
 		colorBuffer: new Uint8Array(80 * 30 * 4),
 		bgColorBuffer: new Uint8Array(80 * 30 * 4),
@@ -32,7 +33,12 @@ function createMockTextmodifier(): Textmodifier {
 
 describe('ExportPlugin', () => {
 	it('registers all 14 export extension methods and overlay getter', () => {
-		const definedExtensions: Array<{ target: string; name: string; isAccessor: boolean }> = [];
+		const definedExtensions: Array<{
+			target: string;
+			name: string;
+			descriptor: PropertyDescriptor;
+			isAccessor: boolean;
+		}> = [];
 		const postDrawHooks: Array<() => void> = [];
 
 		const mockContext: TextmodePluginContext = {
@@ -40,6 +46,7 @@ describe('ExportPlugin', () => {
 				definedExtensions.push({
 					target,
 					name,
+					descriptor: descriptor as PropertyDescriptor,
 					isAccessor: typeof descriptor === 'object' && descriptor !== null && 'get' in descriptor,
 				});
 			}),
@@ -81,10 +88,23 @@ describe('ExportPlugin', () => {
 		const overlayExt = definedExtensions.find((e) => e.name === 'exportOverlay');
 		expect(overlayExt?.isAccessor).toBe(true);
 
+		const saveCanvas = definedExtensions.find((extension) => extension.name === 'saveCanvas')!.descriptor
+			.value as () => Promise<void>;
+		const exportOverlay = definedExtensions
+			.find((extension) => extension.name === 'exportOverlay')!
+			.descriptor.get!.call(mockTextmodifier);
+
 		// Execute cleanup
 		if (typeof cleanup === 'function') {
 			cleanup();
+			cleanup();
 		}
+
+		return expect(saveCanvas())
+			.rejects.toThrow('disposed')
+			.then(() => {
+				expect(() => exportOverlay.getDefaults()).toThrow('disposed');
+			});
 	});
 
 	it('subscribes to postDraw and unsubscribes on cleanup', () => {
@@ -108,6 +128,7 @@ describe('ExportPlugin', () => {
 		expect(unsubscribeCalled).toBe(false);
 
 		if (typeof cleanup === 'function') {
+			cleanup();
 			cleanup();
 		}
 
