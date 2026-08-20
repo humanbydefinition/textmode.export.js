@@ -2,7 +2,7 @@ import type { Textmodifier } from 'textmode.js';
 import { FileHandler } from '../base';
 import { VideoFrameDriver, type PostDrawSubscription } from './VideoFrameDriver';
 import { VideoRecorder, type VideoOutputDestination } from './VideoRecorder';
-import { VideoExportError, normalizeFilePickerError } from './errors';
+import { VideoExportError } from './errors';
 import { assertVideoOutputFitsMemory, createVideoEncodingPlan } from './VideoEncodingPolicy';
 import type {
 	VideoBitrateMode,
@@ -25,11 +25,6 @@ const DEFAULT_LATENCY_MODE: VideoLatencyMode = 'quality';
 const DEFAULT_HARDWARE_ACCELERATION: VideoHardwareAcceleration = 'no-preference';
 const DEFAULT_KEYFRAME_INTERVAL = 2;
 
-type SaveFilePicker = (options: {
-	suggestedName: string;
-	types?: Array<{ description: string; accept: Record<string, string[]> }>;
-}) => Promise<FileSystemFileHandle>;
-
 /** Main video exporter for the textmode.js library. */
 export class VideoExporter {
 	private readonly _recorder: VideoRecorder;
@@ -47,44 +42,15 @@ export class VideoExporter {
 		const format = options.format ?? 'mp4';
 		const generationOptions = this._applyDefaultOptions(format, options);
 		const preflightPlan = createVideoEncodingPlan(generationOptions);
-		const picker = this._filePicker();
-
-		if (!picker) {
-			assertVideoOutputFitsMemory(preflightPlan, false);
-			const blob = await this._record(
-				generationOptions,
-				{ kind: 'blob', allowLargeInMemory: false },
-				options.onProgress
-			);
-			if (!blob)
-				throw new VideoExportError('VIDEO_EXPORT_FAILED', 'Video export did not produce a downloadable file.');
-			new FileHandler().$downloadFile(blob, this._withExtension(options.filename, `.${format}`));
-			return;
-		}
-
-		let writable: FileSystemWritableFileStream;
-		try {
-			const handle = await picker({
-				suggestedName: this._withExtension(options.filename, `.${format}`) ?? `textmode-export.${format}`,
-				types: [
-					{
-						description: format === 'mp4' ? 'MP4 video' : 'WebM video',
-						accept: { [format === 'mp4' ? 'video/mp4' : 'video/webm']: [`.${format}`] },
-					},
-				],
-			});
-			writable = await handle.createWritable();
-		} catch (error) {
-			const abortError = normalizeFilePickerError(error);
-			if (abortError) throw abortError;
-			throw new VideoExportError(
-				'VIDEO_EXPORT_FAILED',
-				error instanceof Error ? error.message : 'Could not open the selected output file.',
-				error
-			);
-		}
-
-		await this._record(generationOptions, { kind: 'stream', writable }, options.onProgress);
+		assertVideoOutputFitsMemory(preflightPlan, false);
+		const blob = await this._record(
+			generationOptions,
+			{ kind: 'blob', allowLargeInMemory: false },
+			options.onProgress
+		);
+		if (!blob)
+			throw new VideoExportError('VIDEO_EXPORT_FAILED', 'Video export did not produce a downloadable file.');
+		new FileHandler().$downloadFile(blob, this._withExtension(options.filename, `.${format}`));
 	}
 
 	/** Generates a deterministic video without initiating a download. */
@@ -199,10 +165,6 @@ export class VideoExporter {
 		const modifier = this._textmodifier as Textmodifier & { pixelDensity?: () => number };
 		const density = modifier.pixelDensity?.();
 		return typeof density === 'number' && Number.isFinite(density) && density > 0 ? density : 1;
-	}
-
-	private _filePicker(): SaveFilePicker | undefined {
-		return (globalThis as typeof globalThis & { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
 	}
 
 	private _withExtension(filename: string | undefined, extension: `.${VideoExportFormat}`): string | undefined {
