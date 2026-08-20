@@ -16,13 +16,6 @@ export function createAbortError(): VideoExportError {
 	return new VideoExportError('VIDEO_EXPORT_ABORTED', 'Video export was cancelled.');
 }
 
-export function normalizeFilePickerError(error: unknown): VideoExportError | undefined {
-	if (error instanceof VideoExportError) return error.code === 'VIDEO_EXPORT_ABORTED' ? error : undefined;
-	if (error instanceof DOMException && error.name === 'AbortError') return createAbortError();
-	if (error instanceof Error && error.name === 'AbortError') return createAbortError();
-	return undefined;
-}
-
 export function createTimeoutError(message: string, cause?: unknown): VideoExportError {
 	return new VideoExportError('VIDEO_EXPORT_TIMEOUT', message, cause);
 }

@@ -137,8 +137,7 @@ export function assertVideoOutputFitsMemory(plan: VideoEncodingPlan, allowLargeI
 	throw new VideoExportError(
 		'VIDEO_OUTPUT_TOO_LARGE',
 		`The estimated ${formatBytes(plan.estimatedBytes)} video is too large for an in-memory export. ` +
-			'Use saveVideo() in a browser with the File System Access API, lower the resolution, duration, or quality, ' +
-			'or pass allowLargeInMemory: true to toVideoBlob().'
+			'Lower the resolution, duration, or quality, or pass allowLargeInMemory: true to toVideoBlob().'
 	);
 }
 

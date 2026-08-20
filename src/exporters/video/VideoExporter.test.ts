@@ -82,10 +82,8 @@ describe('VideoExporter', () => {
 		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture.webm');
 	});
 
-	it('streams saveVideo through the File System Access API when available', async () => {
-		const writable = new WritableStream();
-		const createWritable = vi.fn(async () => writable);
-		const showSaveFilePicker = vi.fn(async () => ({ createWritable }));
+	it('downloads saveVideo without invoking the native save picker', async () => {
+		const showSaveFilePicker = vi.fn();
 		Object.defineProperty(globalThis, 'showSaveFilePicker', { value: showSaveFilePicker, configurable: true });
 
 		await new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
@@ -93,22 +91,9 @@ describe('VideoExporter', () => {
 			filename: 'streamed',
 		});
 
-		expect(showSaveFilePicker).toHaveBeenCalledWith(expect.objectContaining({ suggestedName: 'streamed.webm' }));
-		expect(createWritable).toHaveBeenCalledTimes(1);
-		expect(recordSpy.mock.calls[0]?.[3]).toMatchObject({ kind: 'stream', writable });
-		expect(downloadSpy).not.toHaveBeenCalled();
-	});
-
-	it('normalizes a cancelled save picker to VIDEO_EXPORT_ABORTED without rendering', async () => {
-		const showSaveFilePicker = vi.fn(async () => {
-			throw new DOMException('The user cancelled the picker.', 'AbortError');
-		});
-		Object.defineProperty(globalThis, 'showSaveFilePicker', { value: showSaveFilePicker, configurable: true });
-
-		await expect(new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo()).rejects.toMatchObject({
-			code: 'VIDEO_EXPORT_ABORTED',
-		});
-		expect(recordSpy.mock.calls).toHaveLength(0);
+		expect(showSaveFilePicker).not.toHaveBeenCalled();
+		expect(recordSpy.mock.calls[0]?.[3]).toMatchObject({ kind: 'blob', allowLargeInMemory: false });
+		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'streamed.webm');
 	});
 
 	it('rejects an unsafe Blob fallback before rendering', async () => {
