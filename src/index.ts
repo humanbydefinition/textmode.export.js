@@ -16,18 +16,9 @@
  * the [Exporting guide](/docs/exporting).
  */
 
-import type { Textmodifier } from 'textmode.js';
 import type { TextmodePlugin, TextmodePluginContext } from 'textmode.js';
 import './augmentations';
-import { SVGExporter, type SVGExportOptions } from './exporters/svg';
-import { ImageExporter, type ImageExportOptions } from './exporters/image';
-import { TXTExporter, type TXTExportOptions } from './exporters/txt';
-import { GIFExporter, type GIFExportOptions } from './exporters/gif';
-import { VideoExporter, type VideoExportOptions } from './exporters/video';
-import { JSONExporter, type JSONExportOptions } from './exporters/json';
-import { createExportOverlay } from './overlay';
-import { createLayerTargetProvider } from './exporters/base';
-import type { TextmodeExportAPI, ExportOverlayController, ExportDefaults, ExportDefaultsPatch } from './types';
+import { EXPORT_API_METHOD_KEYS, TextmodeExportController } from './runtime/TextmodeExportController';
 import packageJson from '../package.json';
 
 // Re-export all types for consumers
@@ -52,6 +43,7 @@ export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export type {
 	VideoBitrateMode,
 	VideoBitratePreset,
+	VideoContentHint,
 	VideoExportFormat,
 	VideoExportOptions,
 	VideoExportPhase,
@@ -61,25 +53,6 @@ export type {
 	VideoRecordingState,
 } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';
-
-// Register the export methods that are exposed as Textmodifier extensions.
-// The overlay controller is exposed separately through a getter.
-const _apiMethodKeys: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOverlay'>> = [
-	'saveCanvas',
-	'toImageBlob',
-	'copyCanvas',
-	'saveSVG',
-	'saveStrings',
-	'toSVG',
-	'toString',
-	'toJSON',
-	'toJSONString',
-	'saveJSON',
-	'saveGIF',
-	'toGIFBlob',
-	'saveVideo',
-	'toVideoBlob',
-];
 
 /**
  * Default export plugin instance for the standard textmode.js workflow.
@@ -98,181 +71,23 @@ export const ExportPlugin: TextmodePlugin = {
 	 * @param api The plugin API
 	 * @returns A cleanup function that releases the mounted overlay and its post-draw subscription.
 	 */
-	install(textmodifier: Textmodifier, api: TextmodePluginContext): () => void {
-		const onPostDraw = (callback: () => void): (() => void) => api.on('postDraw', callback);
-		// Create export API methods first
-		const exportMethods = {
-			/**
-			 * Saves the current canvas as an image file
-			 *
-			 * @param options Export options
-			 * @returns Promise that resolves when the file is saved
-			 */
-			saveCanvas: async (options: ImageExportOptions = {}) => {
-				return new ImageExporter().$saveImage(textmodifier.canvas, options);
-			},
-
-			/**
-			 * Copies the current canvas image to the clipboard
-			 *
-			 * @param options Export options
-			 * @returns Promise that resolves when the image is copied
-			 * @throws {Error} If the Clipboard API is not supported or copying fails
-			 */
-			copyCanvas: async (options: ImageExportOptions = {}) => {
-				return new ImageExporter().$copyImageToClipboard(textmodifier.canvas, options);
-			},
-
-			toImageBlob: async (options: ImageExportOptions = {}) => {
-				return new ImageExporter().$toImageBlob(textmodifier.canvas, options);
-			},
-
-			/**
-			 * Saves the current canvas as an SVG file
-			 *
-			 * @param options Export options
-			 */
-			saveSVG: (options: SVGExportOptions = {}) => {
-				new SVGExporter().$saveSVG(textmodifier, options);
-			},
-
-			/**
-			 * Saves the current text content as a TXT file
-			 *
-			 * @param options Export options
-			 */
-			saveStrings: (options: TXTExportOptions = {}) => {
-				new TXTExporter().$saveTXT(textmodifier, options);
-			},
-
-			/**
-			 * Generates SVG content as a string
-			 *
-			 * @param options Export options
-			 * @returns String containing the SVG content
-			 */
-			toSVG: (options: SVGExportOptions = {}) => {
-				return new SVGExporter().$generateSVG(textmodifier, options);
-			},
-
-			/**
-			 * Generates TXT content as a string
-			 *
-			 * @param options Export options
-			 * @returns String containing the TXT content
-			 */
-			toString: (options: TXTExportOptions = {}) => {
-				return new TXTExporter().$generateTXT(textmodifier, options);
-			},
-
-			/**
-			 * Generates structured JSON document data for the selected layer or layer stack.
-			 *
-			 * @param options Export options
-			 * @returns Object containing the exported document data
-			 */
-			toJSON: (options: JSONExportOptions = {}) => {
-				return new JSONExporter().$generateJSONData(textmodifier, options);
-			},
-
-			/**
-			 * Generates serialized JSON for the selected layer.
-			 *
-			 * @param options Export options
-			 * @returns String containing the JSON content
-			 */
-			toJSONString: (options: JSONExportOptions = {}) => {
-				return new JSONExporter().$generateJSONString(textmodifier, options);
-			},
-
-			/**
-			 * Saves the selected layer as a JSON file.
-			 *
-			 * @param options Export options
-			 */
-			saveJSON: (options: JSONExportOptions = {}) => {
-				new JSONExporter().$saveJSON(textmodifier, options);
-			},
-
-			/**
-			 * Saves the current canvas as an animated GIF file
-			 *
-			 * @param options Export options
-			 * @returns Promise that resolves when the file is saved
-			 */
-			saveGIF: async (options: GIFExportOptions = {}) => {
-				return new GIFExporter(textmodifier, onPostDraw).$saveGIF(options);
-			},
-
-			toGIFBlob: async (options: GIFExportOptions = {}) => {
-				return new GIFExporter(textmodifier, onPostDraw).$generateGIFBlob(options);
-			},
-
-			/**
-			 * Saves the current canvas as an MP4/H.264 video file
-			 *
-			 * @param options Export options
-			 * @returns Promise that resolves when the file is saved
-			 */
-			saveVideo: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, onPostDraw).$saveVideo(options);
-			},
-
-			toVideoBlob: async (options: VideoExportOptions = {}) => {
-				return new VideoExporter(textmodifier, onPostDraw).$generateVideoBlob(options);
-			},
-		};
-
-		const overlayController = createExportOverlay(
-			textmodifier,
-			exportMethods as TextmodeExportAPI,
-			createLayerTargetProvider(textmodifier)
-		);
-		const stopOverlayRefresh = onPostDraw(() => {
-			if (overlayController.isVisible()) {
-				overlayController.refreshLayerTargets();
-			}
-		});
-
-		// Create overlay API
-		const exportOverlayAPI: ExportOverlayController = {
-			show: () => overlayController.show(),
-			hide: () => overlayController.hide(),
-			toggle: () => overlayController.toggle(),
-			isVisible: () => overlayController.isVisible(),
-			resetPosition: () => overlayController.resetPosition(),
-			getPosition: () => overlayController.getPosition(),
-			setPosition: (position) => overlayController.setPosition(position),
-			setDefaults: (patch: ExportDefaultsPatch) => overlayController.setDefaults(patch),
-			getDefaults: () => overlayController.getDefaults(),
-			resetDefaults: (format?: keyof ExportDefaults) => overlayController.resetDefaults(format),
-		};
-
-		// Register the export API as Textmodifier extensions so the plugin runtime
-		// handles conflict detection and cleanup uniformly. The export
-		// methods are registered as value extensions; the overlay controller is
-		// exposed through a getter.
+	install(textmodifier, api: TextmodePluginContext): () => void {
+		const controller = new TextmodeExportController(textmodifier, (callback) => api.on('postDraw', callback));
 		try {
-			for (const key of _apiMethodKeys) {
+			for (const key of EXPORT_API_METHOD_KEYS) {
 				api.defineExtension('textmodifier', key, {
-					value: exportMethods[key],
+					value: controller.api[key],
 				});
 			}
 			api.defineExtension('textmodifier', 'exportOverlay', {
-				get: () => exportOverlayAPI,
+				get: () => controller.api.exportOverlay,
 			});
 		} catch (error) {
-			// Extension conflicts surface after the overlay is mounted; release the
-			// DOM and event resources the runtime cannot infer.
-			stopOverlayRefresh();
-			overlayController.$dispose();
+			controller.dispose();
 			throw error;
 		}
 
-		return () => {
-			stopOverlayRefresh();
-			overlayController.$dispose();
-		};
+		return () => controller.dispose();
 	},
 };
 

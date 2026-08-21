@@ -2,7 +2,8 @@
 
 import type { Textmodifier } from 'textmode.js';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { VideoExportError, VideoFrameDriver } from '.';
+import { VideoExportError } from './errors';
+import { VideoFrameDriver } from './VideoFrameDriver';
 import type { PostDrawSubscription } from './VideoFrameDriver';
 
 type PostDrawHook = Parameters<PostDrawSubscription>[0];

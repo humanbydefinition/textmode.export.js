@@ -1,121 +1,90 @@
 import {
 	BufferTarget,
 	CanvasSource,
+	canEncodeVideo,
 	Mp4OutputFormat,
 	Output,
+	Quality,
+	StreamTarget,
 	WebMOutputFormat,
-	getFirstEncodableVideoCodec,
+	type StreamTargetChunk,
+	type VideoCodec as MediabunnyVideoCodec,
 } from 'mediabunny';
 import { VideoExportError, createAbortError } from './errors';
-import type {
-	VideoBitratePreset,
-	VideoCodec,
-	VideoEncodingPlan,
-	VideoExportProgress,
-	VideoFrameDriverLike,
-	VideoGenerationOptions,
-} from './types';
+import { assertVideoOutputFitsMemory, createVideoEncodingPlan, getVideoQualityDescriptor } from './VideoEncodingPolicy';
+import type { VideoEncodingPlan, VideoExportProgress, VideoFrameDriverLike, VideoGenerationOptions } from './types';
 import { withAbortableTimeout } from './withAbortableTimeout';
 
-const WEBM_CODEC_PREFERENCES: VideoCodec[] = ['vp9', 'vp8'];
-const MP4_CODEC_PREFERENCES: VideoCodec[] = ['avc'];
-const MAX_PENDING_VIDEO_ENCODE_FRAMES = 4;
-const VIDEO_CAPTURE_YIELD_FRAME_INTERVAL = 4;
-const VIDEO_ENCODE_DRAIN_TIMEOUT_MS = 30_000;
+const WEBM_CODEC_PREFERENCES: MediabunnyVideoCodec[] = ['vp9', 'vp8'];
+const MP4_CODEC_PREFERENCES: MediabunnyVideoCodec[] = ['avc'];
 const VIDEO_OUTPUT_START_TIMEOUT_MS = 30_000;
 const VIDEO_OUTPUT_FINALIZE_TIMEOUT_MS = 30_000;
 
-type PendingVideoEncode = Promise<void>;
-type CancellableOutput = Output & {
-	cancel(): Promise<void>;
-};
+export type VideoOutputDestination =
+	{ kind: 'blob'; allowLargeInMemory: boolean } | { kind: 'stream'; writable: WritableStream<StreamTargetChunk> };
 
-class VideoEncodeQueue {
-	private readonly _pending: PendingVideoEncode[] = [];
-
-	constructor(
-		private readonly _source: CanvasSource,
-		private readonly _plan: VideoEncodingPlan,
-		private readonly _timeoutMs: number
-	) {}
-
-	public get pendingCount(): number {
-		return this._pending.length;
-	}
-
-	public enqueue(frameIndex: number): void {
-		let promise: Promise<void>;
-		try {
-			promise = Promise.resolve(this._source.add(frameIndex / this._plan.frameRate, 1 / this._plan.frameRate));
-		} catch (error) {
-			promise = Promise.reject(error);
-		}
-		promise.catch(() => undefined);
-		this._pending.push(promise);
-	}
-
-	public async drainOne(signal?: AbortSignal): Promise<void> {
-		if (this._pending.length === 0) return;
-		const settled = await withAbortableTimeout(
-			Promise.race(
-				this._pending.map((promise, index) =>
-					promise.then(
-						() => ({ index, error: null as unknown | null }),
-						(error: unknown) => ({ index, error })
-					)
-				)
-			),
-			`Video encoder did not drain within ${this._timeoutMs}ms.`,
-			signal,
-			this._timeoutMs
-		);
-		this._pending.splice(settled.index, 1);
-		if (settled.error) {
-			throw settled.error;
-		}
-	}
-
-	public async drainAll(signal: AbortSignal | undefined, onDrain: () => void): Promise<void> {
-		while (this._pending.length > 0) {
-			await this.drainOne(signal);
-			onDrain();
-		}
-	}
-}
-
-/**
- * Records deterministic textmode frames through WebCodecs and muxes them with Mediabunny.
- */
+/** Records deterministic textmode frames through WebCodecs and muxes them with Mediabunny. */
 export class VideoRecorder {
 	public async $record(
 		options: VideoGenerationOptions,
 		frameDriver: VideoFrameDriverLike,
-		onProgress?: (progress: VideoExportProgress) => void
-	): Promise<Blob> {
+		onProgress?: (progress: VideoExportProgress) => void,
+		destination: VideoOutputDestination = { kind: 'blob', allowLargeInMemory: options.allowLargeInMemory ?? false }
+	): Promise<Blob | undefined> {
 		this._throwIfAborted(options.signal);
 		this._assertWebCodecsAvailable();
 
 		const plan = await this._createEncodingPlan(options);
 		this._log(options, 'video export plan', plan);
-		this._emitProgress(onProgress, 'recording', 'probing', 0, plan.frameCount);
+		if (destination.kind === 'blob') assertVideoOutputFitsMemory(plan, destination.allowLargeInMemory);
+		this._emitProgress(onProgress, 'recording', 'probing', 0, plan.frameCount, plan);
 
 		const format = plan.format === 'mp4' ? new Mp4OutputFormat() : new WebMOutputFormat();
-		const target = new BufferTarget();
+		const target =
+			destination.kind === 'stream'
+				? new StreamTarget(destination.writable, { chunked: true })
+				: new BufferTarget();
 		const output = new Output({ format, target });
-		const cancellableOutput = output as CancellableOutput;
+		const quality = this._createQuality(plan);
+		let selectedRateControl: VideoExportProgress['rateControl'];
 		const source = new CanvasSource(frameDriver.canvas, {
-			codec: plan.codec,
-			bitrate: plan.bitrate,
+			codec: plan.codec as MediabunnyVideoCodec,
+			quality,
 			alpha: plan.transparent ? 'keep' : 'discard',
-			bitrateMode: plan.bitrateMode,
 			latencyMode: plan.latencyMode,
 			hardwareAcceleration: plan.hardwareAcceleration,
 			keyFrameInterval: plan.keyFrameInterval,
 			sizeChangeBehavior: 'deny',
+			contentHint: plan.contentHint,
+			onEncoderConfig: (config) => {
+				const mode = (config as VideoEncoderConfig & { bitrateMode?: string }).bitrateMode;
+				selectedRateControl =
+					mode === 'quantizer'
+						? 'quantizer'
+						: plan.rateControlIntent === 'ultra'
+							? 'bitrate-fallback'
+							: 'bitrate';
+				this._log(options, 'video encoder config', config, { rateControl: selectedRateControl });
+			},
 		});
-		const encodeQueue = new VideoEncodeQueue(source, plan, VIDEO_ENCODE_DRAIN_TIMEOUT_MS);
+		output.addVideoTrack(source, { frameRate: plan.frameRate });
 
-		output.addVideoTrack(source);
+		let sourceClosed = false;
+		let outputCanceled = false;
+		const closeSource = () => {
+			if (sourceClosed) return;
+			sourceClosed = true;
+			source.close();
+		};
+		const cancelOutput = async () => {
+			if (outputCanceled) return;
+			outputCanceled = true;
+			try {
+				await output.cancel();
+			} catch {
+				// Best-effort cleanup only; the original export error is more useful.
+			}
+		};
 
 		try {
 			await withAbortableTimeout(
@@ -124,6 +93,7 @@ export class VideoRecorder {
 				options.signal,
 				VIDEO_OUTPUT_START_TIMEOUT_MS
 			);
+			this._emitProgress(onProgress, 'recording', 'probing', 0, plan.frameCount, plan, selectedRateControl);
 
 			await frameDriver.$render({
 				frameCount: plan.frameCount,
@@ -132,18 +102,33 @@ export class VideoRecorder {
 				prepareFrame: options.prepareFrame,
 				onFrame: async ({ frameIndex }) => {
 					this._throwIfAborted(options.signal);
-					encodeQueue.enqueue(frameIndex);
-					this._emitProgress(onProgress, 'recording', 'capturing', frameIndex + 1, plan.frameCount);
-					await this._drainIfNeeded(encodeQueue, onProgress, plan, frameIndex + 1, options.signal);
-					if (this._shouldYieldAfterCaptureFrame(frameIndex, plan.frameCount)) {
-						await this._yieldToBrowser(options.signal);
-					}
+					await this._awaitWithAbort(
+						source.add(frameIndex / plan.frameRate, 1 / plan.frameRate),
+						options.signal
+					);
+					this._emitProgress(
+						onProgress,
+						'recording',
+						'capturing',
+						frameIndex + 1,
+						plan.frameCount,
+						plan,
+						selectedRateControl
+					);
 				},
 			});
 
 			this._throwIfAborted(options.signal);
-			await this._drainEncodes(encodeQueue, onProgress, plan, options.signal);
-			this._emitProgress(onProgress, 'encoding', 'finalizing', plan.frameCount, plan.frameCount);
+			closeSource();
+			this._emitProgress(
+				onProgress,
+				'encoding',
+				destination.kind === 'stream' ? 'writing' : 'finalizing',
+				plan.frameCount,
+				plan.frameCount,
+				plan,
+				selectedRateControl
+			);
 			await withAbortableTimeout(
 				output.finalize(),
 				`Video output did not finalize within ${VIDEO_OUTPUT_FINALIZE_TIMEOUT_MS}ms.`,
@@ -151,151 +136,72 @@ export class VideoRecorder {
 				VIDEO_OUTPUT_FINALIZE_TIMEOUT_MS
 			);
 
-			this._emitProgress(onProgress, 'completed', 'finalizing', plan.frameCount, plan.frameCount);
-			if (!target.buffer) {
+			this._emitProgress(
+				onProgress,
+				'completed',
+				destination.kind === 'stream' ? 'writing' : 'finalizing',
+				plan.frameCount,
+				plan.frameCount,
+				plan,
+				selectedRateControl
+			);
+			if (destination.kind === 'stream') return undefined;
+			const bufferTarget = target as BufferTarget;
+			if (!bufferTarget.buffer)
 				throw new VideoExportError('VIDEO_EXPORT_FAILED', 'Video encoder finalized without producing data.');
-			}
-			return new Blob([target.buffer], { type: plan.mimeType });
+			return new Blob([bufferTarget.buffer], { type: plan.mimeType });
 		} catch (error) {
-			try {
-				await cancellableOutput.cancel();
-			} catch {
-				// Best-effort cleanup only; the original export error is more useful.
-			}
+			closeSource();
+			await cancelOutput();
 			const exportError = this._normalizeError(error);
-			onProgress?.({ state: 'error', message: exportError.message });
+			onProgress?.({ state: 'error', message: exportError.message, estimatedBytes: plan.estimatedBytes });
 			throw exportError;
 		}
 	}
 
-	private async _drainIfNeeded(
-		encodeQueue: VideoEncodeQueue,
-		onProgress: ((progress: VideoExportProgress) => void) | undefined,
-		plan: VideoEncodingPlan,
-		capturedFrameCount: number,
-		signal?: AbortSignal
-	): Promise<void> {
-		if (encodeQueue.pendingCount < MAX_PENDING_VIDEO_ENCODE_FRAMES) {
-			return;
-		}
-		await encodeQueue.drainOne(signal);
-		this._emitProgress(onProgress, 'recording', 'draining', capturedFrameCount, plan.frameCount);
-	}
-
-	private async _drainEncodes(
-		encodeQueue: VideoEncodeQueue,
-		onProgress: ((progress: VideoExportProgress) => void) | undefined,
-		plan: VideoEncodingPlan,
-		signal?: AbortSignal
-	): Promise<void> {
-		await encodeQueue.drainAll(signal, () => {
-			this._throwIfAborted(signal);
-			this._emitProgress(onProgress, 'encoding', 'draining', plan.frameCount, plan.frameCount);
-		});
-	}
-
-	private _shouldYieldAfterCaptureFrame(frameIndex: number, frameCount: number): boolean {
-		const capturedFrameCount = frameIndex + 1;
-		return capturedFrameCount < frameCount && capturedFrameCount % VIDEO_CAPTURE_YIELD_FRAME_INTERVAL === 0;
-	}
-
-	private _yieldToBrowser(signal?: AbortSignal): Promise<void> {
-		return new Promise((resolve, reject) => {
-			if (signal?.aborted) {
-				reject(createAbortError());
-				return;
-			}
-
-			let rafId: number | null = null;
-			let timeoutId: ReturnType<typeof setTimeout> | null = null;
-			let settled = false;
-
-			const cleanup = () => {
-				if (rafId !== null && typeof globalThis.cancelAnimationFrame === 'function') {
-					globalThis.cancelAnimationFrame(rafId);
-				}
-				if (timeoutId !== null) {
-					clearTimeout(timeoutId);
-				}
-				signal?.removeEventListener('abort', abort);
-			};
-			const settle = (callback: () => void) => {
-				if (settled) return;
-				settled = true;
-				cleanup();
-				callback();
-			};
-			const abort = () => settle(() => reject(createAbortError()));
-			const finish = () => settle(resolve);
-
-			signal?.addEventListener('abort', abort, { once: true });
-
-			if (typeof globalThis.requestAnimationFrame === 'function') {
-				rafId = globalThis.requestAnimationFrame(() => {
-					rafId = null;
-					timeoutId = setTimeout(finish, 0);
-				});
-				return;
-			}
-
-			timeoutId = setTimeout(finish, 0);
-		});
-	}
-
 	private async _createEncodingPlan(options: VideoGenerationOptions): Promise<VideoEncodingPlan> {
-		if (options.format === 'mp4' && options.transparent) {
-			throw new VideoExportError(
-				'VIDEO_TRANSPARENCY_UNSUPPORTED',
-				"MP4/H.264 export does not support portable alpha. Use saveVideo({ format: 'webm', transparent: true }) instead."
-			);
-		}
-
-		const width = Math.max(1, Math.round(options.width));
-		const height = Math.max(1, Math.round(options.height));
-		const bitrate = this._resolveBitrate(options.bitrate, width, height);
+		const preliminaryPlan = createVideoEncodingPlan(options);
 		const format = options.format === 'mp4' ? new Mp4OutputFormat() : new WebMOutputFormat();
 		const codecPreferences = options.format === 'mp4' ? MP4_CODEC_PREFERENCES : WEBM_CODEC_PREFERENCES;
-		const containableCodecs = format
-			.getSupportedVideoCodecs()
-			.filter((codec): codec is VideoCodec => codecPreferences.includes(codec as VideoCodec));
-		const codec = await getFirstEncodableVideoCodec(containableCodecs, {
-			width,
-			height,
-			bitrate,
-		});
+		const supportedCodecs = format.getSupportedVideoCodecs().filter((codec) => codecPreferences.includes(codec));
+		const quality = this._createQuality(preliminaryPlan);
+		let codec: MediabunnyVideoCodec | null = null;
+		for (const candidate of supportedCodecs) {
+			if (
+				await canEncodeVideo(candidate, {
+					width: preliminaryPlan.width,
+					height: preliminaryPlan.height,
+					quality,
+					latencyMode: preliminaryPlan.latencyMode,
+					hardwareAcceleration: preliminaryPlan.hardwareAcceleration,
+					contentHint: preliminaryPlan.contentHint,
+				})
+			) {
+				codec = candidate;
+				break;
+			}
+		}
 
 		if (!codec) {
 			const requested = codecPreferences.join(' or ');
 			throw new VideoExportError(
 				'VIDEO_CODEC_UNSUPPORTED',
-				`This browser cannot encode ${requested} at ${width}x${height}. Try a browser/device with native WebCodecs encoding support or reduce the export dimensions.`
+				`This browser cannot encode ${requested} at ${preliminaryPlan.width}x${preliminaryPlan.height}. Try a browser/device with native WebCodecs encoding support or reduce the export dimensions.`
 			);
 		}
+		return createVideoEncodingPlan(options, codec);
+	}
 
-		return {
-			format: options.format,
-			extension: options.format === 'mp4' ? '.mp4' : '.webm',
-			mimeType: format.mimeType,
-			codec,
-			bitrate,
-			bitrateMode: options.bitrateMode,
-			latencyMode: options.latencyMode,
-			hardwareAcceleration: options.hardwareAcceleration,
-			keyFrameInterval: options.keyFrameInterval,
-			frameRate: options.frameRate,
-			frameCount: options.frameCount,
-			width,
-			height,
-			transparent: options.transparent,
-		};
+	private _createQuality(plan: VideoEncodingPlan): Quality {
+		const descriptor = getVideoQualityDescriptor(plan);
+		if (descriptor.kind === 'named') return new Quality(descriptor.level);
+		if (descriptor.kind === 'ultra')
+			return new Quality({ bitrate: descriptor.bitrate, bitrateMode: 'variable', quantizer: 0 });
+		return new Quality({ bitrate: descriptor.bitrate, bitrateMode: descriptor.bitrateMode });
 	}
 
 	private _assertWebCodecsAvailable(): void {
-		const host = globalThis as typeof globalThis & {
-			VideoEncoder?: unknown;
-			VideoFrame?: unknown;
-		};
-
+		const host = globalThis as typeof globalThis & { VideoEncoder?: unknown; VideoFrame?: unknown };
 		if (typeof host.VideoEncoder !== 'function' || typeof host.VideoFrame !== 'function') {
 			throw new VideoExportError(
 				'VIDEO_EXPORT_UNSUPPORTED',
@@ -304,22 +210,30 @@ export class VideoRecorder {
 		}
 	}
 
-	private _resolveBitrate(bitrate: number | VideoBitratePreset, width: number, height: number): number {
-		if (typeof bitrate === 'number' && Number.isFinite(bitrate) && bitrate > 0) {
-			return Math.round(bitrate);
-		}
-
-		const preset = typeof bitrate === 'string' ? bitrate : 'medium';
-		const pixels = Math.max(1, width) * Math.max(1, height);
-		const bitsPerPixel = preset === 'high' ? 6 : preset === 'low' ? 1.5 : 3;
-
-		return Math.max(250_000, Math.round(pixels * bitsPerPixel));
+	private _awaitWithAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+		if (!signal) return promise;
+		return new Promise<T>((resolve, reject) => {
+			if (signal.aborted) {
+				reject(createAbortError());
+				return;
+			}
+			const abort = () => reject(createAbortError());
+			signal.addEventListener('abort', abort, { once: true });
+			promise.then(
+				(value) => {
+					signal.removeEventListener('abort', abort);
+					resolve(value);
+				},
+				(error) => {
+					signal.removeEventListener('abort', abort);
+					reject(error);
+				}
+			);
+		});
 	}
 
 	private _throwIfAborted(signal?: AbortSignal): void {
-		if (signal?.aborted) {
-			throw createAbortError();
-		}
+		if (signal?.aborted) throw createAbortError();
 	}
 
 	private _emitProgress(
@@ -327,7 +241,9 @@ export class VideoRecorder {
 		state: VideoExportProgress['state'],
 		phase: VideoExportProgress['phase'],
 		frameIndex: number,
-		totalFrames: number
+		totalFrames: number,
+		plan: VideoEncodingPlan,
+		rateControl?: VideoExportProgress['rateControl']
 	): void {
 		onProgress?.({
 			state,
@@ -336,13 +252,13 @@ export class VideoRecorder {
 			frame: frameIndex,
 			totalFrames,
 			progress: totalFrames > 0 ? frameIndex / totalFrames : 0,
+			rateControl,
+			estimatedBytes: plan.estimatedBytes,
 		});
 	}
 
 	private _normalizeError(error: unknown): VideoExportError {
-		if (error instanceof VideoExportError) {
-			return error;
-		}
+		if (error instanceof VideoExportError) return error;
 		return new VideoExportError(
 			'VIDEO_EXPORT_FAILED',
 			error instanceof Error ? error.message : 'Video export failed.',
@@ -351,8 +267,6 @@ export class VideoRecorder {
 	}
 
 	private _log(options: VideoGenerationOptions, ...args: unknown[]): void {
-		if (options.debugLogging) {
-			console.debug('[textmode-export]', ...args);
-		}
+		if (options.debugLogging) console.debug('[textmode-export]', ...args);
 	}
 }

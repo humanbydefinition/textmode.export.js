@@ -52,8 +52,7 @@ export interface LayerTargetProvider {
 
 function getLayerLabel(id: string, layer: TextmodeLayer): string {
 	const baseLabel = id === 'base' ? 'Base layer' : `Layer ${Number.parseInt(id.replace('layer-', ''), 10)}`;
-	const visibility = (layer as { _visible?: boolean })._visible;
-	return visibility === false ? `${baseLabel} (hidden)` : baseLabel;
+	return layer.isVisible() ? baseLabel : `${baseLabel} (hidden)`;
 }
 
 export function getLayerTargetOptions(textmodifier: Textmodifier): LayerTargetOption[] {
@@ -116,23 +115,16 @@ export function resolveLayerStackExportTargets(textmodifier: Textmodifier): Reso
 
 	return layers.map((layer) => {
 		const target = resolveLayerExportTarget(textmodifier, layer);
-		const internals = layer as {
-			_visible?: boolean;
-			_opacity?: number;
-			_blendMode?: LayerBlendMode;
-			_offsetX?: number;
-			_offsetY?: number;
-			_rotation?: number;
-		};
+		const offset = layer.offset();
 
 		return {
 			...target,
-			visible: internals._visible ?? true,
-			opacity: internals._opacity ?? 1,
-			blendMode: internals._blendMode ?? LayerBlendMode.NORMAL,
-			offsetX: internals._offsetX ?? 0,
-			offsetY: internals._offsetY ?? 0,
-			rotationZ: internals._rotation ?? 0,
+			visible: layer.isVisible(),
+			opacity: layer.opacity() ?? 1,
+			blendMode: layer.blendMode() ?? LayerBlendMode.NORMAL,
+			offsetX: offset?.x ?? 0,
+			offsetY: offset?.y ?? 0,
+			rotationZ: layer.rotateZ() ?? 0,
 		};
 	});
 }

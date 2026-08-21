@@ -19,8 +19,24 @@ export function createExportOverlay(
 	layerTargetProvider?: LayerTargetProvider
 ): OverlayController {
 	const defaultsStore = new DefaultsStore();
-	const definitions = getExportFormatDefinitions(layerTargetProvider, (format) => defaultsStore.get(format));
+	const definitions = getExportFormatDefinitions(
+		layerTargetProvider,
+		(format) => defaultsStore.get(format),
+		() => {
+			const density = textmodifier.pixelDensity?.() ?? 1;
+			return {
+				width: Math.max(1, Math.round(textmodifier.canvas.width / density)),
+				height: Math.max(1, Math.round(textmodifier.canvas.height / density)),
+			};
+		},
+		textmodifier.canvas
+	);
 	const controller = new OverlayController(textmodifier, exportAPI, defaultsStore, definitions);
-	controller.$mount();
+	try {
+		controller.$mount();
+	} catch (error) {
+		controller.$dispose();
+		throw error;
+	}
 	return controller;
 }
