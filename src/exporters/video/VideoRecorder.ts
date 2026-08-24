@@ -10,7 +10,6 @@ import {
 	type StreamTargetChunk,
 	type VideoCodec as MediabunnyVideoCodec,
 } from 'mediabunny';
-import { VIDEO_EXPORT_BUILD_METADATA } from './buildMetadata';
 import { VideoExportError, createAbortError } from './errors';
 import { createVideoEncodingPlan } from './VideoEncodingPolicy';
 import { videoFrameTiming } from './VideoFrameSchedule';
@@ -226,7 +225,6 @@ export class VideoRecorder {
 			codedWidth: plan.width,
 			codedHeight: plan.height,
 			frameRate: plan.frameRate,
-			build: VIDEO_EXPORT_BUILD_METADATA,
 		});
 	}
 

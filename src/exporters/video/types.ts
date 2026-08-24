@@ -170,12 +170,6 @@ export type VideoExportProgress = {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#framerate | VideoExportProgress.frameRate API reference}
 	 */
 	frameRate?: number;
-	/**
-	 * Build provenance for packed-artifact diagnostics.
-	 *
-	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#build | VideoExportProgress.build API reference}
-	 */
-	build?: { exporterVersion: string; mediabunnyVersion: string };
 };
 
 /**
