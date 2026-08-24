@@ -40,16 +40,17 @@ export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
 export type { JSONExportColorMode, JSONExportOptions, JSONExportTarget, TextmodeDocumentJSON } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
+export { VIDEO_EXPORT_BUILD_METADATA } from './exporters/video';
 export type {
 	VideoBitrateMode,
-	VideoBitratePreset,
-	VideoContentHint,
 	VideoExportFormat,
 	VideoExportOptions,
 	VideoExportPhase,
 	VideoExportProgress,
 	VideoHardwareAcceleration,
-	VideoLatencyMode,
+	VideoQuality,
+	VideoQualityLevel,
+	VideoSaveDestination,
 	VideoRecordingState,
 } from './exporters/video';
 export type { LayerExportOptions } from './exporters/base';

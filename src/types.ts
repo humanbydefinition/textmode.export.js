@@ -2,7 +2,7 @@ import type { ImageExportOptions } from './exporters/image';
 import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
-import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
+import type { VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
 /**
@@ -59,17 +59,8 @@ export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRat
  */
 export type VideoOverlayDefaults = Pick<
 	VideoExportOptions,
-	| 'format'
-	| 'frameCount'
-	| 'frameRate'
-	| 'bitrateMode'
-	| 'latencyMode'
-	| 'hardwareAcceleration'
-	| 'keyFrameInterval'
-	| 'transparent'
-> & {
-	bitrate?: VideoBitratePreset;
-};
+	'format' | 'frameCount' | 'frameRate' | 'quality' | 'hardwareAcceleration' | 'keyFrameInterval' | 'transparent'
+>;
 
 /**
  * Per-format default options used to seed the overlay UI inputs at mount time
@@ -510,9 +501,7 @@ export interface TextmodeExportAPI {
 	 * await t.saveVideo({ frameCount: 240, frameRate: 60, filename: 'capture' });
 	 * await t.saveVideo({
 	 *     format: 'webm',
-	 *     bitrate: 'high',
-	 *     bitrateMode: 'variable',
-	 *     latencyMode: 'quality',
+	 *     quality: 'very-high',
 	 *     keyFrameInterval: 2,
 	 *     frameCount: 240,
 	 *     filename: 'capture',

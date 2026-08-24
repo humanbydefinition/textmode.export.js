@@ -1,8 +1,7 @@
 export { VideoExportError } from './errors';
+export { VIDEO_EXPORT_BUILD_METADATA } from './buildMetadata';
 export type {
 	VideoBitrateMode,
-	VideoBitratePreset,
-	VideoContentHint,
 	VideoEncodingPlan,
 	VideoExportErrorCode,
 	VideoExportFormat,
@@ -10,7 +9,9 @@ export type {
 	VideoExportPhase,
 	VideoFrameDriverLike,
 	VideoHardwareAcceleration,
-	VideoLatencyMode,
+	VideoQuality,
+	VideoQualityLevel,
+	VideoSaveDestination,
 	VideoExportProgress,
 	VideoGenerationOptions,
 	VideoRecordingState,
