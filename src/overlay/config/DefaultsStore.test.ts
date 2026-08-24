@@ -20,7 +20,7 @@ describe('DefaultsStore', () => {
 			format: 'mp4',
 			frameCount: 480,
 			frameRate: 60,
-			bitrate: 'medium',
+			quality: 'medium',
 		});
 	});
 
