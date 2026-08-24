@@ -5,15 +5,38 @@
  *
  * ## Choose an output
  *
- * Use **canvas capture** for the exact image on screen: PNG, JPEG, WebP, GIF,
- * or video preserve compositing, filters, shaders, and post-processing. Use
- * **layer data export** when the artwork should stay editable or machine
- * readable: TXT, SVG, and JSON read from the selected layer, while JSON can
- * also describe the full layer stack.
+ * Use **canvas capture** for the rendered image on screen: PNG, JPEG, WebP,
+ * GIF, and video preserve compositing, filters, shaders, and post-processing.
+ * Use **layer data export** when the artwork should stay editable or machine
+ * readable: TXT and SVG read from the selected layer, while JSON can describe
+ * either the selected layer or the full layer stack.
  *
  * Start with {@link ExportPlugin}, then call the helpers added to your sketch
  * or use the built-in export overlay. For recipes and format trade-offs, read
  * the [Exporting guide](/docs/exporting).
+ *
+ * @categoryDescription Workflow
+ * Install the plugin and use the export helpers added to a textmode.js sketch.
+ *
+ * @categoryDescription Canvas capture
+ * Export a still image from the rendered canvas.
+ *
+ * @categoryDescription GIF export
+ * Capture deterministic frames and encode an animated GIF.
+ *
+ * @categoryDescription Video export
+ * Capture deterministic frames and encode MP4 or WebM video with Mediabunny.
+ *
+ * @categoryDescription Layer data export
+ * Export selected-layer text or vector data as TXT or SVG.
+ *
+ * @categoryDescription JSON document data
+ * Export selected-layer or full-stack document data as JSON.
+ *
+ * @categoryDescription Overlay
+ * Configure and control the built-in export overlay.
+ *
+ * @showCategories
  */
 
 import type { TextmodePlugin, TextmodePluginContext } from 'textmode.js';

@@ -498,13 +498,29 @@ export interface TextmodeExportAPI {
 	 *
 	 * @example
 	 * ```ts
-	 * await t.saveVideo({ frameCount: 240, frameRate: 60, filename: 'capture' });
+	 * // Mediabunny's qualitative quality levels produce content-dependent file sizes.
 	 * await t.saveVideo({
 	 *     format: 'webm',
 	 *     quality: 'very-high',
-	 *     keyFrameInterval: 2,
 	 *     frameCount: 240,
-	 *     filename: 'capture',
+	 *     frameRate: 60,
+	 *     filename: 'high-quality-capture',
+	 * });
+	 *
+	 * // Request a target bitrate and rate-control mode.
+	 * await t.saveVideo({
+	 *     quality: { bitrate: 8_000_000, bitrateMode: 'variable' },
+	 *     frameCount: 240,
+	 *     frameRate: 60,
+	 *     filename: 'target-bitrate-capture',
+	 * });
+	 *
+	 * // Stream directly to a user-selected file when the browser supports it.
+	 * await t.saveVideo({
+	 *     destination: 'file-system',
+	 *     quality: 'high',
+	 *     frameCount: 240,
+	 *     frameRate: 60,
 	 * });
 	 * ```
 	 *
@@ -513,7 +529,9 @@ export interface TextmodeExportAPI {
 	saveVideo(options?: VideoExportOptions): Promise<void>;
 
 	/**
-	 * Generates a video blob without downloading it.
+	 * Generates an in-memory video blob without downloading it.
+	 *
+	 * `destination` is only used by {@link saveVideo}; this method always buffers and returns a `Blob`.
 	 *
 	 * @example
 	 * ```ts

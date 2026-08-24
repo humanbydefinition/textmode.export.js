@@ -1,20 +1,22 @@
 import type { PrepareExportFrame } from '../base';
 
 /**
- * Lifecycle state reported while a video export is being prepared, recorded, encoded, or completed.
+ * High-level lifecycle state reported while a video export is captured, encoded, or completed.
  *
- * @category Animation export
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoRecordingState | VideoRecordingState API reference}
  */
 export type VideoRecordingState = 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 
 /**
- * More granular phase information for progress UIs that need to distinguish setup, rendering, and finalization.
+ * Detailed phase information for progress UIs that distinguish capability probing, frame capture, and output.
  *
- * `rendering` is retained for 1.5.x compatibility. Current deterministic video capture emits `capturing`.
+ * Current exports emit `probing`, `capturing`, and either `writing` for streamed file-system output or `finalizing`
+ * for buffered output. `rendering`, `encoding`, and `draining` remain available for compatibility with older progress
+ * producers.
  *
- * @category Animation export
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportPhase | VideoExportPhase API reference}
  */
@@ -24,35 +26,63 @@ export type VideoExportPhase =
 export type VideoCodec = 'vp8' | 'vp9' | 'avc' | (string & {});
 
 /**
- * Subjective video quality level passed directly to Mediabunny.
+ * Qualitative video quality level matching Mediabunny's five native levels.
  *
- * @category Animation export
+ * Higher levels generally preserve more detail and produce larger, content-dependent files. Mediabunny may use
+ * quantizer-based encoding or a codec-adjusted bitrate, depending on codec and browser support.
+ *
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoQualityLevel | VideoQualityLevel API reference}
  */
 export type VideoQualityLevel = 'very-low' | 'low' | 'medium' | 'high' | 'very-high';
 
 /**
- * Video compression policy. Named levels map one-to-one to Mediabunny's
- * subjective quality levels. The object form requests an exact bitrate.
+ * Video compression policy passed to Mediabunny.
  *
- * @category Animation export
+ * Use a named {@link VideoQualityLevel} for content-dependent qualitative encoding. Use the object form to request a
+ * positive target bitrate in bits per second and, optionally, constant or variable allocation. When `bitrateMode` is
+ * omitted, Mediabunny defaults bitrate-based encoding to `'variable'`. A target bitrate guides the encoder but does
+ * not guarantee an exact final file size.
+ *
+ * @example Named qualitative quality
+ * ```ts
+ * await t.saveVideo({ quality: 'very-high' });
+ * ```
+ *
+ * @example Target bitrate with constant allocation
+ * ```ts
+ * await t.saveVideo({ quality: { bitrate: 8_000_000, bitrateMode: 'constant' } });
+ * ```
+ *
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoQuality | VideoQuality API reference}
  */
 export type VideoQuality = VideoQualityLevel | { bitrate: number; bitrateMode?: VideoBitrateMode };
 
 /**
- * Destination policy used by `saveVideo`.
+ * Destination policy used by `saveVideo()`.
+ *
+ * - `'download'` is the default. The complete video is buffered in memory before a browser download begins.
+ * - `'file-system'` opens the browser's save picker and streams encoded chunks directly to the selected file. It
+ *   requires the File System Access API and rejects with `VIDEO_EXPORT_UNSUPPORTED` when that API is unavailable.
+ *
+ * This setting does not affect `toVideoBlob()`, which always returns an in-memory `Blob`.
+ *
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoSaveDestination | VideoSaveDestination API reference}
  */
 export type VideoSaveDestination = 'download' | 'file-system';
 
 /**
- * Video container format written by `saveVideo`.
+ * Video container format produced by `saveVideo()` and `toVideoBlob()`.
  *
- * @category Animation export
+ * MP4 uses AVC/H.264 and requires even coded dimensions. WebM selects VP9 when available and falls back to VP8; it
+ * is the only format that can be requested with transparency.
+ *
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportFormat | VideoExportFormat API reference}
  */
@@ -66,7 +96,9 @@ export type VideoExportFormat = 'webm' | 'mp4';
  * - `'constant'`: asks the encoder to keep the bitrate steadier throughout the export. This can make file size
  *   more predictable, but may waste bits on simple frames or reduce detail on complex frames.
  *
- * @category Animation export
+ * If omitted for an explicit target bitrate, Mediabunny uses `'variable'`.
+ *
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoBitrateMode | VideoBitrateMode API reference}
  */
@@ -81,7 +113,7 @@ export type VideoBitrateMode = 'variable' | 'constant';
  *   availability and output characteristics vary by device.
  * - `'prefer-software'`: prefer CPU encoding, often more consistent across machines, but usually slower.
  *
- * @category Animation export
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoHardwareAcceleration | VideoHardwareAcceleration API reference}
  */
@@ -97,27 +129,27 @@ export type VideoExportErrorCode =
 	| 'VIDEO_DIMENSIONS_UNSUPPORTED';
 
 /**
- * Progress information emitted during the video export process.
+ * Progress information emitted while a deterministic video is probed, captured, and written.
  *
- * @category Animation export
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress | VideoExportProgress API reference}
  */
 export type VideoExportProgress = {
 	/**
-	 * Current state of the recording process.
+	 * Current high-level export state.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#state | VideoExportProgress.state API reference}
 	 */
 	state: VideoRecordingState;
 	/**
-	 * Current export phase for newer progress UIs.
+	 * Current detailed phase. See {@link VideoExportPhase} for current and compatibility-only values.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#phase | VideoExportProgress.phase API reference}
 	 */
 	phase?: VideoExportPhase;
 	/**
-	 * Number of frames that have been recorded so far.
+	 * Number of frames captured so far.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#frameindex | VideoExportProgress.frameIndex API reference}
 	 */
@@ -135,7 +167,9 @@ export type VideoExportProgress = {
 	 */
 	totalFrames?: number;
 	/**
-	 * Export completion ratio between `0` and `1`.
+	 * Normalized frame-capture completion ratio between `0` and `1`.
+	 *
+	 * Final writing or muxing may still be in progress when this value reaches `1`.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#progress | VideoExportProgress.progress API reference}
 	 */
@@ -147,19 +181,19 @@ export type VideoExportProgress = {
 	 */
 	message?: string;
 	/**
-	 * Effective codec family selected after probing.
+	 * Effective codec family selected after capability probing (`avc`, `vp9`, or `vp8`).
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#codec | VideoExportProgress.codec API reference}
 	 */
 	codec?: VideoCodec;
 	/**
-	 * Effective coded width.
+	 * Effective coded width in pixels.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#codedwidth | VideoExportProgress.codedWidth API reference}
 	 */
 	codedWidth?: number;
 	/**
-	 * Effective coded height.
+	 * Effective coded height in pixels.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportProgress#codedheight | VideoExportProgress.codedHeight API reference}
 	 */
@@ -173,9 +207,9 @@ export type VideoExportProgress = {
 };
 
 /**
- * Options for exporting the textmode content to video format.
+ * Options for capturing deterministic textmode frames as MP4 or WebM video.
  *
- * @category Animation export
+ * @category Video export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions | VideoExportOptions API reference}
  */
@@ -207,14 +241,17 @@ export type VideoExportOptions = {
 	/**
 	 * Video quality policy. Defaults to `'medium'`.
 	 *
-	 * Named levels are passed directly to Mediabunny and produce content-dependent file sizes. Use the object form to
-	 * request an exact bitrate and optional bitrate mode.
+	 * Named levels map one-to-one to Mediabunny's qualitative levels and produce content-dependent file sizes. Use the
+	 * object form to request a positive target bitrate in bits per second and an optional bitrate mode.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#quality | VideoExportOptions.quality API reference}
 	 */
 	quality?: VideoQuality;
 	/**
-	 * Save destination. File-system output streams directly to a user-selected file.
+	 * Save destination used by `saveVideo()`. Defaults to `'download'`.
+	 *
+	 * `'file-system'` opens a save picker and streams directly to the selected file when the File System Access API is
+	 * available. `toVideoBlob()` always returns an in-memory blob and does not use this setting.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#destination | VideoExportOptions.destination API reference}
 	 */
@@ -257,7 +294,7 @@ export type VideoExportOptions = {
 	 */
 	prepareFrame?: PrepareExportFrame;
 	/**
-	 * When true, attempts to preserve alpha data in WebM recordings. MP4 exports reject this option.
+	 * When `true`, attempts to preserve alpha data in WebM recordings. MP4 exports reject this option.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/VideoExportOptions#transparent | VideoExportOptions.transparent API reference}
 	 */
