@@ -109,36 +109,41 @@ describe('getExportFormatDefinitions', () => {
 
 		expect(blade.getOptions()).toMatchObject({
 			format: 'mp4',
-			bitrate: 'medium',
-			bitrateMode: 'variable',
-			latencyMode: 'quality',
+			quality: 'medium',
 			hardwareAcceleration: 'no-preference',
 			keyFrameInterval: 2,
 		});
 		expect((blade.getOptions() as { transparent?: boolean }).transparent).toBeUndefined();
 
 		const formatSelect = container.querySelector<HTMLSelectElement>('#textmode-export-video-format');
-		const bitrateSelect = container.querySelector<HTMLSelectElement>('#textmode-export-video-bitrate');
+		const qualitySelect = container.querySelector<HTMLSelectElement>('#textmode-export-video-quality');
 		const transparentCheckbox = container.querySelector<HTMLInputElement>('#textmode-export-video-transparent');
 
 		expect(formatSelect).not.toBeNull();
-		expect(bitrateSelect).not.toBeNull();
+		expect(qualitySelect).not.toBeNull();
 		expect(transparentCheckbox).not.toBeNull();
 
-		if (!formatSelect || !bitrateSelect || !transparentCheckbox) {
+		if (!formatSelect || !qualitySelect || !transparentCheckbox) {
 			throw new Error('Expected video controls');
 		}
+		expect(Array.from(qualitySelect.options, (option) => option.value)).toEqual([
+			'very-low',
+			'low',
+			'medium',
+			'high',
+			'very-high',
+		]);
 
 		expect(transparentCheckbox.disabled).toBe(true);
 
 		formatSelect.value = 'webm';
 		formatSelect.dispatchEvent(new Event('change'));
-		bitrateSelect.value = 'high';
+		qualitySelect.value = 'high';
 		transparentCheckbox.checked = true;
 
 		expect(blade.getOptions()).toMatchObject({
 			format: 'webm',
-			bitrate: 'high',
+			quality: 'high',
 			transparent: true,
 		});
 		expect(transparentCheckbox.disabled).toBe(false);

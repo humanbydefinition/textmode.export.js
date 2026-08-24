@@ -3,21 +3,21 @@ import type { PrepareExportFrame } from '../base';
 export type GIFRecordingState = 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 
 /**
- * Progress information emitted during the GIF export process.
+ * Progress information emitted while deterministic frames are captured and encoded as an animated GIF.
  *
- * @category Animation export
+ * @category GIF export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportProgress | GIFExportProgress API reference}
  */
 export type GIFExportProgress = {
 	/**
-	 * Current state of the recording process.
+	 * Current GIF capture or encoding state.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportProgress#state | GIFExportProgress.state API reference}
 	 */
 	state: 'idle' | 'recording' | 'encoding' | 'completed' | 'error';
 	/**
-	 * Number of frames that have been recorded so far.
+	 * Number of frames captured so far.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportProgress#frameindex | GIFExportProgress.frameIndex API reference}
 	 */
@@ -37,9 +37,9 @@ export type GIFExportProgress = {
 };
 
 /**
- * Options for exporting the textmode content to GIF format.
+ * Options for capturing deterministic textmode frames as an animated GIF.
  *
- * @category Animation export
+ * @category GIF export
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/GIFExportOptions | GIFExportOptions API reference}
  */

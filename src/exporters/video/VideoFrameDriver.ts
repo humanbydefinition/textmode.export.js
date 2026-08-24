@@ -2,6 +2,7 @@ import type { Textmodifier } from 'textmode.js';
 import { createAbortError } from './errors';
 import type { VideoRenderFrameOptions } from './types';
 import { withAbortableTimeout } from './withAbortableTimeout';
+import { videoFrameTiming } from './VideoFrameSchedule';
 
 const FRAME_RENDER_TIMEOUT_MS = 30_000;
 
@@ -75,7 +76,7 @@ export class VideoFrameDriver {
 	public async $render(options: VideoRenderFrameOptions): Promise<void> {
 		const textmodifier = this._textmodifier;
 		const frameCount = Math.max(1, Math.round(options.frameCount));
-		const frameRate = Math.max(1, Math.round(options.frameRate));
+		const frameRate = Math.max(Number.EPSILON, Math.abs(options.frameRate));
 		const deltaTime = 1000 / frameRate;
 		const originalLooping = textmodifier.isLooping();
 		const originalFrameCount = textmodifier.frameCount;
@@ -99,12 +100,16 @@ export class VideoFrameDriver {
 
 			for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
 				this._throwIfAborted(options.signal);
+				const timing = videoFrameTiming(frameIndex, frameRate);
 				this._syntheticFrameCount = originalFrameCount + frameIndex + 1;
-				this._syntheticMillis = (frameIndex * 1000) / frameRate;
+				this._syntheticMillis = timing.startSeconds * 1000;
 				await options.prepareFrame?.({
 					frameIndex,
 					frameCount,
-					timeSeconds: frameIndex / frameRate,
+					startSeconds: timing.startSeconds,
+					centerSeconds: timing.centerSeconds,
+					endSeconds: timing.endSeconds,
+					timeSeconds: timing.startSeconds,
 					frameRate,
 					signal: options.signal,
 				});

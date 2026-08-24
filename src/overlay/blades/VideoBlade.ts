@@ -1,12 +1,10 @@
 import type {
-	VideoBitrateMode,
-	VideoBitratePreset,
 	VideoExportFormat,
 	VideoExportOptions,
 	VideoExportProgress,
 	VideoGenerationOptions,
 	VideoHardwareAcceleration,
-	VideoLatencyMode,
+	VideoQualityLevel,
 	VideoRecordingState,
 } from '../../exporters/video';
 import { createVideoEncodingPlan } from '../../exporters/video/VideoEncodingPolicy';
@@ -37,14 +35,15 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		})
 	);
 
-	private bitrateSelect = this._manageComponent(
-		new SelectInput<VideoBitratePreset>({
-			id: 'textmode-export-video-bitrate',
+	private qualitySelect = this._manageComponent(
+		new SelectInput<VideoQualityLevel>({
+			id: 'textmode-export-video-quality',
 			options: [
+				{ value: 'very-low', label: 'very low' },
 				{ value: 'low', label: 'low' },
 				{ value: 'medium', label: 'medium' },
 				{ value: 'high', label: 'high' },
-				{ value: 'ultra', label: 'ultra (near-lossless)' },
+				{ value: 'very-high', label: 'very high' },
 			],
 			defaultValue: 'medium',
 		})
@@ -62,28 +61,6 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		new NumberInput({
 			defaultValue: '480',
 			attributes: { min: String(FRAME_COUNT_MIN), max: String(FRAME_COUNT_MAX), step: '1' },
-		})
-	);
-
-	private bitrateModeSelect = this._manageComponent(
-		new SelectInput<VideoBitrateMode>({
-			id: 'textmode-export-video-bitrate-mode',
-			options: [
-				{ value: 'variable', label: 'variable' },
-				{ value: 'constant', label: 'constant' },
-			],
-			defaultValue: 'variable',
-		})
-	);
-
-	private latencyModeSelect = this._manageComponent(
-		new SelectInput<VideoLatencyMode>({
-			id: 'textmode-export-video-latency-mode',
-			options: [
-				{ value: 'quality', label: 'quality' },
-				{ value: 'realtime', label: 'realtime' },
-			],
-			defaultValue: 'quality',
 		})
 	);
 
@@ -156,13 +133,13 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		formatField.mount(formatRow.root);
 		this.formatSelect.mount(formatField.root);
 
-		const bitrateField = new Field({
-			label: 'bitrate preset',
-			labelFor: 'textmode-export-video-bitrate',
+		const qualityField = new Field({
+			label: 'quality',
+			labelFor: 'textmode-export-video-quality',
 			variant: 'compact',
 		});
-		bitrateField.mount(formatRow.root);
-		this.bitrateSelect.mount(bitrateField.root);
+		qualityField.mount(formatRow.root);
+		this.qualitySelect.mount(qualityField.root);
 
 		const timingRow = new Container('row');
 		timingRow.mount(container);
@@ -184,25 +161,6 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		frameRateField.mount(timingRow.root);
 		this.frameRateInput.mount(frameRateField.root);
 		this.frameRateInput.inputElement.id = 'textmode-export-video-frame-rate';
-
-		const encoderRow = new Container('row');
-		encoderRow.mount(container);
-
-		const bitrateModeField = new Field({
-			label: 'bitrate mode',
-			labelFor: 'textmode-export-video-bitrate-mode',
-			variant: 'compact',
-		});
-		bitrateModeField.mount(encoderRow.root);
-		this.bitrateModeSelect.mount(bitrateModeField.root);
-
-		const latencyModeField = new Field({
-			label: 'encoder mode',
-			labelFor: 'textmode-export-video-latency-mode',
-			variant: 'compact',
-		});
-		latencyModeField.mount(encoderRow.root);
-		this.latencyModeSelect.mount(latencyModeField.root);
 
 		const hardwareRow = new Container('row');
 		hardwareRow.mount(container);
@@ -227,7 +185,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		this.transparencyInput.mount(container);
 		this.formatSelect.selectElement.addEventListener('change', this.handleFormatChange);
 		this.syncTransparencyAvailability();
-		this.bitrateSelect.selectElement.addEventListener('change', this.handleBitrateChange);
+		this.qualitySelect.selectElement.addEventListener('change', this.handleQualityChange);
 		this.frameCountInput.inputElement.addEventListener('input', this.handleEstimateChange);
 		this.frameRateInput.inputElement.addEventListener('input', this.handleEstimateChange);
 		this.formatSelect.selectElement.addEventListener('change', this.handleEstimateChange);
@@ -252,9 +210,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 
 		const options: VideoExportOptions = {
 			format,
-			bitrate: this.bitrateSelect.value,
-			bitrateMode: this.bitrateModeSelect.value,
-			latencyMode: this.latencyModeSelect.value,
+			quality: this.qualitySelect.value,
 			hardwareAcceleration: this.hardwareAccelerationSelect.value,
 			keyFrameInterval: Number.isFinite(keyFrameInterval) ? keyFrameInterval : (defaults.keyFrameInterval ?? 2),
 			frameCount: Number.isFinite(frameCount) ? frameCount : (defaults.frameCount ?? 480),
@@ -301,11 +257,9 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		this.recordingState = state;
 		const disabled = state === 'recording' || state === 'encoding';
 		this.formatSelect.selectElement.disabled = disabled;
-		this.bitrateSelect.selectElement.disabled = disabled;
+		this.qualitySelect.selectElement.disabled = disabled;
 		this.frameCountInput.inputElement.disabled = disabled;
 		this.frameRateInput.inputElement.disabled = disabled;
-		this.bitrateModeSelect.selectElement.disabled = disabled;
-		this.latencyModeSelect.selectElement.disabled = disabled;
 		this.hardwareAccelerationSelect.selectElement.disabled = disabled;
 		this.keyFrameIntervalInput.inputElement.disabled = disabled;
 		this.transparencyInput.inputElement.disabled = disabled || this.formatSelect.value !== 'webm';
@@ -364,11 +318,9 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		const defaults = this._config.defaultOptions;
 
 		this.formatSelect.value = defaults.format ?? 'mp4';
-		this.bitrateSelect.value = this.resolveBitratePreset(defaults.bitrate);
+		this.qualitySelect.value = this.resolveQuality(defaults.quality);
 		this.frameCountInput.value = String(defaults.frameCount ?? 480);
 		this.frameRateInput.value = String(defaults.frameRate ?? 60);
-		this.bitrateModeSelect.value = defaults.bitrateMode ?? 'variable';
-		this.latencyModeSelect.value = defaults.latencyMode ?? 'quality';
 		this.hardwareAccelerationSelect.value = defaults.hardwareAcceleration ?? 'no-preference';
 		this.keyFrameIntervalInput.value = String(defaults.keyFrameInterval ?? 2);
 		this.transparencyInput.checked = Boolean(defaults.transparent);
@@ -379,11 +331,17 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		this.syncTransparencyAvailability();
 	}
 
-	private resolveBitratePreset(value: VideoExportOptions['bitrate']): VideoBitratePreset {
-		return value === 'low' || value === 'medium' || value === 'high' || value === 'ultra' ? value : 'medium';
+	private resolveQuality(value: VideoExportOptions['quality']): VideoQualityLevel {
+		return value === 'very-low' ||
+			value === 'low' ||
+			value === 'medium' ||
+			value === 'high' ||
+			value === 'very-high'
+			? value
+			: 'medium';
 	}
 
-	private readonly handleBitrateChange = () => {
+	private readonly handleQualityChange = () => {
 		if (!this.isRecording()) this.syncReadyStatus();
 		this.syncOutputEstimate();
 	};
@@ -391,11 +349,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 	private readonly handleEstimateChange = () => this.syncOutputEstimate();
 
 	private syncReadyStatus(): void {
-		if (this.bitrateSelect.value === 'ultra') {
-			this.status.setMessage('near-lossless; very large files and slower exports', 'alert');
-		} else {
-			this.status.setMessage('ready to record', 'neutral');
-		}
+		this.status.setMessage('constant quality; file size depends on content', 'neutral');
 	}
 
 	private readonly handleFormatChange = () => {
@@ -416,10 +370,7 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 			format: this.formatSelect.value,
 			frameCount: Math.max(1, Math.round(frameCount)),
 			frameRate,
-			bitrate: this.bitrateSelect.value,
-			bitrateMode: this.bitrateModeSelect.value,
-			contentHint: 'text',
-			latencyMode: this.latencyModeSelect.value,
+			quality: this.qualitySelect.value,
 			hardwareAcceleration: this.hardwareAccelerationSelect.value,
 			keyFrameInterval: Number.parseFloat(this.keyFrameIntervalInput.value) || 2,
 			pixelDensity: 1,
@@ -431,8 +382,8 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		try {
 			const plan = createVideoEncodingPlan(options);
 			this.estimate.setMessage(
-				`${plan.width}×${plan.height} · ${(plan.frameCount / plan.frameRate).toFixed(1)}s · ~${this.formatBytes(plan.estimatedBytes)}`,
-				this.bitrateSelect.value === 'ultra' ? 'alert' : 'neutral'
+				`${plan.width}×${plan.height} · ${(plan.frameCount / plan.frameRate).toFixed(1)}s · content-dependent size`,
+				'neutral'
 			);
 		} catch {
 			this.estimate.setMessage(
@@ -442,15 +393,10 @@ export class VideoBlade extends Blade<VideoExportOptions> {
 		}
 	}
 
-	private formatBytes(bytes: number): string {
-		if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
-		return `${Math.max(1, Math.round(bytes / 1_000_000))} MB`;
-	}
-
 	protected override _onUnmount(): void {
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = undefined;
-		this.bitrateSelect.selectElement.removeEventListener('change', this.handleBitrateChange);
+		this.qualitySelect.selectElement.removeEventListener('change', this.handleQualityChange);
 		this.formatSelect.selectElement.removeEventListener('change', this.handleFormatChange);
 		this.formatSelect.selectElement.removeEventListener('change', this.handleEstimateChange);
 		this.frameCountInput.inputElement.removeEventListener('input', this.handleEstimateChange);

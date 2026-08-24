@@ -58,6 +58,7 @@ describe('VideoExporter', () => {
 		const options = recordSpy.mock.calls[0]?.[0] as VideoGenerationOptions;
 
 		expect(options.format).toBe('mp4');
+		expect(options.quality).toBe('medium');
 		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture.mp4');
 	});
 
@@ -65,8 +66,7 @@ describe('VideoExporter', () => {
 		await new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
 			format: 'webm',
 			filename: 'capture',
-			bitrateMode: 'constant',
-			latencyMode: 'realtime',
+			quality: { bitrate: 4_000_000, bitrateMode: 'constant' },
 			hardwareAcceleration: 'prefer-software',
 			keyFrameInterval: 1,
 		});
@@ -74,8 +74,7 @@ describe('VideoExporter', () => {
 
 		expect(options).toMatchObject({
 			format: 'webm',
-			bitrateMode: 'constant',
-			latencyMode: 'realtime',
+			quality: { bitrate: 4_000_000, bitrateMode: 'constant' },
 			hardwareAcceleration: 'prefer-software',
 			keyFrameInterval: 1,
 		});
@@ -92,20 +91,61 @@ describe('VideoExporter', () => {
 		});
 
 		expect(showSaveFilePicker).not.toHaveBeenCalled();
-		expect(recordSpy.mock.calls[0]?.[3]).toMatchObject({ kind: 'blob', allowLargeInMemory: false });
+		expect(recordSpy.mock.calls[0]?.[3]).toEqual({ kind: 'blob' });
 		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'streamed.webm');
 	});
 
-	it('rejects an unsafe Blob fallback before rendering', async () => {
+	it('preserves a positive fractional output frame rate', async () => {
+		await new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
+			frameRate: 30000 / 1001,
+		});
+
+		expect(recordSpy.mock.calls[0]?.[0].frameRate).toBe(30000 / 1001);
+	});
+
+	it('streams through a positioned writable when file-system output is requested', async () => {
+		const file = { write: vi.fn().mockResolvedValue(undefined), close: vi.fn(), abort: vi.fn() };
+		const showSaveFilePicker = vi.fn().mockResolvedValue({ createWritable: vi.fn().mockResolvedValue(file) });
+		Object.defineProperty(globalThis, 'showSaveFilePicker', { value: showSaveFilePicker, configurable: true });
+		await new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
+			format: 'webm',
+			filename: 'large-export',
+			destination: 'file-system',
+		});
+
+		expect(showSaveFilePicker).toHaveBeenCalledWith(
+			expect.objectContaining({ suggestedName: 'large-export.webm' })
+		);
+		expect(recordSpy.mock.calls[0]?.[3]).toMatchObject({ kind: 'stream', writable: expect.any(WritableStream) });
+		expect(downloadSpy).not.toHaveBeenCalled();
+	});
+
+	it('aborts a selected file when encoder probing fails before the stream starts', async () => {
+		const failure = new Error('encoder unavailable');
+		recordSpy.mockRestore();
+		recordSpy = vi
+			.spyOn(VideoRecorder.prototype, '$record')
+			.mockRejectedValue(failure) as unknown as typeof recordSpy;
+		const file = { write: vi.fn(), close: vi.fn(), abort: vi.fn().mockResolvedValue(undefined) };
+		Object.defineProperty(globalThis, 'showSaveFilePicker', {
+			value: vi.fn().mockResolvedValue({ createWritable: vi.fn().mockResolvedValue(file) }),
+			configurable: true,
+		});
+
+		await expect(
+			new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({ destination: 'file-system' })
+		).rejects.toBe(failure);
+
+		expect(file.abort).toHaveBeenCalledWith(failure);
+		expect(file.close).not.toHaveBeenCalled();
+	});
+
+	it('rejects removed custom quality levels before rendering', async () => {
 		await expect(
 			new VideoExporter(createTextmodifier(), registerPostDrawHook).$saveVideo({
-				format: 'webm',
-				frameCount: 3_600,
-				frameRate: 60,
-				bitrate: 'ultra',
-				pixelDensity: 4,
-			})
-		).rejects.toMatchObject({ code: 'VIDEO_OUTPUT_TOO_LARGE' });
+				quality: 'ultra',
+			} as never)
+		).rejects.toThrow('Video quality');
 		expect(recordSpy.mock.calls).toHaveLength(0);
 	});
 });
