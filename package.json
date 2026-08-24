@@ -64,7 +64,7 @@
 	},
 	"dependencies": {
 		"gifenc": "^1.0.1",
-		"mediabunny": "^1.52.3"
+		"mediabunny": "1.55.2"
 	},
 	"devDependencies": {
 		"@textmode/build": "^0.1.0",
