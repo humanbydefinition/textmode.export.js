@@ -335,14 +335,20 @@ describe('JSONExporter', () => {
 
 	it('applies color mode and metadata options to all layer entries', () => {
 		const exporter = new JSONExporter();
+		const createdAt = new Date('2026-08-28T12:00:00.000Z');
 		const document = expectLayerStackDocument(
-			exporter.$generateJSONData(createTextmodifierMock(), {
-				target: 'all',
-				colorMode: 'rgba',
-			})
+			exporter.$generateJSONData(
+				createTextmodifierMock(),
+				{
+					target: 'all',
+					colorMode: 'rgba',
+				},
+				createdAt
+			)
 		);
 
 		expect(document.metadata?.generator.name).toBe('textmode.export.js');
+		expect(document.metadata?.createdAt).toBe(createdAt.toISOString());
 
 		const userLayerCells = document.layers[1].cells;
 		expect(userLayerCells.encoding).toBe('object-rows-v1');

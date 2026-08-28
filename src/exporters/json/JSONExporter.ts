@@ -63,10 +63,10 @@ export class JSONExporter {
 		};
 	}
 
-	private _createMetadata(generationOptions: JSONGenerationOptions): JSONExportMetadata | undefined {
+	private _createMetadata(generationOptions: JSONGenerationOptions, createdAt: Date): JSONExportMetadata | undefined {
 		return generationOptions.includeMetadata
 			? {
-					createdAt: new Date().toISOString(),
+					createdAt: createdAt.toISOString(),
 					generator: {
 						name: 'textmode.export.js',
 						version: packageJson.version,
@@ -174,9 +174,13 @@ export class JSONExporter {
 	 * @param options Export options
 	 * @returns Structured JSON document for the selected layer or layer stack
 	 */
-	public $generateJSONData(textmodifier: Textmodifier, options: JSONExportOptions = {}): TextmodeDocumentJSON {
+	public $generateJSONData(
+		textmodifier: Textmodifier,
+		options: JSONExportOptions = {},
+		createdAt: Date = new Date()
+	): TextmodeDocumentJSON {
 		const generationOptions = this._applyDefaultOptions(options);
-		const metadata = this._createMetadata(generationOptions);
+		const metadata = this._createMetadata(generationOptions, createdAt);
 
 		if (generationOptions.target === 'all') {
 			const targets = resolveLayerStackExportTargets(textmodifier);
@@ -221,9 +225,13 @@ export class JSONExporter {
 	 * @param options Export options
 	 * @returns Serialized JSON string
 	 */
-	public $generateJSONString(textmodifier: Textmodifier, options: JSONExportOptions = {}): string {
+	public $generateJSONString(
+		textmodifier: Textmodifier,
+		options: JSONExportOptions = {},
+		createdAt: Date = new Date()
+	): string {
 		const generationOptions = this._applyDefaultOptions(options);
-		const data = this.$generateJSONData(textmodifier, generationOptions);
+		const data = this.$generateJSONData(textmodifier, generationOptions, createdAt);
 		const indentation =
 			typeof generationOptions.pretty === 'number' ? generationOptions.pretty : generationOptions.pretty ? 2 : 0;
 		return JSON.stringify(data, null, indentation);
