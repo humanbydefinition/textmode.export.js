@@ -1,10 +1,16 @@
 import type { StreamTargetChunk } from 'mediabunny';
 import type { Textmodifier } from 'textmode.js';
-import { FileHandler } from '../base';
+import {
+	FileHandler,
+	FilenamePolicy,
+	FrameSequenceDriver,
+	FrameSequenceError,
+	isFrameSequenceAbortError,
+	type PostDrawSubscription,
+} from '../base';
 import { createVideoEncodingPlan } from './VideoEncodingPolicy';
-import { VideoFrameDriver, type PostDrawSubscription } from './VideoFrameDriver';
 import { VideoRecorder, type VideoOutputDestination } from './VideoRecorder';
-import { VideoExportError } from './errors';
+import { normalizeVideoExportError, VideoExportError } from './errors';
 import type {
 	VideoBitrateMode,
 	VideoExportFormat,
@@ -42,7 +48,7 @@ export class VideoExporter {
 
 		if (options.destination === 'file-system') {
 			const destination = await this._createFileSystemDestination(
-				this._withExtension(options.filename, `.${format}`) ?? `textmode-export.${format}`,
+				new FilenamePolicy().$resolve(options.filename, `.${format}`),
 				plan.mimeType
 			);
 			try {
@@ -61,7 +67,7 @@ export class VideoExporter {
 		const blob = await this._record(generationOptions, { kind: 'blob' }, options.onProgress);
 		if (!blob)
 			throw new VideoExportError('VIDEO_EXPORT_FAILED', 'Video export did not produce a downloadable file.');
-		new FileHandler().$downloadFile(blob, this._withExtension(options.filename, `.${format}`));
+		new FileHandler().$downloadFile(blob, options.filename, `.${format}`);
 	}
 
 	/** Generates a deterministic video without initiating a download. */
@@ -79,12 +85,10 @@ export class VideoExporter {
 		destination: VideoOutputDestination,
 		onProgress?: VideoExportOptions['onProgress']
 	): Promise<Blob | undefined> {
-		const frameDriver = new VideoFrameDriver(
-			this._textmodifier,
-			this._registerPostDrawHook,
-			generationOptions.width,
-			generationOptions.height
-		);
+		const frameDriver = new FrameSequenceDriver(this._textmodifier, this._registerPostDrawHook, {
+			width: generationOptions.width,
+			height: generationOptions.height,
+		});
 		try {
 			return await this._recorder.$record(generationOptions, frameDriver, onProgress, destination);
 		} catch (error) {
@@ -93,6 +97,9 @@ export class VideoExporter {
 				message:
 					error instanceof Error ? error.message : `${generationOptions.format.toUpperCase()} export failed`,
 			});
+			if (error instanceof FrameSequenceError || isFrameSequenceAbortError(error)) {
+				throw normalizeVideoExportError(error);
+			}
 			throw error;
 		}
 	}
@@ -167,13 +174,6 @@ export class VideoExporter {
 		const modifier = this._textmodifier as Textmodifier & { pixelDensity?: () => number };
 		const density = modifier.pixelDensity?.();
 		return typeof density === 'number' && Number.isFinite(density) && density > 0 ? density : 1;
-	}
-
-	private _withExtension(filename: string | undefined, extension: `.${VideoExportFormat}`): string | undefined {
-		if (!filename) return undefined;
-		const trimmed = filename.trim();
-		if (!trimmed) return undefined;
-		return trimmed.toLowerCase().endsWith(extension) ? trimmed : `${trimmed}${extension}`;
 	}
 
 	private async _createFileSystemDestination(

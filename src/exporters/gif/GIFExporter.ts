@@ -1,7 +1,6 @@
 import type { Textmodifier } from 'textmode.js';
 import { applyPalette, GIFEncoder, quantize, type GIFPalette } from 'gifenc';
-import { FileHandler } from '../base';
-import { VideoFrameDriver, type PostDrawSubscription } from '../video/VideoFrameDriver';
+import { FileHandler, FrameSequenceDriver, type PostDrawSubscription } from '../base';
 import { GIFWorkerClient } from './GIFWorkerClient';
 import type { GIFExportOptions, GIFGenerationOptions } from './types';
 
@@ -14,7 +13,7 @@ export class GIFExporter {
 
 	public async $saveGIF(options: GIFExportOptions = {}): Promise<void> {
 		const blob = await this.$generateGIFBlob(options);
-		new FileHandler().$downloadFile(blob, options.filename);
+		new FileHandler().$downloadFile(blob, options.filename, '.gif');
 	}
 
 	/** Generates a GIF blob without initiating a download. */
@@ -23,7 +22,7 @@ export class GIFExporter {
 		const liveCanvas = this._textmodifier.canvas;
 		const width = Math.max(1, Math.round(liveCanvas.width * generationOptions.scale));
 		const height = Math.max(1, Math.round(liveCanvas.height * generationOptions.scale));
-		const frameDriver = new VideoFrameDriver(this._textmodifier, this._registerPostDrawHook, width, height);
+		const frameDriver = new FrameSequenceDriver(this._textmodifier, this._registerPostDrawHook, { width, height });
 		const context = frameDriver.canvas.getContext('2d', { willReadFrequently: true });
 
 		if (!context) {

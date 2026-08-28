@@ -1,4 +1,4 @@
-import type { PrepareExportFrame } from '../base';
+import type { FrameSequenceDriverLike, FrameSequenceRenderOptions, PrepareExportFrame } from '../base';
 
 /**
  * High-level lifecycle state reported while a video export is captured, encoded, or completed.
@@ -345,15 +345,6 @@ export interface VideoEncodingPlan {
 	transparent: boolean;
 }
 
-export interface VideoRenderFrameOptions {
-	frameCount: number;
-	frameRate: number;
-	signal?: AbortSignal;
-	prepareFrame?: PrepareExportFrame;
-	onFrame(frame: { frameIndex: number; canvas: HTMLCanvasElement }): Promise<void> | void;
-}
+export type VideoRenderFrameOptions = FrameSequenceRenderOptions;
 
-export interface VideoFrameDriverLike {
-	readonly canvas: HTMLCanvasElement;
-	$render(options: VideoRenderFrameOptions): Promise<void>;
-}
+export type VideoFrameDriverLike = FrameSequenceDriverLike;

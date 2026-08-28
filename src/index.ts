@@ -27,6 +27,9 @@
  * @categoryDescription Video export
  * Capture deterministic frames and encode MP4 or WebM video with Mediabunny.
  *
+ * @categoryDescription ZIP frame-sequence export
+ * Capture deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames in a code-only ZIP archive.
+ *
  * @categoryDescription Layer data export
  * Export selected-layer text or vector data as TXT or SVG.
  *
@@ -63,6 +66,16 @@ export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
 export type { JSONExportColorMode, JSONExportOptions, JSONExportTarget, TextmodeDocumentJSON } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
+export { ZIPExportError } from './exporters/zip';
+export type {
+	ZIPCaptureOptions,
+	ZIPExportErrorCode,
+	ZIPExportOptions,
+	ZIPExportProgress,
+	ZIPExportState,
+	ZIPFrameFormat,
+	ZIPFrameOptionsMap,
+} from './exporters/zip';
 export type {
 	VideoBitrateMode,
 	VideoExportFormat,
