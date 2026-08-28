@@ -2,7 +2,7 @@ import type { ImageExportOptions } from './exporters/image';
 import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
-import type { VideoBitratePreset, VideoExportOptions } from './exporters/video';
+import type { VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
 
 /**
@@ -59,17 +59,8 @@ export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRat
  */
 export type VideoOverlayDefaults = Pick<
 	VideoExportOptions,
-	| 'format'
-	| 'frameCount'
-	| 'frameRate'
-	| 'bitrateMode'
-	| 'latencyMode'
-	| 'hardwareAcceleration'
-	| 'keyFrameInterval'
-	| 'transparent'
-> & {
-	bitrate?: VideoBitratePreset;
-};
+	'format' | 'frameCount' | 'frameRate' | 'quality' | 'hardwareAcceleration' | 'keyFrameInterval' | 'transparent'
+>;
 
 /**
  * Per-format default options used to seed the overlay UI inputs at mount time
@@ -507,15 +498,29 @@ export interface TextmodeExportAPI {
 	 *
 	 * @example
 	 * ```ts
-	 * await t.saveVideo({ frameCount: 240, frameRate: 60, filename: 'capture' });
+	 * // Mediabunny's qualitative quality levels produce content-dependent file sizes.
 	 * await t.saveVideo({
 	 *     format: 'webm',
-	 *     bitrate: 'high',
-	 *     bitrateMode: 'variable',
-	 *     latencyMode: 'quality',
-	 *     keyFrameInterval: 2,
+	 *     quality: 'very-high',
 	 *     frameCount: 240,
-	 *     filename: 'capture',
+	 *     frameRate: 60,
+	 *     filename: 'high-quality-capture',
+	 * });
+	 *
+	 * // Request a target bitrate and rate-control mode.
+	 * await t.saveVideo({
+	 *     quality: { bitrate: 8_000_000, bitrateMode: 'variable' },
+	 *     frameCount: 240,
+	 *     frameRate: 60,
+	 *     filename: 'target-bitrate-capture',
+	 * });
+	 *
+	 * // Stream directly to a user-selected file when the browser supports it.
+	 * await t.saveVideo({
+	 *     destination: 'file-system',
+	 *     quality: 'high',
+	 *     frameCount: 240,
+	 *     frameRate: 60,
 	 * });
 	 * ```
 	 *
@@ -524,7 +529,9 @@ export interface TextmodeExportAPI {
 	saveVideo(options?: VideoExportOptions): Promise<void>;
 
 	/**
-	 * Generates a video blob without downloading it.
+	 * Generates an in-memory video blob without downloading it.
+	 *
+	 * `destination` is only used by {@link saveVideo}; this method always buffers and returns a `Blob`.
 	 *
 	 * @example
 	 * ```ts

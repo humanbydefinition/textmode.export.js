@@ -2,7 +2,7 @@ import type { ImageExportOptions } from '../exporters/image';
 import type { TXTExportOptions } from '../exporters/txt';
 import type { SVGExportOptions } from '../exporters/svg';
 import type { GIFExportOptions } from '../exporters/gif';
-import type { VideoBitratePreset, VideoExportOptions } from '../exporters/video';
+import type { VideoExportOptions } from '../exporters/video';
 import type { JSONExportOptions } from '../exporters/json';
 
 export type ExportFormat = 'txt' | 'json' | 'image' | 'gif' | 'video' | 'svg';
@@ -23,17 +23,8 @@ export type SVGOverlayDefaults = Pick<SVGExportOptions, 'includeBackgroundRectan
 export type GIFOverlayDefaults = Pick<GIFExportOptions, 'frameCount' | 'frameRate' | 'scale' | 'repeat'>;
 export type VideoOverlayDefaults = Pick<
 	VideoExportOptions,
-	| 'format'
-	| 'frameCount'
-	| 'frameRate'
-	| 'bitrateMode'
-	| 'latencyMode'
-	| 'hardwareAcceleration'
-	| 'keyFrameInterval'
-	| 'transparent'
-> & {
-	bitrate?: VideoBitratePreset;
-};
+	'format' | 'frameCount' | 'frameRate' | 'quality' | 'hardwareAcceleration' | 'keyFrameInterval' | 'transparent'
+>;
 
 /**
  * Curated default options for every export format.

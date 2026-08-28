@@ -124,7 +124,7 @@ describe('VideoFrameDriver', () => {
 
 		expect(frames).toEqual([
 			{ frameIndex: 0, frameCount: 8, millis: 0, secs: 0 },
-			{ frameIndex: 1, frameCount: 9, millis: 1000 / 60, secs: 1 / 60 },
+			{ frameIndex: 1, frameCount: 9, millis: 16.667, secs: 0.016667 },
 		]);
 		expect(context.drawImage).toHaveBeenCalledTimes(2);
 		expect(sourceCanvas.width).toBe(800);
@@ -149,6 +149,34 @@ describe('VideoFrameDriver', () => {
 		expect(textmodifier.deltaTime).toBe(originalDeltaTime);
 		expect(textmodifier.frameRate).toBe(originalFrameRate);
 		expect(textmodifier.resizeCanvas).toBe(originalResizeCanvas);
+	});
+
+	it('preserves fractional frame rates and exposes one center-based interval schedule', async () => {
+		const { textmodifier, registerPostDrawHook } = createHarness();
+		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const prepareFrame = vi.fn();
+
+		await driver.$render({
+			frameCount: 2,
+			frameRate: 30000 / 1001,
+			prepareFrame,
+			onFrame: () => undefined,
+		});
+
+		expect(prepareFrame).toHaveBeenNthCalledWith(
+			1,
+			expect.objectContaining({
+				frameRate: 30000 / 1001,
+				startSeconds: 0,
+				centerSeconds: 0.016683,
+				endSeconds: 0.033367,
+			})
+		);
+		expect(prepareFrame).toHaveBeenNthCalledWith(
+			2,
+			expect.objectContaining({ startSeconds: 0.033367, centerSeconds: 0.05005, endSeconds: 0.066733 })
+		);
+		expect(textmodifier.frameRate).toBeDefined();
 	});
 
 	it('restores state after abort and reports a typed error', async () => {

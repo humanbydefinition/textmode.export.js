@@ -97,10 +97,7 @@ function createOptions(overrides: Partial<VideoGenerationOptions> = {}): VideoGe
 		format: 'webm',
 		frameRate: 60,
 		frameCount: 3,
-		bitrate: 'medium',
-		bitrateMode: 'variable',
-		contentHint: 'text',
-		latencyMode: 'quality',
+		quality: 'medium',
 		hardwareAcceleration: 'no-preference',
 		keyFrameInterval: 2,
 		pixelDensity: 1,
@@ -108,7 +105,6 @@ function createOptions(overrides: Partial<VideoGenerationOptions> = {}): VideoGe
 		height: 360,
 		transparent: false,
 		debugLogging: false,
-		allowLargeInMemory: false,
 		...overrides,
 	};
 }
@@ -162,25 +158,23 @@ describe('VideoRecorder', () => {
 		expect(render).not.toHaveBeenCalled();
 	});
 
-	it('maps named presets to Mediabunny Quality and passes the complete source configuration', async () => {
+	it('passes named quality directly to Mediabunny with the fixed source configuration', async () => {
 		setWebCodecsAvailable(true);
 		const canvas = createCanvas();
 		await new VideoRecorder().$record(
 			createOptions({
-				bitrate: 'high',
-				bitrateMode: 'constant',
-				latencyMode: 'realtime',
+				quality: 'high',
 				hardwareAcceleration: 'prefer-hardware',
 				keyFrameInterval: 0.5,
 			}),
 			createFrameDriver(async ({ onFrame }) => onFrame?.({ frameIndex: 0, canvas }))
 		);
 
-		expect(qualityOptions()).toBe('very-high');
+		expect(qualityOptions()).toBe('high');
 		expect(mediabunnyMock.canvasSourceConfigs[0]).toMatchObject({
-			quality: expect.objectContaining({ options: 'very-high' }),
+			quality: expect.objectContaining({ options: 'high' }),
 			contentHint: 'text',
-			latencyMode: 'realtime',
+			latencyMode: 'quality',
 			hardwareAcceleration: 'prefer-hardware',
 			keyFrameInterval: 0.5,
 			sizeChangeBehavior: 'deny',
@@ -188,10 +182,11 @@ describe('VideoRecorder', () => {
 		expect(mediabunnyMock.trackMetadata[0]).toEqual({ frameRate: 60 });
 	});
 
-	it('maps ultra to quantizer zero with a frame-rate-aware fallback', async () => {
+	it('uses Mediabunny capability detection without an extra encode/decode smoke export', async () => {
 		setWebCodecsAvailable(true);
-		await new VideoRecorder().$record(createOptions({ bitrate: 'ultra', frameRate: 30 }), createFrameDriver());
-		expect(qualityOptions()).toEqual({ bitrate: 3_456_000, bitrateMode: 'variable', quantizer: 0 });
+		await new VideoRecorder().$record(createOptions({ frameRate: 30000 / 1001 }), createFrameDriver());
+		expect(mediabunnyMock.outputStart).toHaveBeenCalledTimes(1);
+		expect(mediabunnyMock.outputFinalize).toHaveBeenCalledTimes(1);
 		expect(mediabunnyMock.canEncodeVideo).toHaveBeenCalledWith(
 			'vp9',
 			expect.objectContaining({ quality: expect.anything(), contentHint: 'text' })
@@ -201,7 +196,9 @@ describe('VideoRecorder', () => {
 	it('preserves numeric bitrates and bitrate mode through Quality', async () => {
 		setWebCodecsAvailable(true);
 		await new VideoRecorder().$record(
-			createOptions({ bitrate: 1_500_001, bitrateMode: 'constant' }),
+			createOptions({
+				quality: { bitrate: 1_500_001, bitrateMode: 'constant' },
+			}),
 			createFrameDriver()
 		);
 		expect(qualityOptions()).toEqual({ bitrate: 1_500_001, bitrateMode: 'constant' });
@@ -210,7 +207,7 @@ describe('VideoRecorder', () => {
 	it('awaits each source add before requesting the next rendered frame', async () => {
 		setWebCodecsAvailable(true);
 		let resolveFirst!: () => void;
-		mediabunnyMock.addImpl.mockImplementationOnce(
+		mediabunnyMock.addImpl.mockResolvedValueOnce(undefined).mockImplementationOnce(
 			() =>
 				new Promise<void>((resolve) => {
 					resolveFirst = resolve;
@@ -227,11 +224,11 @@ describe('VideoRecorder', () => {
 				await onFrame({ frameIndex, canvas: createCanvas() });
 		};
 		const exportPromise = new VideoRecorder().$record(createOptions({ frameCount: 2 }), createFrameDriver(render));
-		await vi.waitFor(() => expect(mediabunnyMock.canvasSourceAdds).toHaveLength(1));
+		await vi.waitFor(() => expect(mediabunnyMock.canvasSourceAdds).toHaveLength(2));
 		resolveFirst();
 		await exportPromise;
 		expect(mediabunnyMock.canvasSourceAdds).toHaveLength(2);
-		expect(mediabunnyMock.canvasSourceAdds.map(({ timestamp }) => timestamp)).toEqual([0, 1 / 60]);
+		expect(mediabunnyMock.canvasSourceAdds.map(({ timestamp }) => timestamp)).toEqual([0, 0.016667]);
 	});
 
 	it('closes the source before finalizing and cancels once on an aborted add', async () => {
