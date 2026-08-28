@@ -28,6 +28,7 @@ export type ZIPExportState = 'capturing' | 'finalizing' | 'completed' | 'error';
  */
 export type ZIPExportErrorCode =
 	| 'ZIP_EXPORT_INVALID_OPTIONS'
+	| 'ZIP_EXPORT_TOO_LARGE'
 	| 'ZIP_EXPORT_ABORTED'
 	| 'ZIP_EXPORT_TIMEOUT'
 	| 'ZIP_EXPORT_BUSY'

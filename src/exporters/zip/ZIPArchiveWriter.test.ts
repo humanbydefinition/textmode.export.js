@@ -52,4 +52,27 @@ describe('ZIPArchiveWriter', () => {
 		await expect(writer.$addEntry('safe/file.txt', new Uint8Array(), 'store')).rejects.toThrow('failed');
 		expect(() => writer.$finalize()).toThrow('failed');
 	});
+
+	it('rejects instead of emitting a classic ZIP whose archive size exceeds the 32-bit limit', async () => {
+		const modifiedAt = new Date('2026-08-28T12:00:00.000Z');
+		const data = new TextEncoder().encode('frame');
+		const baselineWriter = new ZIPArchiveWriter(modifiedAt);
+		await baselineWriter.$addEntry('sequence/frame.txt', data, 'store');
+		const baseline = await baselineWriter.$finalize();
+
+		const exactWriter = new ZIPArchiveWriter(modifiedAt, baseline.size);
+		await exactWriter.$addEntry('sequence/frame.txt', data, 'store');
+		await expect(exactWriter.$finalize()).resolves.toHaveProperty('size', baseline.size);
+
+		const oversizedWriter = new ZIPArchiveWriter(modifiedAt, baseline.size - 1);
+		await oversizedWriter.$addEntry('sequence/frame.txt', data, 'store');
+		await expect(oversizedWriter.$finalize()).rejects.toMatchObject({ code: 'ZIP_EXPORT_TOO_LARGE' });
+	});
+
+	it('rejects an entry whose uncompressed size exceeds the configured classic ZIP boundary', async () => {
+		const writer = new ZIPArchiveWriter(new Date('2026-08-28T12:00:00.000Z'), 4);
+		await expect(writer.$addEntry('frame.txt', new Uint8Array(5), 'deflate')).rejects.toMatchObject({
+			code: 'ZIP_EXPORT_TOO_LARGE',
+		});
+	});
 });

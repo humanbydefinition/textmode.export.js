@@ -4,19 +4,24 @@ import type { ZIPEntryCompression } from './types';
 
 type WriterState = 'open' | 'finalizing' | 'closed' | 'failed';
 
+const CLASSIC_ZIP_MAX_ARCHIVE_BYTES = 0xffff_ffff;
+
 /** Streaming ZIP wrapper that retains only compressed archive output chunks. */
 export class ZIPArchiveWriter {
 	private readonly _archive: Zip;
 	private readonly _chunks: ArrayBuffer[] = [];
 	private readonly _entryNames = new Set<string>();
 	private readonly _modifiedAt: Date;
+	private readonly _maxArchiveBytes: number;
 	private _state: WriterState = 'open';
+	private _archiveBytes = 0;
 	private _failure: unknown;
 	private _resolveFinal?: (blob: Blob) => void;
 	private _rejectFinal?: (error: unknown) => void;
 
-	constructor(modifiedAt: Date) {
+	constructor(modifiedAt: Date, maxArchiveBytes: number = CLASSIC_ZIP_MAX_ARCHIVE_BYTES) {
 		this._modifiedAt = modifiedAt;
+		this._maxArchiveBytes = maxArchiveBytes;
 		this._archive = new Zip((error, chunk, final) => {
 			if (this._state === 'failed') return;
 			if (error) {
@@ -24,9 +29,19 @@ export class ZIPArchiveWriter {
 				return;
 			}
 			if (chunk.byteLength > 0) {
+				if (this._archiveBytes + chunk.byteLength > this._maxArchiveBytes) {
+					this._fail(
+						new ZIPExportError(
+							'ZIP_EXPORT_TOO_LARGE',
+							`Classic ZIP archives cannot exceed ${this._maxArchiveBytes.toLocaleString('en-US')} bytes.`
+						)
+					);
+					return;
+				}
 				const copy = new Uint8Array(chunk.byteLength);
 				copy.set(chunk);
 				this._chunks.push(copy.buffer);
+				this._archiveBytes += chunk.byteLength;
 			}
 			if (final && this._state === 'finalizing') {
 				this._state = 'closed';
@@ -47,8 +62,14 @@ export class ZIPArchiveWriter {
 		}
 		if (this._entryNames.size >= 65_535) {
 			throw new ZIPExportError(
-				'ZIP_EXPORT_FAILED',
+				'ZIP_EXPORT_TOO_LARGE',
 				'Classic ZIP archives cannot contain more than 65,535 entries.'
+			);
+		}
+		if (data.byteLength > this._maxArchiveBytes) {
+			throw new ZIPExportError(
+				'ZIP_EXPORT_TOO_LARGE',
+				`A classic ZIP entry cannot exceed ${this._maxArchiveBytes.toLocaleString('en-US')} bytes.`
 			);
 		}
 
