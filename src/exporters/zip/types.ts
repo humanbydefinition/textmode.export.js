@@ -28,6 +28,7 @@ export type ZIPExportState = 'capturing' | 'finalizing' | 'completed' | 'error';
  */
 export type ZIPExportErrorCode =
 	| 'ZIP_EXPORT_INVALID_OPTIONS'
+	| 'ZIP_EXPORT_ENCODING_UNSUPPORTED'
 	| 'ZIP_EXPORT_TOO_LARGE'
 	| 'ZIP_EXPORT_ABORTED'
 	| 'ZIP_EXPORT_TIMEOUT'
@@ -163,7 +164,11 @@ export type ZIPEntryCompression = 'store' | 'deflate';
 export interface ZIPFrameSerializer {
 	readonly extension: `.${ZIPFrameFormat}`;
 	readonly compression: ZIPEntryCompression;
-	serialize(context: { canvas: HTMLCanvasElement; frameOptions: unknown }): Promise<Uint8Array>;
+	getDimensions(context: { canvas: HTMLCanvasElement; frameOptions: unknown }): {
+		width: number;
+		height: number;
+	};
+	serialize(context: { canvas: HTMLCanvasElement; frameOptions: unknown; createdAt: Date }): Promise<Uint8Array>;
 }
 
 export interface ZIPFrameSequenceManifest {
@@ -177,6 +182,8 @@ export interface ZIPFrameSequenceManifest {
 	format: ZIPFrameFormat;
 	frameCount: number;
 	frameRate: number;
+	width: number;
+	height: number;
 	indexBase: 1;
 	filePattern: string;
 }

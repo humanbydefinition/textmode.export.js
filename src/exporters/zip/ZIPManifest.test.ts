@@ -8,6 +8,8 @@ describe('ZIP manifest policy', () => {
 			format: 'png',
 			frameCount: 120,
 			frameRate: 30,
+			width: 1920,
+			height: 1080,
 			extension: '.png',
 		});
 		expect(manifest).toMatchObject({
@@ -17,6 +19,8 @@ describe('ZIP manifest policy', () => {
 			format: 'png',
 			frameCount: 120,
 			frameRate: 30,
+			width: 1920,
+			height: 1080,
 			indexBase: 1,
 			filePattern: 'frames/frame-%06d.png',
 		});

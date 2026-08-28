@@ -10,6 +10,8 @@ export function createZIPManifest(options: {
 	format: ZIPFrameFormat;
 	frameCount: number;
 	frameRate: number;
+	width: number;
+	height: number;
 	extension: string;
 }): ZIPFrameSequenceManifest {
 	return {
@@ -20,6 +22,8 @@ export function createZIPManifest(options: {
 		format: options.format,
 		frameCount: options.frameCount,
 		frameRate: options.frameRate,
+		width: options.width,
+		height: options.height,
 		indexBase: 1,
 		filePattern: `frames/frame-%06d${options.extension}`,
 	};

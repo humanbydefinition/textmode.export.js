@@ -9,6 +9,7 @@ import { createZIPFrameSerializerRegistry } from './FrameSerializerRegistry';
 
 describe('ZIP frame serializer registry', () => {
 	afterEach(() => vi.restoreAllMocks());
+	const createdAt = new Date('2026-08-28T12:00:00.000Z');
 
 	it('exhaustively maps formats to canonical extensions and compression', () => {
 		const registry = createZIPFrameSerializerRegistry({} as never);
@@ -31,29 +32,60 @@ describe('ZIP frame serializer registry', () => {
 		const bytes = await createZIPFrameSerializerRegistry({} as never).png.serialize({
 			canvas,
 			frameOptions: { scale: 2, filename: '../escape', format: 'webp' },
+			createdAt,
 		});
 
 		expect(toBlob).toHaveBeenCalledWith(canvas, { scale: 2, format: 'png' });
 		expect(bytes).toEqual(new Uint8Array([1, 2, 3]));
+		expect(
+			createZIPFrameSerializerRegistry({} as never).png.getDimensions({ canvas, frameOptions: { scale: 2 } })
+		).toEqual({
+			width: 600,
+			height: 300,
+		});
+	});
+
+	it('rejects a browser fallback blob whose MIME type does not match the requested frame format', async () => {
+		vi.spyOn(ImageExporter.prototype, '$toImageBlob').mockResolvedValue(
+			new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' })
+		);
+
+		await expect(
+			createZIPFrameSerializerRegistry({} as never).webp.serialize({
+				canvas: document.createElement('canvas'),
+				frameOptions: {},
+				createdAt,
+			})
+		).rejects.toMatchObject({ code: 'ZIP_EXPORT_ENCODING_UNSUPPORTED' });
 	});
 
 	it('forwards complete text-format controls and encodes UTF-8 without a BOM', async () => {
 		const textmodifier = {} as never;
 		vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg>✓</svg>');
-		vi.spyOn(JSONExporter.prototype, '$generateJSONString').mockReturnValue('{"frame":1}');
+		const jsonString = vi.spyOn(JSONExporter.prototype, '$generateJSONString').mockReturnValue('{"frame":1}');
 		const txt = vi.spyOn(TXTExporter.prototype, '$generateTXT').mockReturnValue('A B');
 		const registry = createZIPFrameSerializerRegistry(textmodifier);
 
-		const svg = await registry.svg.serialize({ canvas: document.createElement('canvas'), frameOptions: {} });
-		const json = await registry.json.serialize({ canvas: document.createElement('canvas'), frameOptions: {} });
+		const svg = await registry.svg.serialize({
+			canvas: document.createElement('canvas'),
+			frameOptions: {},
+			createdAt,
+		});
+		const json = await registry.json.serialize({
+			canvas: document.createElement('canvas'),
+			frameOptions: {},
+			createdAt,
+		});
 		const text = await registry.txt.serialize({
 			canvas: document.createElement('canvas'),
 			frameOptions: { preserveTrailingSpaces: true, emptyCharacter: '.', filename: 'ignored' },
+			createdAt,
 		});
 
 		expect(new TextDecoder().decode(svg)).toBe('<svg>✓</svg>');
 		expect(new TextDecoder().decode(json)).toBe('{"frame":1}');
 		expect(new TextDecoder().decode(text)).toBe('A B');
+		expect(jsonString).toHaveBeenCalledWith(textmodifier, {}, createdAt);
 		expect(txt).toHaveBeenCalledWith(textmodifier, { preserveTrailingSpaces: true, emptyCharacter: '.' });
 	});
 });

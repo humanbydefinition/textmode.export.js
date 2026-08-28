@@ -107,6 +107,10 @@ export class ZIPExporter {
 			const driver =
 				this._dependencies.createDriver?.() ??
 				new FrameSequenceDriver(this._textmodifier, this._registerPostDrawHook);
+			const dimensions = serializer.getDimensions({
+				canvas: driver.canvas,
+				frameOptions: generationOptions.frameOptions,
+			});
 			this._emitProgress(generationOptions, {
 				state: 'capturing',
 				frameIndex: 0,
@@ -119,6 +123,8 @@ export class ZIPExporter {
 				format: generationOptions.format,
 				frameCount: generationOptions.frameCount,
 				frameRate: generationOptions.frameRate,
+				width: dimensions.width,
+				height: dimensions.height,
 				extension: serializer.extension,
 			});
 			await archiveWriter.$addEntry(`${rootStem}/manifest.json`, encodeZIPManifest(manifest), 'deflate');
@@ -134,6 +140,7 @@ export class ZIPExporter {
 					const bytes = await serializer.serialize({
 						canvas,
 						frameOptions: generationOptions.frameOptions,
+						createdAt,
 					});
 					this._throwIfAborted(generationOptions.signal);
 					await archiveWriter.$addEntry(

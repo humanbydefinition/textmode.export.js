@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { unzipSync } from 'fflate';
 import type { FrameSequenceRenderOptions } from '../base';
 import { FileHandler } from '../base';
-import { ImageExporter } from '../image';
+import { IMAGE_MIME_TYPES, ImageExporter } from '../image';
 import { JSONExporter } from '../json';
 import { SVGExporter } from '../svg';
 import { TXTExporter } from '../txt';
@@ -30,10 +30,30 @@ class FakeWriter {
 }
 
 function createDriver(render: (options: FrameSequenceRenderOptions) => Promise<void>) {
+	const canvas = document.createElement('canvas');
+	canvas.width = 640;
+	canvas.height = 480;
 	return {
-		canvas: document.createElement('canvas'),
+		canvas,
 		$render: vi.fn(render),
 	};
+}
+
+function frameDimensions() {
+	return { width: 640, height: 480 };
+}
+
+function createTextmodifierMock() {
+	const canvas = document.createElement('canvas');
+	canvas.width = 640;
+	canvas.height = 480;
+	const base = {
+		grid: { width: 640, height: 480 },
+		font: {},
+		drawFramebuffer: {},
+		isVisible: () => true,
+	};
+	return { canvas, layers: { base, all: [] } } as never;
 }
 
 describe('ZIPExporter', () => {
@@ -45,6 +65,7 @@ describe('ZIPExporter', () => {
 		const serializer: ZIPFrameSerializer = {
 			extension: '.png',
 			compression: 'store',
+			getDimensions: () => ({ width: 1280, height: 960 }),
 			serialize: vi.fn(async () => {
 				callOrder.push('serialize');
 				return new Uint8Array([callOrder.length]);
@@ -93,6 +114,8 @@ describe('ZIPExporter', () => {
 			format: 'png',
 			frameCount: 2,
 			frameRate: 24,
+			width: 1280,
+			height: 960,
 			filePattern: 'frames/frame-%06d.png',
 		});
 	});
@@ -109,6 +132,7 @@ describe('ZIPExporter', () => {
 			resolveSerializer: () => ({
 				extension: '.txt',
 				compression: 'deflate',
+				getDimensions: frameDimensions,
 				serialize: async () => new TextEncoder().encode(`frame ${++serializedFrame}`),
 			}),
 			now: () => new Date('2026-08-28T12:00:00.000Z'),
@@ -130,7 +154,10 @@ describe('ZIPExporter', () => {
 	});
 
 	it('composes all six public formats with their canonical paths and compression policies', async () => {
-		vi.spyOn(ImageExporter.prototype, '$toImageBlob').mockResolvedValue(new Blob([new Uint8Array([1])]));
+		vi.spyOn(ImageExporter.prototype, '$toImageBlob').mockImplementation(async (_canvas, options) => {
+			const format = options?.format ?? 'png';
+			return new Blob([new Uint8Array([1])], { type: IMAGE_MIME_TYPES[format] });
+		});
 		vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg/>');
 		vi.spyOn(JSONExporter.prototype, '$generateJSONString').mockReturnValue('{}');
 		vi.spyOn(TXTExporter.prototype, '$generateTXT').mockReturnValue('A');
@@ -145,7 +172,7 @@ describe('ZIPExporter', () => {
 
 		for (const [format, extension, compression] of policies) {
 			const writer = new FakeWriter();
-			const exporter = new ZIPExporter({ canvas: document.createElement('canvas') } as never, vi.fn() as never, {
+			const exporter = new ZIPExporter(createTextmodifierMock(), vi.fn() as never, {
 				createDriver: () =>
 					createDriver(async ({ onFrame }) => {
 						await onFrame({ frameIndex: 0, canvas: document.createElement('canvas') });
@@ -174,6 +201,7 @@ describe('ZIPExporter', () => {
 			resolveSerializer: () => ({
 				extension: '.txt',
 				compression: 'deflate',
+				getDimensions: frameDimensions,
 				serialize: async () => new Uint8Array(),
 			}),
 		});
@@ -221,6 +249,7 @@ describe('ZIPExporter', () => {
 			resolveSerializer: () => ({
 				extension: '.png',
 				compression: 'store',
+				getDimensions: frameDimensions,
 				serialize: async () => {
 					controller.abort();
 					return new Uint8Array([1]);
@@ -250,6 +279,7 @@ describe('ZIPExporter', () => {
 			resolveSerializer: () => ({
 				extension: '.txt',
 				compression: 'deflate',
+				getDimensions: frameDimensions,
 				serialize: async () => new Uint8Array(),
 			}),
 		});
@@ -271,6 +301,7 @@ describe('ZIPExporter', () => {
 			resolveSerializer: () => ({
 				extension: '.txt',
 				compression: 'deflate',
+				getDimensions: frameDimensions,
 				serialize: async () => new Uint8Array(),
 			}),
 		});
