@@ -2,9 +2,7 @@
 
 import type { Textmodifier } from 'textmode.js';
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { VideoExportError } from './errors';
-import { VideoFrameDriver } from './VideoFrameDriver';
-import type { PostDrawSubscription } from './VideoFrameDriver';
+import { FrameSequenceDriver, type FrameSequenceError, type PostDrawSubscription } from '../base';
 
 type PostDrawHook = Parameters<PostDrawSubscription>[0];
 
@@ -77,7 +75,7 @@ function asTextmodifier(textmodifier: FakeTextmodifier): Textmodifier {
 	return textmodifier as unknown as Textmodifier;
 }
 
-describe('VideoFrameDriver', () => {
+describe('FrameSequenceDriver', () => {
 	const context = {
 		clearRect: vi.fn(),
 		drawImage: vi.fn(),
@@ -101,7 +99,10 @@ describe('VideoFrameDriver', () => {
 
 	it('renders synthetic frames into a staging canvas without mutating the visible canvas', async () => {
 		const { sourceCanvas, textmodifier, registerPostDrawHook } = createHarness();
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 		const frames: Array<{ frameIndex: number; frameCount: number; millis: number; secs: number }> = [];
 
 		await driver.$render({
@@ -133,13 +134,28 @@ describe('VideoFrameDriver', () => {
 		expect(sourceCanvas.style.height).toBe('auto');
 	});
 
+	it('uses the live canvas without copying when no staging surface is requested', async () => {
+		const { sourceCanvas, textmodifier, registerPostDrawHook } = createHarness();
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook);
+		const onFrame = vi.fn();
+
+		await driver.$render({ frameCount: 1, frameRate: 60, onFrame });
+
+		expect(driver.canvas).toBe(sourceCanvas);
+		expect(onFrame).toHaveBeenCalledWith({ frameIndex: 0, canvas: sourceCanvas });
+		expect(context.drawImage).not.toHaveBeenCalled();
+	});
+
 	it('restores loop state, timing, and shadowed methods after success', async () => {
 		const { textmodifier, registerPostDrawHook } = createHarness();
 		const originalDeltaTime = textmodifier.deltaTime;
 		const originalFrameRate = textmodifier.frameRate;
 		const originalResizeCanvas = textmodifier.resizeCanvas;
 
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 		await driver.$render({ frameCount: 1, frameRate: 30, onFrame: () => undefined });
 
 		expect(textmodifier.loop).toHaveBeenCalledTimes(1);
@@ -153,7 +169,10 @@ describe('VideoFrameDriver', () => {
 
 	it('preserves fractional frame rates and exposes one center-based interval schedule', async () => {
 		const { textmodifier, registerPostDrawHook } = createHarness();
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 		const prepareFrame = vi.fn();
 
 		await driver.$render({
@@ -182,7 +201,10 @@ describe('VideoFrameDriver', () => {
 	it('restores state after abort and reports a typed error', async () => {
 		const { textmodifier, registerPostDrawHook } = createHarness();
 		const controller = new AbortController();
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 
 		await expect(
 			driver.$render({
@@ -194,9 +216,49 @@ describe('VideoFrameDriver', () => {
 				},
 			})
 		).rejects.toMatchObject({
-			code: 'VIDEO_EXPORT_ABORTED',
-		} satisfies Partial<VideoExportError>);
+			code: 'FRAME_SEQUENCE_ABORTED',
+		} satisfies Partial<FrameSequenceError>);
 
+		expect(textmodifier.frameCount).toBe(7);
+		expect(textmodifier.millis).toBe(1234);
+		expect(textmodifier.looping).toBe(true);
+	});
+
+	it('restores descriptors and loop state after prepareFrame rejects', async () => {
+		const { textmodifier, registerPostDrawHook } = createHarness();
+		const frameCountDescriptor = Object.getOwnPropertyDescriptor(textmodifier, 'frameCount');
+		const failure = new Error('media seek failed');
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook);
+
+		await expect(
+			driver.$render({
+				frameCount: 1,
+				frameRate: 60,
+				prepareFrame: async () => {
+					throw failure;
+				},
+				onFrame: () => undefined,
+			})
+		).rejects.toBe(failure);
+
+		expect(Object.getOwnPropertyDescriptor(textmodifier, 'frameCount')).toEqual(frameCountDescriptor);
+		expect(textmodifier.frameCount).toBe(7);
+		expect(textmodifier.millis).toBe(1234);
+		expect(textmodifier.looping).toBe(true);
+	});
+
+	it('restores state even when post-draw unsubscription throws', async () => {
+		const { textmodifier } = createHarness();
+		let hook: PostDrawHook | undefined;
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), (callback) => {
+			hook = callback;
+			textmodifier.redraw.mockImplementation(() => hook?.());
+			return () => {
+				throw new Error('unsubscribe failed');
+			};
+		});
+
+		await driver.$render({ frameCount: 1, frameRate: 60, onFrame: () => undefined });
 		expect(textmodifier.frameCount).toBe(7);
 		expect(textmodifier.millis).toBe(1234);
 		expect(textmodifier.looping).toBe(true);
@@ -205,7 +267,10 @@ describe('VideoFrameDriver', () => {
 	it('ignores resizeCanvas calls during export and restores the original method', async () => {
 		const { textmodifier, registerPostDrawHook } = createHarness();
 		const originalResizeCanvas = textmodifier.resizeCanvas;
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 
 		await driver.$render({
 			frameCount: 1,
@@ -223,7 +288,10 @@ describe('VideoFrameDriver', () => {
 	it('keeps a previously paused sketch paused after export', async () => {
 		const { textmodifier, registerPostDrawHook } = createHarness();
 		textmodifier.looping = false;
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 
 		await driver.$render({ frameCount: 1, frameRate: 60, onFrame: () => undefined });
 
@@ -235,11 +303,14 @@ describe('VideoFrameDriver', () => {
 	it('times out a missing post-draw frame and restores textmodifier state', async () => {
 		vi.useFakeTimers();
 		const { textmodifier, registerPostDrawHook } = createHarness({ autoPostDraw: false });
-		const driver = new VideoFrameDriver(asTextmodifier(textmodifier), registerPostDrawHook, 320, 240);
+		const driver = new FrameSequenceDriver(asTextmodifier(textmodifier), registerPostDrawHook, {
+			width: 320,
+			height: 240,
+		});
 
 		const renderPromise = driver.$render({ frameCount: 1, frameRate: 60, onFrame: () => undefined });
 		const expectation = expect(renderPromise).rejects.toMatchObject({
-			code: 'VIDEO_EXPORT_TIMEOUT',
+			code: 'FRAME_SEQUENCE_TIMEOUT',
 		});
 		await Promise.resolve();
 		await vi.advanceTimersByTimeAsync(30_000);
