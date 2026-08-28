@@ -398,6 +398,8 @@ describe('JSONExporter', () => {
 
 		expect(clickSpy).toHaveBeenCalledTimes(1);
 		expect(createObjectURL).toHaveBeenCalledTimes(1);
+		expect(revokeObjectURL).not.toHaveBeenCalled();
+		await new Promise((resolve) => setTimeout(resolve, 0));
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:json-export');
 
 		const anchor = appendSpy.mock.calls[0]?.[0] as HTMLAnchorElement;

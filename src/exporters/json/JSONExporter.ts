@@ -241,7 +241,8 @@ export class JSONExporter {
 			new Blob([this.$generateJSONString(textmodifier, generationOptions)], {
 				type: 'application/json;charset=utf-8',
 			}),
-			generationOptions.filename
+			generationOptions.filename,
+			'.json'
 		);
 	}
 }

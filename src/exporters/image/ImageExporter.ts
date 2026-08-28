@@ -83,7 +83,7 @@ export class ImageExporter {
 
 		const imageBlob = await this.$toImageBlob(canvas, options);
 
-		new FileHandler().$downloadFile(imageBlob, _options.filename);
+		new FileHandler().$downloadFile(imageBlob, _options.filename, `.${_options.format}`);
 	}
 
 	/** Generates an image blob using the public export options. */
