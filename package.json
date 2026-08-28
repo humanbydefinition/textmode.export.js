@@ -1,7 +1,7 @@
 {
 	"name": "textmode.export.js",
 	"version": "1.8.0",
-	"description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, JSON, and plain text.",
+	"description": "Export plugin for textmode.js - Save images, GIFs, videos, SVG, JSON, text, and ZIP frame sequences.",
 	"type": "module",
 	"devEngines": {
 		"runtime": {
@@ -63,6 +63,7 @@
 		"textmode.js": "^0.18.0"
 	},
 	"dependencies": {
+		"fflate": "0.8.3",
 		"gifenc": "^1.0.1",
 		"mediabunny": "1.55.2"
 	},
@@ -94,6 +95,8 @@
 		"png",
 		"jpg",
 		"webp",
+		"zip",
+		"frame-sequence",
 		"creative-coding",
 		"canvas"
 	],
