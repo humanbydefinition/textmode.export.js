@@ -23,6 +23,12 @@
 					"sourceFile": "examples/ExportPlugin/layerTargets/sketch.js",
 					"description": "Draws base, foreground, and annotation layers so TXT, JSON, and SVG exports can target individual layers.",
 					"status": "unrated"
+				},
+				{
+					"title": "ExportPlugin.zipSequence",
+					"sourceFile": "examples/ExportPlugin/zipSequence/sketch.js",
+					"description": "Exports a deterministic PNG frame sequence from code when Z is pressed, without adding ZIP to the overlay.",
+					"status": "unrated"
 				}
 			]
 		}

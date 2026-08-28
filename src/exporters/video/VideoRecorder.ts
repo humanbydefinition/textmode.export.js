@@ -10,9 +10,9 @@ import {
 	type StreamTargetChunk,
 	type VideoCodec as MediabunnyVideoCodec,
 } from 'mediabunny';
-import { VideoExportError, createAbortError } from './errors';
+import { frameTiming } from '../base';
+import { VideoExportError, createAbortError, normalizeVideoExportError } from './errors';
 import { createVideoEncodingPlan } from './VideoEncodingPolicy';
-import { videoFrameTiming } from './VideoFrameSchedule';
 import type { VideoEncodingPlan, VideoExportProgress, VideoFrameDriverLike, VideoGenerationOptions } from './types';
 import { withAbortableTimeout } from './withAbortableTimeout';
 
@@ -96,7 +96,7 @@ export class VideoRecorder {
 				prepareFrame: options.prepareFrame,
 				onFrame: async ({ frameIndex }) => {
 					this._throwIfAborted(options.signal);
-					const timing = videoFrameTiming(frameIndex, plan.frameRate);
+					const timing = frameTiming(frameIndex, plan.frameRate);
 					await this._awaitWithAbort(source.add(timing.startSeconds, timing.durationSeconds), options.signal);
 					this._emitProgress(onProgress, 'recording', 'capturing', frameIndex + 1, plan.frameCount, plan);
 				},
@@ -229,12 +229,7 @@ export class VideoRecorder {
 	}
 
 	private _normalizeError(error: unknown): VideoExportError {
-		if (error instanceof VideoExportError) return error;
-		return new VideoExportError(
-			'VIDEO_EXPORT_FAILED',
-			error instanceof Error ? error.message : 'Video export failed.',
-			error
-		);
+		return normalizeVideoExportError(error);
 	}
 
 	private _log(options: VideoGenerationOptions, ...args: unknown[]): void {
