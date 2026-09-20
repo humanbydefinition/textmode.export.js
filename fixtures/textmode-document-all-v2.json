@@ -1,0 +1,46 @@
+{
+	"format": "textmode.document",
+	"formatVersion": "2.0.0",
+	"target": "all",
+	"canvas": {
+		"width": 8,
+		"height": 8
+	},
+	"layers": [
+		{
+			"id": "base",
+			"visible": true,
+			"opacity": 1,
+			"blendMode": "normal",
+			"offsetX": 0,
+			"offsetY": 0,
+			"rotationZ": 0,
+			"grid": {
+				"cols": 1,
+				"rows": 1,
+				"cellWidth": 8,
+				"cellHeight": 8
+			},
+			"cells": {
+				"encoding": "object-rows-v1",
+				"rows": [
+					[
+						{
+							"x": 0,
+							"y": 0,
+							"character": "B",
+							"foreground": "#ffffffff",
+							"background": "#000000ff",
+							"transform": {
+								"invert": true,
+								"flipX": false,
+								"flipY": false,
+								"rotation": -90
+							}
+						}
+					]
+				]
+			}
+		}
+	]
+}
