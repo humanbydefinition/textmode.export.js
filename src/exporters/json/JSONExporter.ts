@@ -9,6 +9,7 @@ import {
 } from '../base';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import packageJson from '../../../package.json';
+import { TEXTMODE_DOCUMENT_FORMAT, TEXTMODE_DOCUMENT_FORMAT_VERSION } from '../../document';
 import type {
 	JSONCellData,
 	JSONCellCollection,
@@ -22,8 +23,6 @@ import type {
 	TextmodeDocumentLayer,
 } from './types';
 
-const TEXTMODE_DOCUMENT_FORMAT = 'textmode.document' as const;
-const TEXTMODE_DOCUMENT_FORMAT_VERSION = '2.0.0' as const;
 const JSON_BLEND_MODE_NAMES: Readonly<Record<LayerBlendMode, string>> = {
 	[LayerBlendMode.NORMAL]: 'normal',
 	[LayerBlendMode.ADDITIVE]: 'additive',
