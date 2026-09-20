@@ -23,6 +23,14 @@
 			"types": "./dist/types/index.d.ts",
 			"import": "./dist/textmode.export.esm.js",
 			"require": "./dist/textmode.export.umd.js"
+		},
+		"./document": {
+			"types": "./dist/types/document/index.d.ts",
+			"import": "./dist/textmode.document.esm.js"
+		},
+		"./schema": {
+			"types": "./schemas/textmode-document-2.0.schema.d.ts",
+			"default": "./schemas/textmode-document-2.0.schema.json"
 		}
 	},
 	"sideEffects": [
@@ -30,15 +38,19 @@
 		"./dist/textmode.export.umd.js"
 	],
 	"files": [
-		"dist"
+		"dist",
+		"fixtures",
+		"schemas",
+		"TEXTMODE_DOCUMENT_FORMAT.md"
 	],
 	"scripts": {
 		"prebuild": "npm run clean",
 		"clean": "rm -rf dist",
 		"dev": "textmode-build dev --port 5174 --host",
 		"build:bundle": "textmode-build build",
+		"build:document": "vite build --config vite.document.config.ts",
 		"build:types": "textmode-types build",
-		"build": "npm run build:bundle && npm run build:types",
+		"build": "npm run build:bundle && npm run build:document && npm run build:types",
 		"check": "npm run format:check && npm run lint && npm run lint:markdown && npm run typecheck && npm run docs:check && npm run test && npm run build && npm run types:verify",
 		"docs:links:add": "textmode-docs links add",
 		"docs:api:check": "textmode-docs api-check",
