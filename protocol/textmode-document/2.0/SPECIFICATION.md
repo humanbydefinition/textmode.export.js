@@ -3,8 +3,13 @@
 ## Status
 
 This document defines `textmode.document` version `2.0.0`. The JSON Schema is
-published at `schemas/textmode-document-2.0.schema.json`. The runtime codec is
-available from `textmode.export.js/document`.
+published beside this specification and through the `textmode.export.js/schema`
+and `textmode.export.js/document/schema/2.0` package subpaths. The schema's
+`$id` is a stable identifier, not a hosted download URL. The runtime codec is
+available from the ESM-only `textmode.export.js/document` subpath. The five
+canonical JSON fixtures in this directory are available through subpaths such
+as `textmode.export.js/document/fixtures/2.0/textmode-document-selected-v2.json`.
+Use the JSON import mechanism required by your runtime or bundler.
 
 The format represents editable cell data. It does not represent final rendered
 pixels, post-processing, an editor project, or authored animation.
@@ -19,9 +24,10 @@ profile in RFC 7493:
 - non-finite numbers are not emitted;
 - timestamps use an uppercase, timezone-qualified RFC 3339 representation.
 
-The media type is `application/json`. Suggested filenames end in
-`.textmode.json`. Extensions and media types are discovery hints; consumers
-must route a decoded object using its `format` member.
+The media type is `application/json`. `.textmode.json` is a suggested filename
+suffix; existing exporter downloads use `.json` by default. Extensions and
+media types are discovery hints; consumers must route a decoded object using
+its `format` member.
 
 ## Root discriminator
 
@@ -175,6 +181,12 @@ Metadata is optional and informational:
 	}
 }
 ```
+
+`generator.name` identifies the producer and is not restricted to
+`textmode.export.js`. If metadata is present, `createdAt` must be a real
+calendar date and time in the uppercase, timezone-qualified RFC 3339 profile:
+seconds are required, fractional seconds are optional, and leap seconds are
+not supported in version 2. The decoder preserves valid timestamps as written.
 
 Consumers must not use metadata to select executable behavior, fetch resources,
 or bypass document validation.

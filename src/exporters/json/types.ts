@@ -1,5 +1,14 @@
 import type { LayerExportOptions } from '../base';
-import type { JSONCellTransform, JSONExportColorMode, JSONExportTarget, JSONRGBAColor } from '../../document';
+import type { JSONCellTransform, JSONExportTarget, JSONRGBAColor } from '../../document';
+
+/**
+ * Color representation written by the JSON exporter: hexadecimal strings or
+ * RGBA channel objects.
+ *
+ * @category JSON document data
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportColorMode | JSONExportColorMode API reference}
+ */
+export type JSONExportColorMode = 'hex' | 'rgba';
 
 export type {
 	JSONCellCollection,
@@ -7,7 +16,6 @@ export type {
 	JSONColorValue,
 	JSONDocumentFormat,
 	JSONDocumentVersion,
-	JSONExportColorMode,
 	JSONExportMetadata,
 	JSONExportTarget,
 	JSONLayerGrid,
@@ -29,19 +37,25 @@ export type {
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportOptions | JSONExportOptions API reference}
  */
 export type JSONExportOptions = LayerExportOptions & {
-	/** Export one selected layer or the complete layer stack. Defaults to `selected`. */
+	/**
+	 * Export one selected layer or the complete layer stack.
+	 * Defaults to `selected`.
+	 */
 	target?: JSONExportTarget;
 
-	/** Filename used by the download helper. */
+	/** Filename used by the download helper. A default name is used when omitted. */
 	filename?: string;
 
-	/** Pretty-print with two spaces, a custom indentation width, or not at all. */
+	/**
+	 * Pretty-print with two spaces when `true`, use the given indentation width
+	 * when numeric, or produce compact JSON when `false`. Defaults to `true`.
+	 */
 	pretty?: boolean | number;
 
-	/** Color representation used for foreground and background values. Defaults to `hex`. */
+	/** Foreground and background color representation. Defaults to `hex`. */
 	colorMode?: JSONExportColorMode;
 
-	/** Include the timestamp and generator metadata. Defaults to `true`. */
+	/** Include the creation timestamp and generator metadata. Defaults to `true`. */
 	includeMetadata?: boolean;
 };
 

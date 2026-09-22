@@ -9,7 +9,11 @@ import {
 } from '../base';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import packageJson from '../../../package.json';
-import { TEXTMODE_DOCUMENT_FORMAT, TEXTMODE_DOCUMENT_FORMAT_VERSION } from '../../document';
+import {
+	TEXTMODE_DOCUMENT_FORMAT,
+	TEXTMODE_DOCUMENT_FORMAT_VERSION,
+	TEXTMODE_OBJECT_ROWS_ENCODING,
+} from '../../document';
 import type {
 	JSONCellData,
 	JSONCellCollection,
@@ -127,7 +131,7 @@ export class JSONExporter {
 		}
 
 		return {
-			encoding: 'object-rows-v1',
+			encoding: TEXTMODE_OBJECT_ROWS_ENCODING,
 			rows: rowCollections,
 		};
 	}

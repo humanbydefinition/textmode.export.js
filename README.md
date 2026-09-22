@@ -24,6 +24,10 @@ Choose a compact still, structured document data, or a complete animation to sui
 - **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
 - **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames with a versioned manifest
 
+The [textmode document 2.0 specification](./protocol/textmode-document/2.0/SPECIFICATION.md) defines the editable
+JSON format, its schema, and the published compatibility fixtures. The dependency-free decoder is available from the
+ESM-only `textmode.export.js/document` entry point.
+
 ## Try it online first
 
 Open [editor.textmode.art](https://editor.textmode.art/), a browser-based live-coding environment for the

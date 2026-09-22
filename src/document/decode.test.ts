@@ -34,7 +34,7 @@ type MutableSelectedFixture = Record<string, unknown> & {
 };
 
 function readFixture(name: string): unknown {
-	const fixturePath = path.resolve(import.meta.dirname, '../../fixtures', name);
+	const fixturePath = path.resolve(import.meta.dirname, '../../protocol/textmode-document/2.0/fixtures', name);
 	return JSON.parse(readFileSync(fixturePath, 'utf8')) as unknown;
 }
 
@@ -77,10 +77,19 @@ describe('textmode document codec', () => {
 		expect(result.ok).toBe(true);
 		if (!result.ok || result.document.target !== 'all') return;
 
-		expect(result.document.layers).toHaveLength(1);
+		expect(result.document.layers).toHaveLength(2);
+		expect(result.document.layers.map((layer) => layer.id)).toEqual(['base', 'accent']);
+		expect(result.document.layers[1].grid).toEqual({ cols: 2, rows: 1, cellWidth: 4, cellHeight: 8 });
+		expect(result.document.layers[1].cells.rows[0].map((cell) => cell.character)).toEqual(['C', ' ']);
 		expect(result.document.layers[0].cells.rows[0][0].transform).toMatchObject({
 			invert: true,
 			rotation: 270,
+		});
+		expect(
+			decodeTextmodeDocument(readFixture('textmode-document-all-v2.json'), { limits: { maxCells: 2 } })
+		).toMatchObject({
+			ok: false,
+			error: { code: 'LIMIT_EXCEEDED', path: '$.layers[1].cells.rows' },
 		});
 	});
 
@@ -238,7 +247,7 @@ describe('textmode document codec', () => {
 			const source = readFileSync(path.join(sourceDir, file), 'utf8');
 			expect(source).not.toMatch(/from ['"]textmode\.js['"]/);
 			expect(source).not.toMatch(/exporters\/(?:gif|video|zip|image)/);
-			expect(source).not.toMatch(/\b(?:window|document)\s*\./);
+			expect(source).not.toMatch(/\b(?:window|document)\s*\.\s*[A-Za-z_$]/);
 			expect(source).not.toMatch(/\b(?:new\s+Blob|HTMLElement)\b/);
 		}
 	});

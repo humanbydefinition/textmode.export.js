@@ -29,8 +29,32 @@
 			"import": "./dist/textmode.document.esm.js"
 		},
 		"./schema": {
-			"types": "./schemas/textmode-document-2.0.schema.d.ts",
-			"default": "./schemas/textmode-document-2.0.schema.json"
+			"types": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.d.ts",
+			"default": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.json"
+		},
+		"./document/schema/2.0": {
+			"types": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.d.ts",
+			"default": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.json"
+		},
+		"./document/fixtures/2.0/textmode-document-selected-v2.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-document-selected-v2.json"
+		},
+		"./document/fixtures/2.0/textmode-document-all-v2.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-document-all-v2.json"
+		},
+		"./document/fixtures/2.0/textmode-document-create-integration-v2.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-document-create-integration-v2.json"
+		},
+		"./document/fixtures/2.0/textmode-layer-selected-v1.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-layer-selected-v1.json"
+		},
+		"./document/fixtures/2.0/textmode-layer-all-v1.1.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-layer-all-v1.1.json"
 		}
 	},
 	"sideEffects": [
@@ -39,9 +63,7 @@
 	],
 	"files": [
 		"dist",
-		"fixtures",
-		"schemas",
-		"TEXTMODE_DOCUMENT_FORMAT.md"
+		"protocol/textmode-document/2.0"
 	],
 	"scripts": {
 		"prebuild": "npm run clean",
@@ -86,6 +108,8 @@
 		"@textmode/release": "^0.2.0",
 		"@textmode/tsconfig": "^0.2.2",
 		"@types/node": "^26.4.1",
+		"ajv": "^8.20.0",
+		"ajv-formats": "^3.0.1",
 		"textmode.js": "^0.18.0",
 		"typescript": "^6.0.3",
 		"vite-plugin-css-injected-by-js": "^5.0.2",
