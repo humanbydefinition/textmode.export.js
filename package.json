@@ -1,6 +1,6 @@
 {
 	"name": "textmode.export.js",
-	"version": "1.8.1",
+	"version": "1.9.0-beta.1",
 	"description": "Export plugin for textmode.js - Save images, GIFs, videos, SVG, JSON, text, and ZIP frame sequences.",
 	"type": "module",
 	"devEngines": {
