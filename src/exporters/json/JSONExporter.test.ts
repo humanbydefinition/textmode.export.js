@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LayerBlendMode, type Textmodifier, type TextmodeLayer } from 'textmode.js';
+import { decodeTextmodeDocument } from '../../document';
 import { JSONExporter } from './JSONExporter';
 import type { TextmodeAllDocumentJSON, TextmodeDocumentJSON, TextmodeSelectedDocumentJSON } from './types';
 
@@ -208,6 +209,17 @@ describe('JSONExporter', () => {
 				rotation: 0,
 			},
 		});
+	});
+
+	it.each(['selected', 'all'] as const)('emits a document accepted by the public codec for target %s', (target) => {
+		const document = new JSONExporter().$generateJSONData(createTextmodifierMock(), {
+			target,
+			includeMetadata: false,
+		});
+		const decoded = decodeTextmodeDocument(document);
+		expect(decoded.ok).toBe(true);
+		if (!decoded.ok) return;
+		expect(decoded.document.target).toBe(target);
 	});
 
 	it('exports a selected user layer when provided', () => {

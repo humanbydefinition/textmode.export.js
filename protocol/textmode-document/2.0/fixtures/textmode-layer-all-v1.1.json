@@ -1,0 +1,46 @@
+{
+	"$schema": "https://textmode.art/schemas/textmode-layer-1.0.schema.json",
+	"format": "textmode.layer",
+	"formatVersion": "1.1.0",
+	"canvas": {
+		"width": 8,
+		"height": 8
+	},
+	"layers": [
+		{
+			"id": "base",
+			"visible": true,
+			"opacity": 1,
+			"blendMode": "normal",
+			"offsetX": 0,
+			"offsetY": 0,
+			"rotationZ": 0,
+			"grid": {
+				"cols": 1,
+				"rows": 1,
+				"cellWidth": 8,
+				"cellHeight": 8
+			},
+			"cells": {
+				"encoding": "object-rows-v1",
+				"rows": [
+					[
+						{
+							"x": 0,
+							"y": 0,
+							"character": "A",
+							"foreground": "#ffffffff",
+							"background": "#000000ff",
+							"transform": {
+								"invert": false,
+								"flipX": false,
+								"flipY": false,
+								"rotation": 0
+							}
+						}
+					]
+				]
+			}
+		}
+	]
+}
