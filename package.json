@@ -23,6 +23,38 @@
 			"types": "./dist/types/index.d.ts",
 			"import": "./dist/textmode.export.esm.js",
 			"require": "./dist/textmode.export.umd.js"
+		},
+		"./document": {
+			"types": "./dist/types/document/index.d.ts",
+			"import": "./dist/textmode.document.esm.js"
+		},
+		"./schema": {
+			"types": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.d.ts",
+			"default": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.json"
+		},
+		"./document/schema/2.0": {
+			"types": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.d.ts",
+			"default": "./protocol/textmode-document/2.0/textmode-document-2.0.schema.json"
+		},
+		"./document/fixtures/2.0/textmode-document-selected-v2.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-document-selected-v2.json"
+		},
+		"./document/fixtures/2.0/textmode-document-all-v2.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-document-all-v2.json"
+		},
+		"./document/fixtures/2.0/textmode-document-create-integration-v2.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-document-create-integration-v2.json"
+		},
+		"./document/fixtures/2.0/textmode-layer-selected-v1.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-layer-selected-v1.json"
+		},
+		"./document/fixtures/2.0/textmode-layer-all-v1.1.json": {
+			"types": "./protocol/textmode-document/2.0/fixture.d.ts",
+			"default": "./protocol/textmode-document/2.0/fixtures/textmode-layer-all-v1.1.json"
 		}
 	},
 	"sideEffects": [
@@ -30,15 +62,17 @@
 		"./dist/textmode.export.umd.js"
 	],
 	"files": [
-		"dist"
+		"dist",
+		"protocol/textmode-document/2.0"
 	],
 	"scripts": {
 		"prebuild": "npm run clean",
 		"clean": "rm -rf dist",
 		"dev": "textmode-build dev --port 5174 --host",
 		"build:bundle": "textmode-build build",
+		"build:document": "vite build --config vite.document.config.ts",
 		"build:types": "textmode-types build",
-		"build": "npm run build:bundle && npm run build:types",
+		"build": "npm run build:bundle && npm run build:document && npm run build:types",
 		"check": "npm run format:check && npm run lint && npm run lint:markdown && npm run typecheck && npm run docs:check && npm run test && npm run build && npm run types:verify",
 		"docs:links:add": "textmode-docs links add",
 		"docs:api:check": "textmode-docs api-check",
@@ -74,6 +108,8 @@
 		"@textmode/release": "^0.2.0",
 		"@textmode/tsconfig": "^0.2.2",
 		"@types/node": "^26.4.1",
+		"ajv": "^8.20.0",
+		"ajv-formats": "^3.0.1",
 		"textmode.js": "^0.18.0",
 		"typescript": "^6.0.3",
 		"vite-plugin-css-injected-by-js": "^5.0.2",

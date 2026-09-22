@@ -1,0 +1,86 @@
+{
+	"format": "textmode.document",
+	"formatVersion": "2.0.0",
+	"target": "selected",
+	"metadata": {
+		"createdAt": "2026-08-28T12:00:00.000Z",
+		"generator": {
+			"name": "textmode.export.js",
+			"version": "1.8.1"
+		}
+	},
+	"canvas": {
+		"width": 16,
+		"height": 16
+	},
+	"grid": {
+		"cols": 2,
+		"rows": 2,
+		"cellWidth": 8,
+		"cellHeight": 8
+	},
+	"layer": {
+		"id": "base",
+		"cells": {
+			"encoding": "object-rows-v1",
+			"rows": [
+				[
+					{
+						"x": 0,
+						"y": 0,
+						"character": "A",
+						"foreground": "#ff0000ff",
+						"background": "#000000ff",
+						"transform": {
+							"invert": false,
+							"flipX": false,
+							"flipY": false,
+							"rotation": 0
+						}
+					},
+					{
+						"x": 1,
+						"y": 0,
+						"character": "😀",
+						"foreground": { "r": 0, "g": 255, "b": 0, "a": 255 },
+						"background": { "r": 0, "g": 0, "b": 255, "a": 128 },
+						"transform": {
+							"invert": false,
+							"flipX": true,
+							"flipY": false,
+							"rotation": 360
+						}
+					}
+				],
+				[
+					{
+						"x": 0,
+						"y": 1,
+						"character": " ",
+						"foreground": "#00000000",
+						"background": "#123456ff",
+						"transform": {
+							"invert": false,
+							"flipX": false,
+							"flipY": true,
+							"rotation": 90
+						}
+					},
+					{
+						"x": 1,
+						"y": 1,
+						"character": "X",
+						"foreground": "#00000000",
+						"background": "#00000000",
+						"transform": {
+							"invert": false,
+							"flipX": false,
+							"flipY": false,
+							"rotation": 0
+						}
+					}
+				]
+			]
+		}
+	}
+}
