@@ -64,8 +64,6 @@ export type { TextmodeExportAPI, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
-export { TEXTMODE_DOCUMENT_FORMAT, TEXTMODE_DOCUMENT_FORMAT_VERSION, TEXTMODE_OBJECT_ROWS_ENCODING } from './document';
-export type { JSONExportTarget, TextmodeDocumentJSON, TextmodeDocumentTarget } from './document';
 export type { JSONExportColorMode, JSONExportOptions } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export { ZIPExportError } from './exporters/zip';

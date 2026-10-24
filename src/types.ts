@@ -3,7 +3,8 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
-import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
+import type { JSONExportOptions } from './exporters/json';
+import type { TextmodeDocumentJSON } from '@textmode/document';
 import type { ZIPExportOptions } from './exporters/zip';
 
 /**
