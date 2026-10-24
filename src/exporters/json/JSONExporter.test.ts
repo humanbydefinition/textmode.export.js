@@ -1,10 +1,16 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import Ajv2020 from 'ajv/dist/2020.js';
+import addFormats from 'ajv-formats';
+import packageJson from '../../../package.json';
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LayerBlendMode, type Textmodifier, type TextmodeLayer } from 'textmode.js';
-import { decodeTextmodeDocument } from '../../document';
+import { decodeTextmodeDocument } from '@textmode/document';
 import { JSONExporter } from './JSONExporter';
-import type { TextmodeAllDocumentJSON, TextmodeDocumentJSON, TextmodeSelectedDocumentJSON } from './types';
+import type { TextmodeAllDocumentJSON, TextmodeDocumentJSON, TextmodeSelectedDocumentJSON } from '@textmode/document';
 
 type LayerMockOptions = {
 	visible?: boolean;
@@ -435,5 +441,84 @@ describe('JSONExporter', () => {
 		expect(text).toContain('"target":"selected"');
 		expect(text).not.toContain('$schema');
 		expect(text).not.toContain('schemas');
+	});
+});
+
+const serializationBaseline: Record<string, string> = {
+	'{"target":"selected","colorMode":"hex","includeMetadata":true,"pretty":false}':
+		'86240617fc76e5152993634f7617b273d0af68b8c6a075be9037dd5ed7dae0cf',
+	'{"target":"selected","colorMode":"hex","includeMetadata":true,"pretty":true}':
+		'17f975e4bc5b8a7329efe18d1e4425453a0ec7b42d141ea9cea990000782c03c',
+	'{"target":"selected","colorMode":"hex","includeMetadata":true,"pretty":4}':
+		'c79676927b9d5533b805fae696a90d98978a2923fe7d28ec8333a2a6efea9654',
+	'{"target":"selected","colorMode":"hex","includeMetadata":false,"pretty":false}':
+		'612c1d28c48cae458d4b89489965320412b64ef9105edbb888ba26a479d7bcf5',
+	'{"target":"selected","colorMode":"hex","includeMetadata":false,"pretty":true}':
+		'a4faece20665a5716a9d16b42c09d8c7589c5daf0eadfda36cd7581295dfc791',
+	'{"target":"selected","colorMode":"hex","includeMetadata":false,"pretty":4}':
+		'4d74bcb63d6a7a074bb7b186f105f376613ff2a1421bc00ff0aa1a70a3ae83e6',
+	'{"target":"selected","colorMode":"rgba","includeMetadata":true,"pretty":false}':
+		'f04121847f013aa1e3c2873cf72816deb2cd4166cdd4aa23c82081648ede27f1',
+	'{"target":"selected","colorMode":"rgba","includeMetadata":true,"pretty":true}':
+		'2995484c1a8689338335c309c3a9d1d7c1a7b4bf2b474eaab4e5f15cca644847',
+	'{"target":"selected","colorMode":"rgba","includeMetadata":true,"pretty":4}':
+		'c1e892a6e10e9ef65a05a83579511c2ae81d79cfc5e6241b31039ce97e379b2f',
+	'{"target":"selected","colorMode":"rgba","includeMetadata":false,"pretty":false}':
+		'402772834d75e381812cb55a473a7d208457338e6577e592f1c2ad56804059db',
+	'{"target":"selected","colorMode":"rgba","includeMetadata":false,"pretty":true}':
+		'26469641db963f65187956900ac21ead880765794cb78b5386500f2b5427d03c',
+	'{"target":"selected","colorMode":"rgba","includeMetadata":false,"pretty":4}':
+		'ee01fe435d559cd3a8f1d626df262b29508f7ce085d5494f856d335cbe4af7da',
+	'{"target":"all","colorMode":"hex","includeMetadata":true,"pretty":false}':
+		'956a488069cca0367d7143d8b4233605cd20739f7b4b5a3bdd54a13f71b3a0d4',
+	'{"target":"all","colorMode":"hex","includeMetadata":true,"pretty":true}':
+		'ffb3fa46ecd789a9ff8fb59a1487fdcc70de95f940ca32d26d4ed96315e05b8e',
+	'{"target":"all","colorMode":"hex","includeMetadata":true,"pretty":4}':
+		'3d579be53e4abdd2fbbbbfdf8178599a7ae6c2a50de304fde41e00b1825c2ab0',
+	'{"target":"all","colorMode":"hex","includeMetadata":false,"pretty":false}':
+		'8c3f18787e4ba7184872921e0469839fae1ae22e661beaa0a4c0f64e3271fbc2',
+	'{"target":"all","colorMode":"hex","includeMetadata":false,"pretty":true}':
+		'9674a136075a6b845033e5e132b01f601c75b3faca0b454e1539b125134451d7',
+	'{"target":"all","colorMode":"hex","includeMetadata":false,"pretty":4}':
+		'dee013f8328613f2ca6011f4efb292b111976d7b2d28caf4ada1621cd71c98c5',
+	'{"target":"all","colorMode":"rgba","includeMetadata":true,"pretty":false}':
+		'ba29fcc0cc5e65e86b7babd835a18512a7e69faad8e9bc0de6d984154026fec2',
+	'{"target":"all","colorMode":"rgba","includeMetadata":true,"pretty":true}':
+		'a99ff496dc72af3ac22c02ea2d233ad6225313e1749e92af13eff474f9979105',
+	'{"target":"all","colorMode":"rgba","includeMetadata":true,"pretty":4}':
+		'552752e9802a86c2b346ea094eb22b815167a24cb684dfbccfd2548688388b4c',
+	'{"target":"all","colorMode":"rgba","includeMetadata":false,"pretty":false}':
+		'fa4379401b74e98a79ef4360dd3be81418cfce600112094bc74ffcb729fb85d6',
+	'{"target":"all","colorMode":"rgba","includeMetadata":false,"pretty":true}':
+		'ef06913d463729c24bbe7dca9919f804e93783cab83a4bf765a01032a48559ac',
+	'{"target":"all","colorMode":"rgba","includeMetadata":false,"pretty":4}':
+		'ce322ea3b689fedcf3e98fe8d4bcb43c94577219d2ff8a77a6c9297c639eaed7',
+};
+const schema = JSON.parse(
+	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/2.0')), 'utf8')
+) as object;
+const schemaValidator = new Ajv2020({ validateFormats: true });
+addFormats(schemaValidator, { mode: 'full' });
+const validateExport = schemaValidator.compile(schema);
+
+describe('extracted protocol compatibility', () => {
+	it.each(Object.entries(serializationBaseline))('preserves pre-extraction output for %s', (key, expectedHash) => {
+		const options = JSON.parse(key) as {
+			target: 'selected' | 'all';
+			colorMode: 'hex' | 'rgba';
+			includeMetadata: boolean;
+			pretty: boolean | number;
+		};
+		const json = new JSONExporter().$generateJSONString(
+			createTextmodifierMock(),
+			options,
+			new Date('2026-09-21T12:00:00.000Z')
+		);
+		const normalizedVersion = json.replace(/("version"\s*:\s*")[^"]+(")/g, '$1<package-version>$2');
+		expect(createHash('sha256').update(normalizedVersion).digest('hex')).toBe(expectedHash);
+		const value = JSON.parse(json) as TextmodeDocumentJSON;
+		expect(validateExport(value), JSON.stringify(validateExport.errors)).toBe(true);
+		expect(decodeTextmodeDocument(value).ok).toBe(true);
+		if (options.includeMetadata) expect(value.metadata?.generator.version).toBe(packageJson.version);
 	});
 });
