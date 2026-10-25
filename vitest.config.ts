@@ -18,7 +18,6 @@ export default defineTextmodeProject({
 		},
 	],
 	alias: {
-		'textmode.export.js/document': path.resolve(import.meta.dirname, 'src/document/index.ts'),
 		'textmode.export.js': path.resolve(import.meta.dirname, 'src/index.ts'),
 	},
 });
