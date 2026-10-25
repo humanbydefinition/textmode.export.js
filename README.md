@@ -24,7 +24,7 @@ Choose a compact still, structured document data, or a complete animation to sui
 - **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
 - **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames with a versioned manifest
 
-The [textmode document specification](https://github.com/humanbydefinition/textmode-document/blob/main/docs/specification-2.0.md)
+The [textmode document specification](https://unpkg.com/@textmode/document@1.0.0/docs/specification-2.0.md)
 defines the portable JSON format. New document consumers should use the independent
 `@textmode/document` package for its decoder, types, and versioned JSON Schema.
 Read the [JSON export guide](./docs/json-export.md) for exporter options and document usage.

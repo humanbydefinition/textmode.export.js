@@ -63,7 +63,7 @@
 		"textmode.js": "^0.18.0"
 	},
 	"dependencies": {
-		"@textmode/document": "github:humanbydefinition/textmode-document#ea13ee793ee2fa7b1b4d272e11925325e163194c",
+		"@textmode/document": "1.0.0",
 		"fflate": "0.8.3",
 		"gifenc": "^1.0.1",
 		"mediabunny": "1.61.5"

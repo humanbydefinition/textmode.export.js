@@ -1,7 +1,7 @@
 # JSON export
 
 `textmode.export.js` produces editable cell data in the
-[`textmode.document@2.0.0` format](https://github.com/humanbydefinition/textmode-document/blob/main/docs/specification-2.0.md).
+[`textmode.document@2.0.0` format](https://unpkg.com/@textmode/document@1.0.0/docs/specification-2.0.md).
 The independent `@textmode/document` package owns its specification, schema,
 document types, and decoder.
 
@@ -51,13 +51,19 @@ import { parseTextmodeDocumentJSON } from '@textmode/document';
 import schema from '@textmode/document/schema/2.0' with { type: 'json' };
 ```
 
-See the [consumer guide](https://github.com/humanbydefinition/textmode-document/blob/main/docs/consumer-guide.md)
+See the [consumer guide](https://unpkg.com/@textmode/document@1.0.0/docs/consumer-guide.md)
 for decoding, resource limits, supported versions, and schema validation.
 The exporter exposes its plugin and export options through its package root.
 
-## Source dependency
+## Protocol package
 
-npm publication is deferred. The exporter currently pins the private
-`humanbydefinition/textmode-document` Git repository at an exact commit. Git needs
-read access for a clean install. CI in another repository needs its own read
-credential for that private repository.
+Install the public protocol package from npm when you need to decode or validate
+exported documents:
+
+```sh
+npm install @textmode/document
+```
+
+The protocol package owns the document format, schema, types, and decoder.
+`textmode.export.js` owns serialization and exporter-specific options. Package
+versions are independent from the on-disk `textmode.document@2.0.0` format version.
