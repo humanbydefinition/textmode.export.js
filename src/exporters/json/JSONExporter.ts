@@ -13,19 +13,17 @@ import {
 	TEXTMODE_DOCUMENT_FORMAT,
 	TEXTMODE_DOCUMENT_FORMAT_VERSION,
 	TEXTMODE_OBJECT_ROWS_ENCODING,
-} from '../../document';
+} from '@textmode/document';
+import type { JSONCellData, JSONExportOptions, JSONGenerationOptions } from './types';
 import type {
-	JSONCellData,
-	JSONCellCollection,
-	JSONColorValue,
-	JSONExportMetadata,
-	JSONExportOptions,
-	JSONGenerationOptions,
-	JSONLayerGrid,
-	JSONObjectRowCell,
+	TextmodeDocumentCellCollection,
+	TextmodeDocumentColor,
+	TextmodeDocumentMetadata,
+	TextmodeDocumentGrid,
+	TextmodeDocumentCell,
 	TextmodeDocumentJSON,
 	TextmodeDocumentLayer,
-} from './types';
+} from '@textmode/document';
 
 const JSON_BLEND_MODE_NAMES: Readonly<Record<LayerBlendMode, string>> = {
 	[LayerBlendMode.NORMAL]: 'normal',
@@ -66,7 +64,10 @@ export class JSONExporter {
 		};
 	}
 
-	private _createMetadata(generationOptions: JSONGenerationOptions, createdAt: Date): JSONExportMetadata | undefined {
+	private _createMetadata(
+		generationOptions: JSONGenerationOptions,
+		createdAt: Date
+	): TextmodeDocumentMetadata | undefined {
 		return generationOptions.includeMetadata
 			? {
 					createdAt: createdAt.toISOString(),
@@ -88,7 +89,7 @@ export class JSONExporter {
 	private _formatColor(
 		color: JSONCellData['foreground'],
 		colorMode: JSONGenerationOptions['colorMode']
-	): JSONColorValue {
+	): TextmodeDocumentColor {
 		if (colorMode === 'rgba') {
 			return { ...color };
 		}
@@ -113,8 +114,8 @@ export class JSONExporter {
 		cols: number,
 		rows: number,
 		colorMode: JSONGenerationOptions['colorMode']
-	): JSONCellCollection {
-		const rowCollections: JSONObjectRowCell[][] = [];
+	): TextmodeDocumentCellCollection {
+		const rowCollections: TextmodeDocumentCell[][] = [];
 
 		for (let y = 0; y < rows; y++) {
 			const rowStart = y * cols;
@@ -136,7 +137,7 @@ export class JSONExporter {
 		};
 	}
 
-	private _createLayerGrid(target: ResolvedLayerExportTarget): JSONLayerGrid {
+	private _createLayerGrid(target: ResolvedLayerExportTarget): TextmodeDocumentGrid {
 		return {
 			cols: target.grid.cols,
 			rows: target.grid.rows,
@@ -148,7 +149,7 @@ export class JSONExporter {
 	private _createLayerCells(
 		target: ResolvedLayerExportTarget,
 		generationOptions: JSONGenerationOptions
-	): JSONCellCollection {
+	): TextmodeDocumentCellCollection {
 		const cells = new JSONDataExtractor().$extractCellData(target);
 		return this._createObjectRowsCells(cells, target.grid.cols, target.grid.rows, generationOptions.colorMode);
 	}
