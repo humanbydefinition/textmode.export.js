@@ -1,2 +1,2 @@
 export { JSONExporter } from './JSONExporter';
-export type { JSONExportColorMode, JSONExportOptions } from './types';
+export type { JSONExportTarget, JSONExportColorMode, JSONExportOptions } from './types';
