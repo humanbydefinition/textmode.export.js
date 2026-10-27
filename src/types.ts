@@ -3,7 +3,9 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
-import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
+import type { JSONExportOptions } from './exporters/json';
+import type { TextmodeDocumentJSON } from '@textmode/document';
+import type { ZIPExportOptions } from './exporters/zip';
 
 /**
  * Default TXT export fields controlled by the export overlay.
@@ -419,7 +421,8 @@ export interface TextmodeExportAPI {
 	toString(options?: TXTExportOptions): string;
 
 	/**
-	 * Produces the selected layer or layer stack as structured JSON data.
+	 * Produces a v3 document with a nonempty layers array.
+	 * Selected layers retain their visibility, opacity, blending, and transforms.
 	 *
 	 * @param options Export options.
 	 * @returns The JSON document representing the selected layer or layer stack.
@@ -428,6 +431,7 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
 	 * const stack = t.toJSON({ target: 'all' });
+	 * console.log(layer.layers[0].grid, stack.formatVersion); // 3.0.0
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojson | TextmodeExportAPI.toJSON API reference}
@@ -435,7 +439,7 @@ export interface TextmodeExportAPI {
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
 	/**
-	 * Produces the selected layer or layer stack as a JSON string.
+	 * Produces the selected layer or layer stack as a v3 JSON document string.
 	 *
 	 * @param options Export options.
 	 * @returns Serialized JSON string for the selected layer or layer stack.
@@ -451,7 +455,7 @@ export interface TextmodeExportAPI {
 	toJSONString(options?: JSONExportOptions): string;
 
 	/**
-	 * Downloads the selected layer or layer stack as a JSON file.
+	 * Downloads the selected layer or layer stack as a v3 JSON document file.
 	 *
 	 * @param options Export options.
 	 *
@@ -541,4 +545,52 @@ export interface TextmodeExportAPI {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tovideoblob | TextmodeExportAPI.toVideoBlob API reference}
 	 */
 	toVideoBlob(options?: VideoExportOptions): Promise<Blob>;
+
+	/**
+	 * Captures and downloads a deterministic frame sequence as a ZIP archive.
+	 *
+	 * The archive contains a versioned manifest followed by one-based, zero-padded frame files. ZIP export is available
+	 * through code only and does not appear in the export overlay.
+	 *
+	 * @param options Required archive format, deterministic capture controls, and per-frame exporter options.
+	 * @returns A promise that resolves after the archive download is initiated.
+	 * @throws {Error} When validation, capture, serialization, archive writing, or download fails.
+	 *
+	 * @category ZIP frame-sequence export
+	 *
+	 * @example
+	 * ```ts
+	 * await t.saveZip({
+	 *     format: 'png',
+	 *     filename: 'orbit-frames',
+	 *     frameCount: 120,
+	 *     frameRate: 30,
+	 *     frameOptions: { scale: 2 },
+	 * });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savezip | TextmodeExportAPI.saveZip API reference}
+	 */
+	saveZip(options: ZIPExportOptions): Promise<void>;
+
+	/**
+	 * Captures a deterministic frame sequence as an in-memory ZIP archive without downloading it.
+	 *
+	 * Peak memory includes the completed ZIP because this method returns a `Blob`; individual uncompressed frame
+	 * payloads are serialized and released sequentially.
+	 *
+	 * @param options Required archive format, deterministic capture controls, and per-frame exporter options.
+	 * @returns The completed `application/zip` blob.
+	 * @throws {Error} When validation, capture, serialization, archive writing, or cancellation fails.
+	 *
+	 * @category ZIP frame-sequence export
+	 *
+	 * @example
+	 * ```ts
+	 * const archive = await t.toZipBlob({ format: 'svg', frameCount: 60, frameRate: 24 });
+	 * ```
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tozipblob | TextmodeExportAPI.toZipBlob API reference}
+	 */
+	toZipBlob(options: ZIPExportOptions): Promise<Blob>;
 }

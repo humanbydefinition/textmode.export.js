@@ -1,4 +1,4 @@
-import type { JSONExportColorMode, JSONExportOptions, JSONExportTarget } from '../../exporters/json';
+import type { JSONExportColorMode, JSONExportOptions } from '../../exporters/json';
 import { overlayClasses } from '../utils/classes';
 import { CheckboxInput } from '../components/inputs/CheckboxInput';
 import { Field } from '../components/base/Field';
@@ -12,7 +12,7 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 	private layerTargetContainer?: HTMLElement;
 
 	private target = this._manageComponent(
-		new SelectInput<JSONExportTarget>({
+		new SelectInput<NonNullable<JSONExportOptions['target']>>({
 			id: 'textmode-export-json-target',
 			options: [
 				{ value: 'selected', label: 'selected layer' },
@@ -66,7 +66,7 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 		container.classList.add(overlayClasses.stack);
 
 		const targetField = new Field({
-			label: 'target',
+			label: 'layers',
 			labelFor: 'textmode-export-json-target',
 			variant: 'full',
 		});

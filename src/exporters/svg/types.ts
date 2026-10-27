@@ -1,4 +1,4 @@
-import type { LayerExportOptions } from '../base';
+import type { LayerExportOptions } from '../base/LayerTarget';
 
 /**
  * RGBA color representation.

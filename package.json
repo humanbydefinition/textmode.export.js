@@ -1,12 +1,12 @@
 {
 	"name": "textmode.export.js",
-	"version": "1.8.1",
-	"description": "Export plugin for textmode.js - Save your creations as images, GIFs, videos, SVG, JSON, and plain text.",
+	"version": "1.9.0-beta.1",
+	"description": "Export plugin for textmode.js - Save images, GIFs, videos, SVG, JSON, text, and ZIP frame sequences.",
 	"type": "module",
 	"devEngines": {
 		"runtime": {
 			"name": "node",
-			"version": "^24.0.0",
+			"version": ">=24.0.0",
 			"onFail": "error"
 		},
 		"packageManager": {
@@ -63,20 +63,24 @@
 		"textmode.js": "^0.18.0"
 	},
 	"dependencies": {
+		"@textmode/document": "1.1.0",
+		"fflate": "0.8.3",
 		"gifenc": "^1.0.1",
-		"mediabunny": "1.55.2"
+		"mediabunny": "1.62.1"
 	},
 	"devDependencies": {
-		"@textmode/build": "^0.1.0",
+		"@textmode/build": "^0.1.1",
 		"@textmode/docs": "^0.3.0",
-		"@textmode/lint": "^0.1.0",
+		"@textmode/lint": "^0.1.2",
 		"@textmode/release": "^0.2.0",
-		"@textmode/tsconfig": "^0.2.1",
-		"@types/node": "^24.0.0",
+		"@textmode/tsconfig": "^0.2.2",
+		"@types/node": "^26.4.1",
+		"ajv": "^8.20.0",
+		"ajv-formats": "^3.0.1",
 		"textmode.js": "^0.18.0",
 		"typescript": "^6.0.3",
 		"vite-plugin-css-injected-by-js": "^5.0.2",
-		"vitest": "^4.1.10"
+		"vitest": "^5.0.0"
 	},
 	"keywords": [
 		"textmode",
@@ -94,6 +98,8 @@
 		"png",
 		"jpg",
 		"webp",
+		"zip",
+		"frame-sequence",
 		"creative-coding",
 		"canvas"
 	],

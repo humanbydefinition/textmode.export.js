@@ -110,6 +110,8 @@ function createExportAPI(): TextmodeExportAPI {
 		toGIFBlob: vi.fn(async () => new Blob()),
 		saveVideo: vi.fn(async () => undefined),
 		toVideoBlob: vi.fn(async () => new Blob()),
+		saveZip: vi.fn(async () => undefined),
+		toZipBlob: vi.fn(async () => new Blob()),
 	};
 }
 

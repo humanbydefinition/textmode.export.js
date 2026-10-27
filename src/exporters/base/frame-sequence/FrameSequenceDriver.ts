@@ -1,14 +1,12 @@
 import type { Textmodifier } from 'textmode.js';
-import { createAbortError } from './errors';
-import type { VideoRenderFrameOptions } from './types';
-import { withAbortableTimeout } from './withAbortableTimeout';
-import { videoFrameTiming } from './VideoFrameSchedule';
+import { createFrameSequenceAbortError } from './errors';
+import { frameTiming } from './FrameSchedule';
+import type { FrameSequenceRenderOptions, FrameSequenceStagingSurface, PostDrawSubscription } from './types';
+import { withAbortableFrameTimeout } from './withAbortableTimeout';
 
 const FRAME_RENDER_TIMEOUT_MS = 30_000;
 
-export type PostDrawSubscription = (callback: () => void) => () => void;
-
-type VideoTextmodifier = Textmodifier & {
+type FrameSequenceTextmodifier = Textmodifier & {
 	frameCount: number;
 	millis: number;
 	secs?: number;
@@ -27,7 +25,7 @@ type TimingPropertyKey = 'frameCount' | 'millis' | 'secs';
 interface MethodSnapshot<K extends MethodKey> {
 	key: K;
 	hadOwnProperty: boolean;
-	value: VideoTextmodifier[K];
+	value: FrameSequenceTextmodifier[K];
 }
 
 interface PropertySnapshot {
@@ -42,154 +40,136 @@ interface FrameRenderRequest {
 	reject(error: unknown): void;
 }
 
-/**
- * Drives deterministic video export frames through public textmode APIs.
- *
- * The visible textmode canvas remains untouched. Each presented frame is copied
- * into a staging canvas sized for the requested video output.
- */
-export class VideoFrameDriver {
+/** Drives deterministic export frames through public textmode.js lifecycle APIs. */
+export class FrameSequenceDriver {
 	public readonly canvas: HTMLCanvasElement;
 
-	private readonly _textmodifier: VideoTextmodifier;
+	private readonly _textmodifier: FrameSequenceTextmodifier;
 	private readonly _registerPostDrawHook: PostDrawSubscription;
-	private readonly _context: CanvasRenderingContext2D;
+	private readonly _context: CanvasRenderingContext2D | null;
 	private readonly _sourceCanvas: HTMLCanvasElement;
 	private _pendingFrame: FrameRenderRequest | null = null;
-	private _syntheticFrameCount: number = 0;
-	private _syntheticMillis: number = 0;
+	private _syntheticFrameCount = 0;
+	private _syntheticMillis = 0;
 
-	constructor(textmodifier: Textmodifier, registerPostDrawHook: PostDrawSubscription, width: number, height: number) {
-		this._textmodifier = textmodifier as VideoTextmodifier;
+	constructor(
+		textmodifier: Textmodifier,
+		registerPostDrawHook: PostDrawSubscription,
+		stagingSurface?: FrameSequenceStagingSurface
+	) {
+		this._textmodifier = textmodifier as FrameSequenceTextmodifier;
 		this._registerPostDrawHook = registerPostDrawHook;
 		this._sourceCanvas = textmodifier.canvas;
-		this.canvas = this._createStagingCanvas(width, height);
+		this.canvas = stagingSurface ? this._createStagingCanvas(stagingSurface) : this._sourceCanvas;
 
-		const context = this.canvas.getContext('2d');
-		if (!context) {
-			throw new Error('Video export requires a 2D canvas context for staging frames.');
+		if (stagingSurface) {
+			const context = this.canvas.getContext('2d');
+			if (!context) throw new Error('Frame-sequence export requires a 2D canvas context for staging frames.');
+			context.imageSmoothingEnabled = false;
+			this._context = context;
+		} else {
+			this._context = null;
 		}
-		context.imageSmoothingEnabled = false;
-		this._context = context;
 	}
 
-	public async $render(options: VideoRenderFrameOptions): Promise<void> {
+	public async $render(options: FrameSequenceRenderOptions): Promise<void> {
+		this._throwIfAborted(options.signal);
 		const textmodifier = this._textmodifier;
-		const frameCount = Math.max(1, Math.round(options.frameCount));
-		const frameRate = Math.max(Number.EPSILON, Math.abs(options.frameRate));
-		const deltaTime = 1000 / frameRate;
 		const originalLooping = textmodifier.isLooping();
 		const originalFrameCount = textmodifier.frameCount;
 		const originalMillis = textmodifier.millis;
 		const hadSecs = 'secs' in textmodifier;
-		const originalSecs = textmodifier.secs;
+		const originalFrameRate = textmodifier.frameRate();
 		const methodSnapshots = this._captureMethodSnapshots();
 		const propertySnapshots = this._capturePropertySnapshots();
-
-		const stopHook = this._registerPostDrawHook(() => {
-			this._capturePendingFrame();
-		});
+		const stopHook = this._registerPostDrawHook(() => this._capturePendingFrame());
 
 		try {
 			textmodifier.noLoop();
 			this._syntheticFrameCount = originalFrameCount;
 			this._syntheticMillis = originalMillis;
 			this._shadowTimingProperties(hadSecs);
-			this._shadowTimingMethods(frameRate, deltaTime);
+			this._shadowTimingMethods(options.frameRate, 1000 / options.frameRate);
 			this._shadowResizeCanvas();
 
-			for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+			for (let frameIndex = 0; frameIndex < options.frameCount; frameIndex++) {
 				this._throwIfAborted(options.signal);
-				const timing = videoFrameTiming(frameIndex, frameRate);
+				const timing = frameTiming(frameIndex, options.frameRate);
 				this._syntheticFrameCount = originalFrameCount + frameIndex + 1;
 				this._syntheticMillis = timing.startSeconds * 1000;
 				await options.prepareFrame?.({
 					frameIndex,
-					frameCount,
+					frameCount: options.frameCount,
 					startSeconds: timing.startSeconds,
 					centerSeconds: timing.centerSeconds,
 					endSeconds: timing.endSeconds,
 					timeSeconds: timing.startSeconds,
-					frameRate,
+					frameRate: options.frameRate,
 					signal: options.signal,
 				});
 				this._throwIfAborted(options.signal);
-
 				await this._renderOneFrame(frameIndex, options.signal);
 				this._throwIfAborted(options.signal);
 				await options.onFrame({ frameIndex, canvas: this.canvas });
+				this._throwIfAborted(options.signal);
 			}
 		} finally {
-			stopHook();
-			this._pendingFrame?.reject(new Error('Video export frame rendering was interrupted.'));
+			try {
+				stopHook();
+			} catch {
+				// State restoration must not be skipped by subscription cleanup failures.
+			}
+			this._pendingFrame?.reject(new Error('Frame-sequence rendering was interrupted.'));
 			this._pendingFrame = null;
 			this._restoreProperties(propertySnapshots);
 			this._restoreMethods(methodSnapshots);
-			textmodifier.frameCount = originalFrameCount;
-			textmodifier.millis = originalMillis;
-			if (hadSecs && originalSecs !== undefined) {
-				textmodifier.secs = originalSecs;
-			}
-			if (originalLooping) {
-				textmodifier.loop();
-			} else {
-				textmodifier.noLoop();
-			}
+			if (typeof originalFrameRate === 'number') textmodifier.frameRate(originalFrameRate);
+			if (originalLooping) textmodifier.loop();
+			else textmodifier.noLoop();
 		}
 	}
 
 	private _renderOneFrame(frameIndex: number, signal?: AbortSignal): Promise<void> {
-		if (this._pendingFrame) {
-			throw new Error('A video export frame is already pending.');
-		}
-
-		const textmodifier = this._textmodifier;
+		if (this._pendingFrame) throw new Error('A frame-sequence render is already pending.');
 		const renderPromise = new Promise<void>((resolve, reject) => {
-			this._pendingFrame = {
-				frameIndex,
-				resolve,
-				reject,
-			};
+			this._pendingFrame = { frameIndex, resolve, reject };
 			try {
-				textmodifier.redraw(1);
+				this._textmodifier.redraw(1);
 			} catch (error) {
 				this._pendingFrame = null;
 				reject(error);
 			}
 		});
 
-		return withAbortableTimeout(
+		return withAbortableFrameTimeout(
 			renderPromise,
-			`Video export frame ${frameIndex + 1} did not render within ${FRAME_RENDER_TIMEOUT_MS}ms.`,
+			`Frame ${frameIndex + 1} did not render within ${FRAME_RENDER_TIMEOUT_MS}ms.`,
 			signal,
 			FRAME_RENDER_TIMEOUT_MS
 		).catch((error: unknown) => {
-			if (this._pendingFrame?.frameIndex === frameIndex) {
-				this._pendingFrame = null;
-			}
+			if (this._pendingFrame?.frameIndex === frameIndex) this._pendingFrame = null;
 			throw error;
 		});
 	}
 
 	private _capturePendingFrame(): void {
 		const pendingFrame = this._pendingFrame;
-		if (!pendingFrame) {
-			return;
-		}
-
+		if (!pendingFrame) return;
 		try {
-			this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			this._context.drawImage(
-				this._sourceCanvas,
-				0,
-				0,
-				this._sourceCanvas.width,
-				this._sourceCanvas.height,
-				0,
-				0,
-				this.canvas.width,
-				this.canvas.height
-			);
+			if (this._context) {
+				this._context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+				this._context.drawImage(
+					this._sourceCanvas,
+					0,
+					0,
+					this._sourceCanvas.width,
+					this._sourceCanvas.height,
+					0,
+					0,
+					this.canvas.width,
+					this.canvas.height
+				);
+			}
 			this._pendingFrame = null;
 			pendingFrame.resolve();
 		} catch (error) {
@@ -198,10 +178,10 @@ export class VideoFrameDriver {
 		}
 	}
 
-	private _createStagingCanvas(width: number, height: number): HTMLCanvasElement {
+	private _createStagingCanvas(surface: FrameSequenceStagingSurface): HTMLCanvasElement {
 		const canvas = document.createElement('canvas');
-		canvas.width = Math.max(1, Math.round(width));
-		canvas.height = Math.max(1, Math.round(height));
+		canvas.width = Math.max(1, Math.round(surface.width));
+		canvas.height = Math.max(1, Math.round(surface.height));
 		return canvas;
 	}
 
@@ -251,32 +231,23 @@ export class VideoFrameDriver {
 	}
 
 	private _shadowTimingMethods(frameRate: number, deltaTime: number): void {
-		const textmodifier = this._textmodifier;
-		const originalFrameRate = textmodifier.frameRate;
-
-		textmodifier.deltaTime = () => deltaTime;
-		textmodifier.frameRate = function (fps?: number): number | void {
-			if (fps === undefined) {
-				return frameRate;
-			}
+		const originalFrameRate = this._textmodifier.frameRate;
+		this._textmodifier.deltaTime = () => deltaTime;
+		this._textmodifier.frameRate = function (fps?: number): number | void {
+			if (fps === undefined) return frameRate;
 			return originalFrameRate.call(this, fps);
 		};
 	}
 
 	private _shadowResizeCanvas(): void {
-		this._textmodifier.resizeCanvas = () => {
-			// Resizes requested during export are ignored so video capture never mutates live layout.
-		};
+		this._textmodifier.resizeCanvas = () => undefined;
 	}
 
 	private _restoreMethods(snapshots: Array<MethodSnapshot<MethodKey>>): void {
 		const textmodifier = this._textmodifier as unknown as Record<MethodKey, unknown>;
 		for (const snapshot of snapshots) {
-			if (snapshot.hadOwnProperty) {
-				textmodifier[snapshot.key] = snapshot.value;
-			} else {
-				delete textmodifier[snapshot.key];
-			}
+			if (snapshot.hadOwnProperty) textmodifier[snapshot.key] = snapshot.value;
+			else delete textmodifier[snapshot.key];
 		}
 	}
 
@@ -291,8 +262,6 @@ export class VideoFrameDriver {
 	}
 
 	private _throwIfAborted(signal?: AbortSignal): void {
-		if (signal?.aborted) {
-			throw createAbortError();
-		}
+		if (signal?.aborted) throw createFrameSequenceAbortError();
 	}
 }

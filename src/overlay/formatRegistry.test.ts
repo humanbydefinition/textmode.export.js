@@ -12,6 +12,13 @@ import { CURATED_DEFAULTS } from './config/ExportDefaults';
 import { DefaultsStore } from './config/DefaultsStore';
 
 describe('getExportFormatDefinitions', () => {
+	it('keeps ZIP out of the six overlay format families', () => {
+		const definitions = getExportFormatDefinitions();
+		expect(definitions.map(({ format }) => format)).toEqual(['txt', 'json', 'image', 'svg', 'gif', 'video']);
+		expect(definitions.some(({ format }) => String(format) === 'zip')).toBe(false);
+		expect('zip' in CURATED_DEFAULTS).toBe(false);
+	});
+
 	it('adds layer targeting only to layer-data formats', () => {
 		const layer = {} as TextmodeLayer;
 		const provider: LayerTargetProvider = {

@@ -13,8 +13,8 @@ const { render } = vi.hoisted(() => ({
 	}),
 }));
 
-vi.mock('../video/VideoFrameDriver', () => ({
-	VideoFrameDriver: class {
+vi.mock('../base/frame-sequence/FrameSequenceDriver', () => ({
+	FrameSequenceDriver: class {
 		readonly canvas = {
 			width: 1,
 			height: 1,

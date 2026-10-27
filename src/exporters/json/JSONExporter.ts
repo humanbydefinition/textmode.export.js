@@ -2,28 +2,28 @@ import type { Textmodifier } from 'textmode.js';
 import { LayerBlendMode } from 'textmode.js';
 import {
 	FileHandler,
-	resolveLayerExportTarget,
 	resolveLayerStackExportTargets,
 	type ResolvedLayerExportTarget,
 	type ResolvedLayerStackExportTarget,
 } from '../base';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import packageJson from '../../../package.json';
+import {
+	TEXTMODE_DOCUMENT_FORMAT,
+	TEXTMODE_DOCUMENT_FORMAT_VERSION,
+	TEXTMODE_OBJECT_ROWS_ENCODING,
+} from '@textmode/document';
+import type { JSONCellData, JSONExportOptions, JSONGenerationOptions } from './types';
 import type {
-	JSONCellData,
-	JSONCellCollection,
-	JSONColorValue,
-	JSONExportMetadata,
-	JSONExportOptions,
-	JSONGenerationOptions,
-	JSONLayerGrid,
-	JSONObjectRowCell,
+	TextmodeDocumentCellCollection,
+	TextmodeDocumentColor,
+	TextmodeDocumentMetadata,
+	TextmodeDocumentGrid,
+	TextmodeDocumentCell,
 	TextmodeDocumentJSON,
 	TextmodeDocumentLayer,
-} from './types';
+} from '@textmode/document';
 
-const TEXTMODE_DOCUMENT_FORMAT = 'textmode.document' as const;
-const TEXTMODE_DOCUMENT_FORMAT_VERSION = '2.0.0' as const;
 const JSON_BLEND_MODE_NAMES: Readonly<Record<LayerBlendMode, string>> = {
 	[LayerBlendMode.NORMAL]: 'normal',
 	[LayerBlendMode.ADDITIVE]: 'additive',
@@ -63,10 +63,13 @@ export class JSONExporter {
 		};
 	}
 
-	private _createMetadata(generationOptions: JSONGenerationOptions): JSONExportMetadata | undefined {
+	private _createMetadata(
+		generationOptions: JSONGenerationOptions,
+		createdAt: Date
+	): TextmodeDocumentMetadata | undefined {
 		return generationOptions.includeMetadata
 			? {
-					createdAt: new Date().toISOString(),
+					createdAt: createdAt.toISOString(),
 					generator: {
 						name: 'textmode.export.js',
 						version: packageJson.version,
@@ -85,7 +88,7 @@ export class JSONExporter {
 	private _formatColor(
 		color: JSONCellData['foreground'],
 		colorMode: JSONGenerationOptions['colorMode']
-	): JSONColorValue {
+	): TextmodeDocumentColor {
 		if (colorMode === 'rgba') {
 			return { ...color };
 		}
@@ -110,8 +113,8 @@ export class JSONExporter {
 		cols: number,
 		rows: number,
 		colorMode: JSONGenerationOptions['colorMode']
-	): JSONCellCollection {
-		const rowCollections: JSONObjectRowCell[][] = [];
+	): TextmodeDocumentCellCollection {
+		const rowCollections: TextmodeDocumentCell[][] = [];
 
 		for (let y = 0; y < rows; y++) {
 			const rowStart = y * cols;
@@ -128,12 +131,12 @@ export class JSONExporter {
 		}
 
 		return {
-			encoding: 'object-rows-v1',
+			encoding: TEXTMODE_OBJECT_ROWS_ENCODING,
 			rows: rowCollections,
 		};
 	}
 
-	private _createLayerGrid(target: ResolvedLayerExportTarget): JSONLayerGrid {
+	private _createLayerGrid(target: ResolvedLayerExportTarget): TextmodeDocumentGrid {
 		return {
 			cols: target.grid.cols,
 			rows: target.grid.rows,
@@ -145,7 +148,7 @@ export class JSONExporter {
 	private _createLayerCells(
 		target: ResolvedLayerExportTarget,
 		generationOptions: JSONGenerationOptions
-	): JSONCellCollection {
+	): TextmodeDocumentCellCollection {
 		const cells = new JSONDataExtractor().$extractCellData(target);
 		return this._createObjectRowsCells(cells, target.grid.cols, target.grid.rows, generationOptions.colorMode);
 	}
@@ -174,43 +177,23 @@ export class JSONExporter {
 	 * @param options Export options
 	 * @returns Structured JSON document for the selected layer or layer stack
 	 */
-	public $generateJSONData(textmodifier: Textmodifier, options: JSONExportOptions = {}): TextmodeDocumentJSON {
+	public $generateJSONData(
+		textmodifier: Textmodifier,
+		options: JSONExportOptions = {},
+		createdAt: Date = new Date()
+	): TextmodeDocumentJSON {
 		const generationOptions = this._applyDefaultOptions(options);
-		const metadata = this._createMetadata(generationOptions);
+		const metadata = this._createMetadata(generationOptions, createdAt);
 
-		if (generationOptions.target === 'all') {
-			const targets = resolveLayerStackExportTargets(textmodifier);
-			const canvasGrid = targets[0].grid;
-
-			return {
-				format: TEXTMODE_DOCUMENT_FORMAT,
-				formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
-				target: 'all',
-				...(metadata ? { metadata } : {}),
-				canvas: {
-					width: canvasGrid.width,
-					height: canvasGrid.height,
-				},
-				layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
-			};
-		}
-
-		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
-
+		const targets = resolveLayerStackExportTargets(
+			textmodifier,
+			generationOptions.target === 'selected' ? [generationOptions.layer ?? textmodifier.layers.base] : undefined
+		);
 		return {
 			format: TEXTMODE_DOCUMENT_FORMAT,
 			formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
-			target: 'selected',
 			...(metadata ? { metadata } : {}),
-			canvas: {
-				width: target.grid.width,
-				height: target.grid.height,
-			},
-			grid: this._createLayerGrid(target),
-			layer: {
-				id: target.id,
-				cells: this._createLayerCells(target, generationOptions),
-			},
+			layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
 		};
 	}
 
@@ -221,9 +204,13 @@ export class JSONExporter {
 	 * @param options Export options
 	 * @returns Serialized JSON string
 	 */
-	public $generateJSONString(textmodifier: Textmodifier, options: JSONExportOptions = {}): string {
+	public $generateJSONString(
+		textmodifier: Textmodifier,
+		options: JSONExportOptions = {},
+		createdAt: Date = new Date()
+	): string {
 		const generationOptions = this._applyDefaultOptions(options);
-		const data = this.$generateJSONData(textmodifier, generationOptions);
+		const data = this.$generateJSONData(textmodifier, generationOptions, createdAt);
 		const indentation =
 			typeof generationOptions.pretty === 'number' ? generationOptions.pretty : generationOptions.pretty ? 2 : 0;
 		return JSON.stringify(data, null, indentation);
@@ -241,7 +228,8 @@ export class JSONExporter {
 			new Blob([this.$generateJSONString(textmodifier, generationOptions)], {
 				type: 'application/json;charset=utf-8',
 			}),
-			generationOptions.filename
+			generationOptions.filename,
+			'.json'
 		);
 	}
 }

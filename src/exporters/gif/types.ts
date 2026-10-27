@@ -107,10 +107,3 @@ export interface GIFGenerationOptions {
 	signal?: AbortSignal;
 	prepareFrame?: PrepareExportFrame;
 }
-
-export interface GIFFrame {
-	imageData: ImageData;
-	width: number;
-	height: number;
-	delayMs?: number;
-}

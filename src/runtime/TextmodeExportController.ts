@@ -7,9 +7,12 @@ import { GIFExporter, type GIFExportOptions } from '../exporters/gif';
 import { VideoExporter } from '../exporters/video/VideoExporter';
 import type { VideoExportOptions } from '../exporters/video';
 import { JSONExporter, type JSONExportOptions } from '../exporters/json';
+import { ZIPExporter, type ZIPExportOptions } from '../exporters/zip';
 import { createExportOverlay } from '../overlay';
 import type { OverlayController } from '../overlay/core/OverlayController';
-import { createLayerTargetProvider } from '../exporters/base';
+import { createLayerTargetProvider, ExclusiveCaptureGate } from '../exporters/base';
+import { normalizeVideoExportError } from '../exporters/video/errors';
+import { normalizeZIPExportError } from '../exporters/zip/errors';
 import type { ExportDefaults, ExportDefaultsPatch, ExportOverlayController, TextmodeExportAPI } from '../types';
 
 export const EXPORT_API_METHOD_KEYS: ReadonlyArray<Exclude<keyof TextmodeExportAPI, 'exportOverlay'>> = [
@@ -27,6 +30,8 @@ export const EXPORT_API_METHOD_KEYS: ReadonlyArray<Exclude<keyof TextmodeExportA
 	'toGIFBlob',
 	'saveVideo',
 	'toVideoBlob',
+	'saveZip',
+	'toZipBlob',
 ];
 
 type PostDrawSubscription = (callback: () => void) => () => void;
@@ -42,6 +47,7 @@ export class TextmodeExportController {
 
 	private readonly _registerPostDrawHook: PostDrawSubscription;
 	private readonly _activeOperations = new Set<AbortController>();
+	private readonly _captureGate = new ExclusiveCaptureGate();
 	private readonly _overlayController: OverlayController;
 	private readonly _stopOverlayRefresh: () => void;
 	private _disposed = false;
@@ -91,34 +97,58 @@ export class TextmodeExportController {
 				new JSONExporter().$saveJSON(textmodifier, options);
 			},
 			saveGIF: (options: GIFExportOptions = {}) =>
-				this._runOperation(options.signal, (signal) =>
+				this._runCaptureOperation('gif', options.signal, (signal) =>
 					new GIFExporter(textmodifier, (callback) => this._registerPostDrawHook(callback)).$saveGIF({
 						...options,
 						signal,
 					})
 				),
 			toGIFBlob: (options: GIFExportOptions = {}) =>
-				this._runOperation(options.signal, (signal) =>
+				this._runCaptureOperation('gif', options.signal, (signal) =>
 					new GIFExporter(textmodifier, (callback) => this._registerPostDrawHook(callback)).$generateGIFBlob({
 						...options,
 						signal,
 					})
 				),
 			saveVideo: (options: VideoExportOptions = {}) =>
-				this._runOperation(options.signal, (signal) =>
+				this._runCaptureOperation('video', options.signal, (signal) =>
 					new VideoExporter(textmodifier, (callback) => this._registerPostDrawHook(callback)).$saveVideo({
 						...options,
 						signal,
 					})
 				),
 			toVideoBlob: (options: VideoExportOptions = {}) =>
-				this._runOperation(options.signal, (signal) =>
+				this._runCaptureOperation('video', options.signal, (signal) =>
 					new VideoExporter(textmodifier, (callback) =>
 						this._registerPostDrawHook(callback)
 					).$generateVideoBlob({
 						...options,
 						signal,
 					})
+				),
+			saveZip: async (options: ZIPExportOptions) =>
+				this._runCaptureOperation(
+					'zip',
+					options?.signal,
+					(signal) =>
+						new ZIPExporter(textmodifier, (callback) => this._registerPostDrawHook(callback)).$saveZIP({
+							...options,
+							signal,
+						}),
+					(error) => this._emitZIPGateError(options, error)
+				),
+			toZipBlob: async (options: ZIPExportOptions) =>
+				this._runCaptureOperation(
+					'zip',
+					options?.signal,
+					(signal) =>
+						new ZIPExporter(textmodifier, (callback) =>
+							this._registerPostDrawHook(callback)
+						).$generateZIPBlob({
+							...options,
+							signal,
+						}),
+					(error) => this._emitZIPGateError(options, error)
 				),
 		};
 
@@ -147,6 +177,7 @@ export class TextmodeExportController {
 		this._disposed = true;
 		for (const controller of this._activeOperations) controller.abort();
 		this._activeOperations.clear();
+		this._captureGate.dispose();
 		this._stopOverlayRefresh();
 		this._overlayController.$dispose();
 	}
@@ -217,6 +248,54 @@ export class TextmodeExportController {
 				controller.signal.removeEventListener('abort', abortFromController);
 				this._activeOperations.delete(controller);
 			});
+	}
+
+	private _runCaptureOperation<T>(
+		kind: 'gif' | 'video' | 'zip',
+		callerSignal: AbortSignal | undefined,
+		operation: (signal: AbortSignal) => Promise<T>,
+		onZIPGateError?: (error: ReturnType<typeof normalizeZIPExportError>) => void
+	): Promise<T> {
+		return this._runOperation(callerSignal, async (signal) => {
+			let release: (() => void) | undefined;
+			try {
+				release = this._captureGate.acquire();
+			} catch (error) {
+				if (kind === 'video') throw normalizeVideoExportError(error);
+				if (kind === 'zip') {
+					const zipError = normalizeZIPExportError(error);
+					onZIPGateError?.(zipError);
+					throw zipError;
+				}
+				throw error;
+			}
+
+			try {
+				return await operation(signal);
+			} finally {
+				release();
+			}
+		});
+	}
+
+	private _emitZIPGateError(
+		options: ZIPExportOptions | undefined,
+		error: ReturnType<typeof normalizeZIPExportError>
+	): void {
+		const requestedFrameCount = options?.frameCount;
+		const totalFrames =
+			Number.isInteger(requestedFrameCount) &&
+			(requestedFrameCount as number) >= 1 &&
+			(requestedFrameCount as number) <= 65_534
+				? (requestedFrameCount as number)
+				: 300;
+		options?.onProgress?.({
+			state: 'error',
+			frameIndex: 0,
+			totalFrames,
+			progress: 0,
+			message: error.message,
+		});
 	}
 
 	private _assertLive(): void {

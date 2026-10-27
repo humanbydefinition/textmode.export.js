@@ -3,10 +3,10 @@
 import type { Textmodifier } from 'textmode.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileHandler } from '../base';
+import type { PostDrawSubscription } from '../base';
 import { VideoExporter } from './VideoExporter';
 import { VideoRecorder } from './VideoRecorder';
 import type { VideoGenerationOptions } from './types';
-import type { PostDrawSubscription } from './VideoFrameDriver';
 
 function createTextmodifier(): Textmodifier {
 	const canvas = document.createElement('canvas');
@@ -59,7 +59,7 @@ describe('VideoExporter', () => {
 
 		expect(options.format).toBe('mp4');
 		expect(options.quality).toBe('medium');
-		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture.mp4');
+		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture', '.mp4');
 	});
 
 	it('uses WebM when saveVideo receives format webm', async () => {
@@ -78,7 +78,7 @@ describe('VideoExporter', () => {
 			hardwareAcceleration: 'prefer-software',
 			keyFrameInterval: 1,
 		});
-		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture.webm');
+		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'capture', '.webm');
 	});
 
 	it('downloads saveVideo without invoking the native save picker', async () => {
@@ -92,7 +92,7 @@ describe('VideoExporter', () => {
 
 		expect(showSaveFilePicker).not.toHaveBeenCalled();
 		expect(recordSpy.mock.calls[0]?.[3]).toEqual({ kind: 'blob' });
-		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'streamed.webm');
+		expect(downloadSpy).toHaveBeenCalledWith(expect.any(Blob), 'streamed', '.webm');
 	});
 
 	it('preserves a positive fractional output frame rate', async () => {

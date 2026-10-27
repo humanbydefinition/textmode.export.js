@@ -9,7 +9,7 @@
 
 </div>
 
-`textmode.export.js` is an export add-on for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that turns a sketch into shareable files and data. Through one consistent browser-based API, it produces plain text and JSON, raster images, animated GIFs, WebM and MP4 video, and scalable vector graphics.
+`textmode.export.js` is an export add-on for [`textmode.js`](https://github.com/humanbydefinition/textmode.js) that turns a sketch into shareable files and data. Through one consistent browser-based API, it produces plain text and JSON, raster images, animated GIFs, WebM and MP4 video, scalable vector graphics, and ZIP frame sequences.
 
 Choose a compact still, structured document data, or a complete animation to suit the way your work will be used. `textmode.export.js` offers programmatic controls for automated workflows and an optional overlay UI for people saving and sharing directly from a sketch.
 
@@ -22,6 +22,7 @@ Choose a compact still, structured document data, or a complete animation to sui
 - **Interactive overlay** - Built-in format controls, live layer selectors, runtime defaults, visibility controls, and remembered placement
 - **Clipboard workflows** - Copy text, JSON, SVG, and raster output without downloading files
 - **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
+- **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames with a versioned manifest
 
 ## Try it online first
 
@@ -104,3 +105,7 @@ Contribution details and profile links are maintained on the [textmode.js contri
 - **[gifenc](https://github.com/mattdesl/gifenc)**
   - Animated GIF encoding by [Matt DesLauriers](https://github.com/mattdesl).
   - License: [MIT License](https://github.com/mattdesl/gifenc/blob/main/LICENSE.md).
+
+- **[fflate](https://github.com/101arrowz/fflate)**
+  - Streaming ZIP archive creation by [101arrowz](https://github.com/101arrowz).
+  - License: [MIT License](https://github.com/101arrowz/fflate/blob/master/LICENSE).

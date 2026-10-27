@@ -183,7 +183,7 @@ describe('SVGExporter', () => {
 		expect(svg).toContain('M8.00,12.80');
 	});
 
-	it('triggers a download when saving', () => {
+	it('triggers a download when saving', async () => {
 		const exporter = new SVGExporter();
 		const createObjectURL = vi.fn(() => 'blob:svg-export');
 		const revokeObjectURL = vi.fn();
@@ -196,6 +196,8 @@ describe('SVGExporter', () => {
 
 		expect(clickSpy).toHaveBeenCalledTimes(1);
 		expect(createObjectURL).toHaveBeenCalledTimes(1);
+		expect(revokeObjectURL).not.toHaveBeenCalled();
+		await new Promise((resolve) => setTimeout(resolve, 0));
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:svg-export');
 
 		const anchor = appendSpy.mock.calls[0]?.[0] as HTMLAnchorElement;

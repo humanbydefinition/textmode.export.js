@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { TextmodePluginContext, Textmodifier } from 'textmode.js';
 import { ExportPlugin } from './index';
+import { TextmodeExportController } from './runtime/TextmodeExportController';
+import { ZIPExporter } from './exporters/zip';
+import { GIFExporter } from './exporters/gif';
+import { VideoExporter } from './exporters/video/VideoExporter';
 
 function createMockTextmodifier(): Textmodifier {
 	const canvas = document.createElement('canvas');
@@ -32,7 +36,9 @@ function createMockTextmodifier(): Textmodifier {
 }
 
 describe('ExportPlugin', () => {
-	it('registers all 14 export extension methods and overlay getter', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	it('registers all 16 export extension methods and overlay getter', async () => {
 		const definedExtensions: Array<{
 			target: string;
 			name: string;
@@ -65,7 +71,7 @@ describe('ExportPlugin', () => {
 		const cleanup = ExportPlugin.install(mockTextmodifier, mockContext);
 
 		expect(typeof cleanup).toBe('function');
-		expect(definedExtensions.length).toBe(15);
+		expect(definedExtensions.length).toBe(17);
 
 		const extensionNames = definedExtensions.map((e) => e.name);
 		expect(extensionNames).toContain('saveCanvas');
@@ -82,6 +88,8 @@ describe('ExportPlugin', () => {
 		expect(extensionNames).toContain('toGIFBlob');
 		expect(extensionNames).toContain('saveVideo');
 		expect(extensionNames).toContain('toVideoBlob');
+		expect(extensionNames).toContain('saveZip');
+		expect(extensionNames).toContain('toZipBlob');
 		expect(extensionNames).toContain('exportOverlay');
 
 		// Verify overlay is getter
@@ -90,6 +98,8 @@ describe('ExportPlugin', () => {
 
 		const saveCanvas = definedExtensions.find((extension) => extension.name === 'saveCanvas')!.descriptor
 			.value as () => Promise<void>;
+		const toZipBlob = definedExtensions.find((extension) => extension.name === 'toZipBlob')!.descriptor
+			.value as (options: { format: 'txt' }) => Promise<Blob>;
 		const exportOverlay = definedExtensions
 			.find((extension) => extension.name === 'exportOverlay')!
 			.descriptor.get!.call(mockTextmodifier);
@@ -100,11 +110,9 @@ describe('ExportPlugin', () => {
 			cleanup();
 		}
 
-		return expect(saveCanvas())
-			.rejects.toThrow('disposed')
-			.then(() => {
-				expect(() => exportOverlay.getDefaults()).toThrow('disposed');
-			});
+		await expect(saveCanvas()).rejects.toThrow('disposed');
+		await expect(toZipBlob({ format: 'txt' })).rejects.toThrow('disposed');
+		expect(() => exportOverlay.getDefaults()).toThrow('disposed');
 	});
 
 	it('subscribes to postDraw and unsubscribes on cleanup', () => {
@@ -133,5 +141,41 @@ describe('ExportPlugin', () => {
 		}
 
 		expect(unsubscribeCalled).toBe(true);
+	});
+
+	it('rejects concurrent deterministic captures and reports ZIP busy progress', async () => {
+		let finishFirst!: (blob: Blob) => void;
+		vi.spyOn(ZIPExporter.prototype, '$generateZIPBlob').mockImplementation(
+			() =>
+				new Promise<Blob>((resolve) => {
+					finishFirst = resolve;
+				})
+		);
+		const controller = new TextmodeExportController(createMockTextmodifier(), () => () => undefined);
+		const gifCapture = vi.spyOn(GIFExporter.prototype, '$generateGIFBlob');
+		const videoCapture = vi.spyOn(VideoExporter.prototype, '$generateVideoBlob');
+		const first = controller.api.toZipBlob({ format: 'txt', frameCount: 1 });
+		await vi.waitFor(() => expect(finishFirst).toBeTypeOf('function'));
+		const progress = vi.fn();
+
+		await expect(
+			controller.api.toZipBlob({ format: 'txt', frameCount: 1, onProgress: progress })
+		).rejects.toMatchObject({ code: 'ZIP_EXPORT_BUSY' });
+		expect(progress).toHaveBeenCalledOnce();
+		expect(progress).toHaveBeenCalledWith(
+			expect.objectContaining({ state: 'error', frameIndex: 0, totalFrames: 1 })
+		);
+		await expect(controller.api.toGIFBlob({ frameCount: 1 })).rejects.toMatchObject({
+			code: 'FRAME_SEQUENCE_BUSY',
+		});
+		await expect(controller.api.toVideoBlob({ frameCount: 1 })).rejects.toMatchObject({
+			code: 'VIDEO_EXPORT_FAILED',
+		});
+		expect(gifCapture).not.toHaveBeenCalled();
+		expect(videoCapture).not.toHaveBeenCalled();
+
+		finishFirst(new Blob([], { type: 'application/zip' }));
+		await first;
+		controller.dispose();
 	});
 });
