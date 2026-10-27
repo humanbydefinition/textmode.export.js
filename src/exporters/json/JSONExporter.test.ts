@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LayerBlendMode, type Textmodifier, type TextmodeLayer } from 'textmode.js';
 import { decodeTextmodeDocument } from '@textmode/document';
 import { JSONExporter } from './JSONExporter';
-import type { TextmodeAllDocumentJSON, TextmodeDocumentJSON, TextmodeSelectedDocumentJSON } from '@textmode/document';
+import type { TextmodeDocumentJSON } from '@textmode/document';
 
 type LayerMockOptions = {
 	visible?: boolean;
@@ -21,16 +21,16 @@ type LayerMockOptions = {
 	rotationZ?: number;
 };
 
-function expectSingleLayerDocument(document: TextmodeDocumentJSON): TextmodeSelectedDocumentJSON {
-	if (document.target !== 'selected') {
+function expectSingleLayerDocument(document: TextmodeDocumentJSON): TextmodeDocumentJSON {
+	if (document.layers.length !== 1) {
 		throw new Error('Expected a single-layer JSON document');
 	}
 
 	return document;
 }
 
-function expectLayerStackDocument(document: TextmodeDocumentJSON): TextmodeAllDocumentJSON {
-	if (document.target !== 'all') {
+function expectLayerStackDocument(document: TextmodeDocumentJSON): TextmodeDocumentJSON {
+	if (document.layers.length < 1) {
 		throw new Error('Expected an all-layers JSON document');
 	}
 
@@ -142,22 +142,22 @@ describe('JSONExporter', () => {
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
-		expect(document.formatVersion).toBe('2.0.0');
-		expect(document.target).toBe('selected');
-		expect(document.grid).toEqual({
+		expect(document.formatVersion).toBe('3.0.0');
+		expect(document).not.toHaveProperty('target');
+		expect(document.layers[0].grid).toEqual({
 			cols: 2,
 			rows: 1,
 			cellWidth: 8,
 			cellHeight: 16,
 		});
-		expect(document.layer.id).toBe('base');
-		expect(document.layer.cells.encoding).toBe('object-rows-v1');
+		expect(document.layers[0].id).toBe('base');
+		expect(document.layers[0].cells.encoding).toBe('object-rows-v1');
 
-		if (document.layer.cells.encoding !== 'object-rows-v1') {
+		if (document.layers[0].cells.encoding !== 'object-rows-v1') {
 			throw new Error('Expected object rows encoding');
 		}
 
-		expect(document.layer.cells.rows[0][0]).toEqual({
+		expect(document.layers[0].cells.rows[0][0]).toEqual({
 			x: 0,
 			y: 0,
 			character: 'A',
@@ -170,7 +170,7 @@ describe('JSONExporter', () => {
 				rotation: 0,
 			},
 		});
-		expect(document.layer.cells.rows[0][1]).toEqual({
+		expect(document.layers[0].cells.rows[0][1]).toEqual({
 			x: 1,
 			y: 0,
 			character: 'B',
@@ -196,13 +196,13 @@ describe('JSONExporter', () => {
 		);
 
 		expect(document.metadata).toBeUndefined();
-		expect(document.layer.cells.encoding).toBe('object-rows-v1');
+		expect(document.layers[0].cells.encoding).toBe('object-rows-v1');
 
-		if (document.layer.cells.encoding !== 'object-rows-v1') {
+		if (document.layers[0].cells.encoding !== 'object-rows-v1') {
 			throw new Error('Expected object rows encoding');
 		}
 
-		expect(document.layer.cells.rows[0][0]).toEqual({
+		expect(document.layers[0].cells.rows[0][0]).toEqual({
 			x: 0,
 			y: 0,
 			character: 'A',
@@ -225,7 +225,7 @@ describe('JSONExporter', () => {
 		const decoded = decodeTextmodeDocument(document);
 		expect(decoded.ok).toBe(true);
 		if (!decoded.ok) return;
-		expect(decoded.document.target).toBe(target);
+		expect(decoded.document.layers).toHaveLength(target === 'selected' ? 1 : 2);
 	});
 
 	it('exports a selected user layer when provided', () => {
@@ -238,19 +238,27 @@ describe('JSONExporter', () => {
 			})
 		);
 
-		expect(document.layer.id).toBe('layer-1');
-		expect(document.layer.cells.encoding).toBe('object-rows-v1');
+		expect(document.layers[0].id).toBe('layer-1');
+		expect(document.layers[0]).toMatchObject({
+			visible: false,
+			opacity: 0.5,
+			blendMode: 'screen',
+			offsetX: 3,
+			offsetY: 4,
+			rotationZ: 15,
+		});
+		expect(document.layers[0].cells.encoding).toBe('object-rows-v1');
 
-		if (document.layer.cells.encoding !== 'object-rows-v1') {
+		if (document.layers[0].cells.encoding !== 'object-rows-v1') {
 			throw new Error('Expected object rows encoding');
 		}
 
-		expect(document.layer.cells.rows[0][0]).toMatchObject({
+		expect(document.layers[0].cells.rows[0][0]).toMatchObject({
 			character: 'X',
 			foreground: '#0a141eff',
 			background: '#46505aff',
 		});
-		expect(document.layer.cells.rows[0][1]).toMatchObject({
+		expect(document.layers[0].cells.rows[0][1]).toMatchObject({
 			character: 'Y',
 			foreground: '#28323cff',
 			background: '#646e78ff',
@@ -268,10 +276,10 @@ describe('JSONExporter', () => {
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
-		expect(document.formatVersion).toBe('2.0.0');
-		expect(document.target).toBe('all');
+		expect(document.formatVersion).toBe('3.0.0');
+		expect(document).not.toHaveProperty('target');
 		expect(document.metadata).toBeUndefined();
-		expect(document.canvas).toEqual({ width: 16, height: 16 });
+		expect(document).not.toHaveProperty('canvas');
 		expect(document.layers.map((layer) => layer.id)).toEqual(['base', 'layer-1']);
 		expect(document.layers[0]).toMatchObject({
 			id: 'base',
@@ -347,7 +355,7 @@ describe('JSONExporter', () => {
 			})
 		);
 
-		expect(document.formatVersion).toBe('2.0.0');
+		expect(document.formatVersion).toBe('3.0.0');
 		expect(document.layers[1].blendMode).toBe(expectedName);
 	});
 
@@ -437,8 +445,8 @@ describe('JSONExporter', () => {
 		expect(blob.type).toBe('application/json;charset=utf-8');
 		const text = await readBlobAsText(blob);
 		expect(text).toContain('"format":"textmode.document"');
-		expect(text).toContain('"formatVersion":"2.0.0"');
-		expect(text).toContain('"target":"selected"');
+		expect(text).toContain('"formatVersion":"3.0.0"');
+		expect(text).not.toContain('"target"');
 		expect(text).not.toContain('$schema');
 		expect(text).not.toContain('schemas');
 	});
@@ -446,63 +454,63 @@ describe('JSONExporter', () => {
 
 const serializationBaseline: Record<string, string> = {
 	'{"target":"selected","colorMode":"hex","includeMetadata":true,"pretty":false}':
-		'86240617fc76e5152993634f7617b273d0af68b8c6a075be9037dd5ed7dae0cf',
+		'fd6261ee31b98812767f41b4bb92f647071f86f6fcd619ccda1e7fc57d6a144a',
 	'{"target":"selected","colorMode":"hex","includeMetadata":true,"pretty":true}':
-		'17f975e4bc5b8a7329efe18d1e4425453a0ec7b42d141ea9cea990000782c03c',
+		'8fe9a2eb731add95205e6490cc3d3b50bc56fac04997a53a42e89c0734b876d3',
 	'{"target":"selected","colorMode":"hex","includeMetadata":true,"pretty":4}':
-		'c79676927b9d5533b805fae696a90d98978a2923fe7d28ec8333a2a6efea9654',
+		'90570a78d2c8b150dd6711dcc2be9e856e0d4341e3edd152d28ced6c3102403b',
 	'{"target":"selected","colorMode":"hex","includeMetadata":false,"pretty":false}':
-		'612c1d28c48cae458d4b89489965320412b64ef9105edbb888ba26a479d7bcf5',
+		'33468f60cbbc46ce759aa44f17f785e0e14112da5835ff62ca7462a3ef200a49',
 	'{"target":"selected","colorMode":"hex","includeMetadata":false,"pretty":true}':
-		'a4faece20665a5716a9d16b42c09d8c7589c5daf0eadfda36cd7581295dfc791',
+		'a576286aea666f7ad817721945e0a60bcc2400bc59ffaaac9263084266d51cb4',
 	'{"target":"selected","colorMode":"hex","includeMetadata":false,"pretty":4}':
-		'4d74bcb63d6a7a074bb7b186f105f376613ff2a1421bc00ff0aa1a70a3ae83e6',
+		'06cfa2251bffb422b8ed2089fa447d79ba79bef0a98932b44caaeea106f49865',
 	'{"target":"selected","colorMode":"rgba","includeMetadata":true,"pretty":false}':
-		'f04121847f013aa1e3c2873cf72816deb2cd4166cdd4aa23c82081648ede27f1',
+		'2266b8cccb36d89ab76e0759fdfc5884d6dc6eb014e0203c16139dc18480c1d2',
 	'{"target":"selected","colorMode":"rgba","includeMetadata":true,"pretty":true}':
-		'2995484c1a8689338335c309c3a9d1d7c1a7b4bf2b474eaab4e5f15cca644847',
+		'61940955288def3ea2308035e28c19295fc1cb2a39fbd71683178af8b4e0f6ab',
 	'{"target":"selected","colorMode":"rgba","includeMetadata":true,"pretty":4}':
-		'c1e892a6e10e9ef65a05a83579511c2ae81d79cfc5e6241b31039ce97e379b2f',
+		'87e60799ae7264ac844b3a9826a569eb6c6908c60ffa11e5eada8d246f424466',
 	'{"target":"selected","colorMode":"rgba","includeMetadata":false,"pretty":false}':
-		'402772834d75e381812cb55a473a7d208457338e6577e592f1c2ad56804059db',
+		'37eecda204688f51782e9d9e1a947f80700e56b2532ae7a536070ffc474613fa',
 	'{"target":"selected","colorMode":"rgba","includeMetadata":false,"pretty":true}':
-		'26469641db963f65187956900ac21ead880765794cb78b5386500f2b5427d03c',
+		'996184b7d2c1393032dc6da7d31a3e041072f8e77009b48a2fe8abf783128845',
 	'{"target":"selected","colorMode":"rgba","includeMetadata":false,"pretty":4}':
-		'ee01fe435d559cd3a8f1d626df262b29508f7ce085d5494f856d335cbe4af7da',
+		'5d60968bf2c1847efbccb1ff6b6445eec2be6cb7946a508aff323a92bc5f850d',
 	'{"target":"all","colorMode":"hex","includeMetadata":true,"pretty":false}':
-		'956a488069cca0367d7143d8b4233605cd20739f7b4b5a3bdd54a13f71b3a0d4',
+		'3857f238bc6580612751953ad82c2fd8b19707dbae5b62a28d04735ebd77154e',
 	'{"target":"all","colorMode":"hex","includeMetadata":true,"pretty":true}':
-		'ffb3fa46ecd789a9ff8fb59a1487fdcc70de95f940ca32d26d4ed96315e05b8e',
+		'3cd6b6b68b96475e38eff73ff80755409a1aea899067182a3efce302f3daf775',
 	'{"target":"all","colorMode":"hex","includeMetadata":true,"pretty":4}':
-		'3d579be53e4abdd2fbbbbfdf8178599a7ae6c2a50de304fde41e00b1825c2ab0',
+		'53572cc67f5e89d8ea8c69b5b34696202c3acac07e9f0c7021eb38929c2d413d',
 	'{"target":"all","colorMode":"hex","includeMetadata":false,"pretty":false}':
-		'8c3f18787e4ba7184872921e0469839fae1ae22e661beaa0a4c0f64e3271fbc2',
+		'a1bdb933aac69f0b02e10c074b3118fd59f52b40059bb5a78b56e3a28d1ad0f2',
 	'{"target":"all","colorMode":"hex","includeMetadata":false,"pretty":true}':
-		'9674a136075a6b845033e5e132b01f601c75b3faca0b454e1539b125134451d7',
+		'559303b1420d651a4775f12cc329485e36e604f6003de4c4c6773910aead64d9',
 	'{"target":"all","colorMode":"hex","includeMetadata":false,"pretty":4}':
-		'dee013f8328613f2ca6011f4efb292b111976d7b2d28caf4ada1621cd71c98c5',
+		'4d472e7b8045ab56351416c5169de4deab737e8ad498d6a7e36ea63872571f99',
 	'{"target":"all","colorMode":"rgba","includeMetadata":true,"pretty":false}':
-		'ba29fcc0cc5e65e86b7babd835a18512a7e69faad8e9bc0de6d984154026fec2',
+		'fe4b725f552d0b9b3fb09ee180a7bb24da40e6e2d74c0bb6661f1781b5bf96df',
 	'{"target":"all","colorMode":"rgba","includeMetadata":true,"pretty":true}':
-		'a99ff496dc72af3ac22c02ea2d233ad6225313e1749e92af13eff474f9979105',
+		'9f4d3a8b6ee485957138da947437c7e9857403761b7a744a4a629a7084308257',
 	'{"target":"all","colorMode":"rgba","includeMetadata":true,"pretty":4}':
-		'552752e9802a86c2b346ea094eb22b815167a24cb684dfbccfd2548688388b4c',
+		'0d8f24d24e252c59dbf0e37382c60227ddb7c592facebaefab84da4e59ee47c5',
 	'{"target":"all","colorMode":"rgba","includeMetadata":false,"pretty":false}':
-		'fa4379401b74e98a79ef4360dd3be81418cfce600112094bc74ffcb729fb85d6',
+		'9778709abf3e6c9fd55e167206d87222c27511c0abf6d79fea1189f857f93a14',
 	'{"target":"all","colorMode":"rgba","includeMetadata":false,"pretty":true}':
-		'ef06913d463729c24bbe7dca9919f804e93783cab83a4bf765a01032a48559ac',
+		'01dff086a4d9009599cd89adcd684ad8725f5b5d1afcff4375cc08badc531fb0',
 	'{"target":"all","colorMode":"rgba","includeMetadata":false,"pretty":4}':
-		'ce322ea3b689fedcf3e98fe8d4bcb43c94577219d2ff8a77a6c9297c639eaed7',
+		'afc4ab68439465c4b1b43ea7add49a515d5610ebe92352729242c3980345fc4a',
 };
 const schema = JSON.parse(
-	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/2.0')), 'utf8')
+	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/3.0')), 'utf8')
 ) as object;
 const schemaValidator = new Ajv2020({ validateFormats: true });
 addFormats(schemaValidator, { mode: 'full' });
 const validateExport = schemaValidator.compile(schema);
 
 describe('extracted protocol compatibility', () => {
-	it.each(Object.entries(serializationBaseline))('preserves pre-extraction output for %s', (key, expectedHash) => {
+	it.each(Object.entries(serializationBaseline))('preserves fixed-time v3 output for %s', (key, expectedHash) => {
 		const options = JSON.parse(key) as {
 			target: 'selected' | 'all';
 			colorMode: 'hex' | 'rgba';
@@ -515,7 +523,8 @@ describe('extracted protocol compatibility', () => {
 			new Date('2026-09-21T12:00:00.000Z')
 		);
 		const normalizedVersion = json.replace(/("version"\s*:\s*")[^"]+(")/g, '$1<package-version>$2');
-		expect(createHash('sha256').update(normalizedVersion).digest('hex')).toBe(expectedHash);
+		const hash = createHash('sha256').update(normalizedVersion).digest('hex');
+		expect(hash).toBe(expectedHash);
 		const value = JSON.parse(json) as TextmodeDocumentJSON;
 		expect(validateExport(value), JSON.stringify(validateExport.errors)).toBe(true);
 		expect(decodeTextmodeDocument(value).ok).toBe(true);

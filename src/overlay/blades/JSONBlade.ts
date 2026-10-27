@@ -66,7 +66,7 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 		container.classList.add(overlayClasses.stack);
 
 		const targetField = new Field({
-			label: 'target',
+			label: 'layers',
 			labelFor: 'textmode-export-json-target',
 			variant: 'full',
 		});

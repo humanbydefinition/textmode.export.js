@@ -64,7 +64,7 @@ export type { TextmodeExportAPI, ExportOverlayController } from './types';
 export type { ImageExportOptions } from './exporters/image';
 export type { SVGExportOptions } from './exporters/svg';
 export type { TXTExportOptions } from './exporters/txt';
-export type { JSONExportColorMode, JSONExportOptions } from './exporters/json';
+export type { JSONExportTarget, JSONExportColorMode, JSONExportOptions } from './exporters/json';
 export type { GIFExportOptions, GIFExportProgress } from './exporters/gif';
 export { ZIPExportError } from './exporters/zip';
 export type {

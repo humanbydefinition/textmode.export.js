@@ -1,9 +1,13 @@
 import type { LayerExportOptions } from '../base';
-import type {
-	TextmodeDocumentCellTransform,
-	TextmodeDocumentTarget,
-	TextmodeDocumentRGBAColor,
-} from '@textmode/document';
+import type { TextmodeDocumentCellTransform, TextmodeDocumentRGBAColor } from '@textmode/document';
+
+/**
+ * Layer selection for export; never serialized into the document.
+ *
+ * @category JSON document data
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportTarget | JSONExportTarget API reference}
+ */
+export type JSONExportTarget = 'selected' | 'all';
 
 /**
  * Color representation written by the JSON exporter: hexadecimal strings or
@@ -25,7 +29,7 @@ export type JSONExportOptions = LayerExportOptions & {
 	 * Export one selected layer or the complete layer stack.
 	 * Defaults to `selected`.
 	 */
-	target?: TextmodeDocumentTarget;
+	target?: JSONExportTarget;
 
 	/** Filename used by the download helper. A default name is used when omitted. */
 	filename?: string;
@@ -45,7 +49,7 @@ export type JSONExportOptions = LayerExportOptions & {
 
 /** Internal JSON generation options after defaults have been applied. */
 export interface JSONGenerationOptions {
-	target: TextmodeDocumentTarget;
+	target: JSONExportTarget;
 	pretty: boolean | number;
 	colorMode: JSONExportColorMode;
 	includeMetadata: boolean;
