@@ -2,7 +2,6 @@ import type { Textmodifier } from 'textmode.js';
 import { LayerBlendMode } from 'textmode.js';
 import {
 	FileHandler,
-	resolveLayerExportTarget,
 	resolveLayerStackExportTargets,
 	type ResolvedLayerExportTarget,
 	type ResolvedLayerStackExportTarget,
@@ -186,39 +185,15 @@ export class JSONExporter {
 		const generationOptions = this._applyDefaultOptions(options);
 		const metadata = this._createMetadata(generationOptions, createdAt);
 
-		if (generationOptions.target === 'all') {
-			const targets = resolveLayerStackExportTargets(textmodifier);
-			const canvasGrid = targets[0].grid;
-
-			return {
-				format: TEXTMODE_DOCUMENT_FORMAT,
-				formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
-				target: 'all',
-				...(metadata ? { metadata } : {}),
-				canvas: {
-					width: canvasGrid.width,
-					height: canvasGrid.height,
-				},
-				layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
-			};
-		}
-
-		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
-
+		const targets = resolveLayerStackExportTargets(
+			textmodifier,
+			generationOptions.target === 'selected' ? [generationOptions.layer ?? textmodifier.layers.base] : undefined
+		);
 		return {
 			format: TEXTMODE_DOCUMENT_FORMAT,
 			formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
-			target: 'selected',
 			...(metadata ? { metadata } : {}),
-			canvas: {
-				width: target.grid.width,
-				height: target.grid.height,
-			},
-			grid: this._createLayerGrid(target),
-			layer: {
-				id: target.id,
-				cells: this._createLayerCells(target, generationOptions),
-			},
+			layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
 		};
 	}
 
