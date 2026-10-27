@@ -17,8 +17,6 @@ export default defineDocs({
 		],
 		defaultCategory: 'Uncategorized',
 		intentionallyNotExported: [
-			'src/document/types.ts:TextmodeSelectedDocumentJSON',
-			'src/document/types.ts:TextmodeAllDocumentJSON',
 			'src/exporters/base/FramePreparation.ts:PrepareExportFrame',
 			'src/exporters/video/types.ts:VideoCodec',
 		],

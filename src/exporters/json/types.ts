@@ -1,5 +1,13 @@
 import type { LayerExportOptions } from '../base';
-import type { JSONCellTransform, JSONExportTarget, JSONRGBAColor } from '../../document';
+import type { TextmodeDocumentCellTransform, TextmodeDocumentRGBAColor } from '@textmode/document';
+
+/**
+ * Layer selection for export; never serialized into the document.
+ *
+ * @category JSON document data
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportTarget | JSONExportTarget API reference}
+ */
+export type JSONExportTarget = 'selected' | 'all';
 
 /**
  * Color representation written by the JSON exporter: hexadecimal strings or
@@ -10,30 +18,10 @@ import type { JSONCellTransform, JSONExportTarget, JSONRGBAColor } from '../../d
  */
 export type JSONExportColorMode = 'hex' | 'rgba';
 
-export type {
-	JSONCellCollection,
-	JSONCellTransform,
-	JSONColorValue,
-	JSONDocumentFormat,
-	JSONDocumentVersion,
-	JSONExportMetadata,
-	JSONExportTarget,
-	JSONLayerGrid,
-	JSONObjectRowCell,
-	JSONObjectRowsCellCollection,
-	JSONRGBAColor,
-	TextmodeAllDocumentJSON,
-	TextmodeDocumentJSON,
-	TextmodeDocumentLayer,
-	TextmodeSelectedDocumentJSON,
-	TextmodeSelectedDocumentLayer,
-} from '../../document';
-
 /**
  * Options for exporting textmode content to JSON.
  *
  * @category JSON document data
- *
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONExportOptions | JSONExportOptions API reference}
  */
 export type JSONExportOptions = LayerExportOptions & {
@@ -74,7 +62,7 @@ export interface JSONCellData {
 	x: number;
 	y: number;
 	character: string;
-	foreground: JSONRGBAColor;
-	background: JSONRGBAColor;
-	transform: JSONCellTransform;
+	foreground: TextmodeDocumentRGBAColor;
+	background: TextmodeDocumentRGBAColor;
+	transform: TextmodeDocumentCellTransform;
 }

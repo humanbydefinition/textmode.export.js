@@ -110,13 +110,15 @@ export function resolveLayerExportTarget(textmodifier: Textmodifier, layer?: Tex
 	};
 }
 
-export function resolveLayerStackExportTargets(textmodifier: Textmodifier): ResolvedLayerStackExportTarget[] {
-	const layers = [textmodifier.layers.base, ...textmodifier.layers.all];
+export function resolveLayerStackExportTargets(
+	textmodifier: Textmodifier,
+	selectedLayers?: readonly TextmodeLayer[]
+): ResolvedLayerStackExportTarget[] {
+	const layers = selectedLayers ?? [textmodifier.layers.base, ...textmodifier.layers.all];
 
 	return layers.map((layer) => {
 		const target = resolveLayerExportTarget(textmodifier, layer);
 		const offset = layer.offset();
-
 		return {
 			...target,
 			visible: layer.isVisible(),
