@@ -24,6 +24,27 @@ Choose a compact still, structured document data, or a complete animation to sui
 - **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
 - **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames with a versioned manifest
 
+## Export documents and frame sequences
+
+Export a selected layer or the full layer stack as a portable Textmode Document v3 JSON file:
+
+```ts
+const document = textmode.toJSON({ target: 'all' });
+```
+
+Capture a deterministic sequence of frames in a ZIP archive. The archive includes a manifest with the frame
+format, dimensions, count, rate, and filename pattern:
+
+```ts
+await textmode.saveZip({
+	format: 'png',
+	frameCount: 120,
+	frameRate: 30,
+});
+```
+
+ZIP frames can use PNG, JPEG, WebP, SVG, JSON, or TXT. The JSON format uses the same portable document schema.
+
 ## Try it online first
 
 Open [editor.textmode.art](https://editor.textmode.art/), a browser-based live-coding environment for the
