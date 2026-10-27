@@ -3,7 +3,8 @@ import type { TXTExportOptions } from './exporters/txt';
 import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
-import type { JSONExportOptions, TextmodeDocumentJSON } from './exporters/json';
+import type { JSONExportOptions } from './exporters/json';
+import type { TextmodeDocumentJSON } from '@textmode/document';
 import type { ZIPExportOptions } from './exporters/zip';
 
 /**
@@ -420,7 +421,8 @@ export interface TextmodeExportAPI {
 	toString(options?: TXTExportOptions): string;
 
 	/**
-	 * Produces the selected layer or layer stack as structured JSON data.
+	 * Produces a v3 document with a nonempty layers array.
+	 * Selected layers retain their visibility, opacity, blending, and transforms.
 	 *
 	 * @param options Export options.
 	 * @returns The JSON document representing the selected layer or layer stack.
@@ -429,6 +431,7 @@ export interface TextmodeExportAPI {
 	 * ```ts
 	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
 	 * const stack = t.toJSON({ target: 'all' });
+	 * console.log(layer.layers[0].grid, stack.formatVersion); // 3.0.0
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojson | TextmodeExportAPI.toJSON API reference}
@@ -436,7 +439,7 @@ export interface TextmodeExportAPI {
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
 	/**
-	 * Produces the selected layer or layer stack as a JSON string.
+	 * Produces the selected layer or layer stack as a v3 JSON document string.
 	 *
 	 * @param options Export options.
 	 * @returns Serialized JSON string for the selected layer or layer stack.
@@ -452,7 +455,7 @@ export interface TextmodeExportAPI {
 	toJSONString(options?: JSONExportOptions): string;
 
 	/**
-	 * Downloads the selected layer or layer stack as a JSON file.
+	 * Downloads the selected layer or layer stack as a v3 JSON document file.
 	 *
 	 * @param options Export options.
 	 *
