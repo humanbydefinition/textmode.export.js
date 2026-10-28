@@ -66,3 +66,43 @@ export interface JSONCellData {
 	background: TextmodeDocumentRGBAColor;
 	transform: TextmodeDocumentCellTransform;
 }
+
+/**
+ * Progress emitted by JSON frame-sequence capture.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONSequenceExportProgress | JSONSequenceExportProgress API reference}
+ */
+export interface JSONSequenceExportProgress {
+	state: 'capturing' | 'finalizing' | 'completed' | 'error';
+	frameIndex: number;
+	totalFrames: number;
+	progress: number;
+	message?: string;
+}
+
+/**
+ * Options for deterministic, fixed-rate JSON sequence capture.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONSequenceExportOptions | JSONSequenceExportOptions API reference}
+ */
+export type JSONSequenceExportOptions = JSONExportOptions & {
+	frameCount?: number;
+	frameRate?: number;
+	prepareFrame?: import('../base').PrepareExportFrame;
+	signal?: AbortSignal;
+	onProgress?: (progress: JSONSequenceExportProgress) => void;
+};
+
+/**
+ * Machine-readable JSON sequence failure.
+ *
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONSequenceExportErrorCode | JSONSequenceExportErrorCode API reference}
+ */
+export type JSONSequenceExportErrorCode =
+	| 'JSON_SEQUENCE_INVALID_OPTIONS'
+	| 'JSON_SEQUENCE_LIMIT_EXCEEDED'
+	| 'JSON_SEQUENCE_ABORTED'
+	| 'JSON_SEQUENCE_TIMEOUT'
+	| 'JSON_SEQUENCE_BUSY'
+	| 'JSON_SEQUENCE_DISPOSED'
+	| 'JSON_SEQUENCE_FAILED';

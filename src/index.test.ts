@@ -38,7 +38,7 @@ function createMockTextmodifier(): Textmodifier {
 describe('ExportPlugin', () => {
 	afterEach(() => vi.restoreAllMocks());
 
-	it('registers all 16 export extension methods and overlay getter', async () => {
+	it('registers all 18 export extension methods and overlay getter', async () => {
 		const definedExtensions: Array<{
 			target: string;
 			name: string;
@@ -71,7 +71,7 @@ describe('ExportPlugin', () => {
 		const cleanup = ExportPlugin.install(mockTextmodifier, mockContext);
 
 		expect(typeof cleanup).toBe('function');
-		expect(definedExtensions.length).toBe(17);
+		expect(definedExtensions.length).toBe(19);
 
 		const extensionNames = definedExtensions.map((e) => e.name);
 		expect(extensionNames).toContain('saveCanvas');
@@ -84,6 +84,8 @@ describe('ExportPlugin', () => {
 		expect(extensionNames).toContain('toJSON');
 		expect(extensionNames).toContain('toJSONString');
 		expect(extensionNames).toContain('saveJSON');
+		expect(extensionNames).toContain('toJSONSequenceBlob');
+		expect(extensionNames).toContain('saveJSONSequence');
 		expect(extensionNames).toContain('saveGIF');
 		expect(extensionNames).toContain('toGIFBlob');
 		expect(extensionNames).toContain('saveVideo');
@@ -157,6 +159,13 @@ describe('ExportPlugin', () => {
 		const first = controller.api.toZipBlob({ format: 'txt', frameCount: 1 });
 		await vi.waitFor(() => expect(finishFirst).toBeTypeOf('function'));
 		const progress = vi.fn();
+		const jsonProgress = vi.fn();
+		await expect(
+			controller.api.toJSONSequenceBlob({ frameCount: 1, onProgress: jsonProgress })
+		).rejects.toMatchObject({ code: 'JSON_SEQUENCE_BUSY' });
+		expect(jsonProgress).toHaveBeenCalledWith(
+			expect.objectContaining({ state: 'error', frameIndex: 0, totalFrames: 1 })
+		);
 
 		await expect(
 			controller.api.toZipBlob({ format: 'txt', frameCount: 1, onProgress: progress })
@@ -177,5 +186,8 @@ describe('ExportPlugin', () => {
 		finishFirst(new Blob([], { type: 'application/zip' }));
 		await first;
 		controller.dispose();
+		await expect(controller.api.toJSONSequenceBlob({ onProgress: jsonProgress })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_DISPOSED',
+		});
 	});
 });

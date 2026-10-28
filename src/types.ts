@@ -4,6 +4,7 @@ import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions } from './exporters/json';
+import type { JSONSequenceExportOptions } from './exporters/json';
 import type { TextmodeDocumentJSON } from '@textmode/document';
 import type { ZIPExportOptions } from './exporters/zip';
 
@@ -468,6 +469,28 @@ export interface TextmodeExportAPI {
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejson | TextmodeExportAPI.saveJSON API reference}
 	 */
 	saveJSON(options?: JSONExportOptions): void;
+
+	/**
+	 * Capture a fixed-rate sequence as one JSON blob.
+	 *
+	 * @example
+	 * ```ts
+	 * const blob = await t.toJSONSequenceBlob({ frameCount: 60, frameRate: 30 });
+	 * ```
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonsequenceblob | TextmodeExportAPI.toJSONSequenceBlob API reference}
+	 */
+	toJSONSequenceBlob(options?: JSONSequenceExportOptions): Promise<Blob>;
+
+	/**
+	 * Capture and download a fixed-rate JSON sequence.
+	 *
+	 * @example
+	 * ```ts
+	 * await t.saveJSONSequence({ frameCount: 60, frameRate: 30 });
+	 * ```
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejsonsequence | TextmodeExportAPI.saveJSONSequence API reference}
+	 */
+	saveJSONSequence(options?: JSONSequenceExportOptions): Promise<void>;
 
 	/**
 	 * Records an animated GIF and saves it to disk.

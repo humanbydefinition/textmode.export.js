@@ -6,7 +6,14 @@ import { TXTExporter, type TXTExportOptions } from '../exporters/txt';
 import { GIFExporter, type GIFExportOptions } from '../exporters/gif';
 import { VideoExporter } from '../exporters/video/VideoExporter';
 import type { VideoExportOptions } from '../exporters/video';
-import { JSONExporter, type JSONExportOptions } from '../exporters/json';
+import {
+	JSONExporter,
+	JSONSequenceExporter,
+	JSONSequenceExportError,
+	normalizeJSONSequenceError,
+	type JSONExportOptions,
+	type JSONSequenceExportOptions,
+} from '../exporters/json';
 import { ZIPExporter, type ZIPExportOptions } from '../exporters/zip';
 import { createExportOverlay } from '../overlay';
 import type { OverlayController } from '../overlay/core/OverlayController';
@@ -26,6 +33,8 @@ export const EXPORT_API_METHOD_KEYS: ReadonlyArray<Exclude<keyof TextmodeExportA
 	'toJSON',
 	'toJSONString',
 	'saveJSON',
+	'toJSONSequenceBlob',
+	'saveJSONSequence',
 	'saveGIF',
 	'toGIFBlob',
 	'saveVideo',
@@ -96,6 +105,18 @@ export class TextmodeExportController {
 				this._assertLive();
 				new JSONExporter().$saveJSON(textmodifier, options);
 			},
+			toJSONSequenceBlob: (options = {}) =>
+				this._runJSONCapture(options, (signal) =>
+					new JSONSequenceExporter(textmodifier, this._registerPostDrawHook).$generateBlob({
+						...options,
+						signal,
+					})
+				),
+			saveJSONSequence: (options = {}) =>
+				this._runJSONCapture(options, (signal) =>
+					new JSONSequenceExporter(textmodifier, this._registerPostDrawHook).$save({ ...options, signal })
+				),
+
 			saveGIF: (options: GIFExportOptions = {}) =>
 				this._runCaptureOperation('gif', options.signal, (signal) =>
 					new GIFExporter(textmodifier, (callback) => this._registerPostDrawHook(callback)).$saveGIF({
@@ -250,18 +271,48 @@ export class TextmodeExportController {
 			});
 	}
 
+	private _runJSONCapture<T>(
+		options: JSONSequenceExportOptions,
+		operation: (signal: AbortSignal) => Promise<T>
+	): Promise<T> {
+		return this._runCaptureOperation('json', options.signal, operation).catch((error: unknown) => {
+			const normalized = normalizeJSONSequenceError(error);
+			if (normalized.code === 'JSON_SEQUENCE_BUSY' || normalized.code === 'JSON_SEQUENCE_DISPOSED') {
+				const count = options.frameCount;
+				const totalFrames = Number.isSafeInteger(count) && count! > 0 && count! <= 65_536 ? count! : 300;
+				try {
+					options.onProgress?.({
+						state: 'error',
+						frameIndex: 0,
+						totalFrames,
+						progress: 0,
+						message: normalized.message,
+					});
+				} catch {
+					/* Preserve the capture error. */
+				}
+			}
+			throw normalized;
+		});
+	}
+
 	private _runCaptureOperation<T>(
-		kind: 'gif' | 'video' | 'zip',
+		kind: 'gif' | 'video' | 'zip' | 'json',
 		callerSignal: AbortSignal | undefined,
 		operation: (signal: AbortSignal) => Promise<T>,
 		onZIPGateError?: (error: ReturnType<typeof normalizeZIPExportError>) => void
 	): Promise<T> {
+		if (kind === 'json' && this._disposed)
+			return Promise.reject(
+				new JSONSequenceExportError('JSON_SEQUENCE_DISPOSED', 'The textmode export plugin has been disposed.')
+			);
 		return this._runOperation(callerSignal, async (signal) => {
 			let release: (() => void) | undefined;
 			try {
 				release = this._captureGate.acquire();
 			} catch (error) {
 				if (kind === 'video') throw normalizeVideoExportError(error);
+				if (kind === 'json') throw normalizeJSONSequenceError(error);
 				if (kind === 'zip') {
 					const zipError = normalizeZIPExportError(error);
 					onZIPGateError?.(zipError);

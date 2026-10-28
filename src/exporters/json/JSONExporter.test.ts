@@ -39,7 +39,7 @@ type LayerMockOptions = {
 };
 
 function expectSingleLayerDocument(document: TextmodeDocumentJSON): TextmodeDocumentJSON {
-	if (document.layers.length !== 1) {
+	if (document.frames[0].layers.length !== 1) {
 		throw new Error('Expected a single-layer JSON document');
 	}
 
@@ -47,7 +47,7 @@ function expectSingleLayerDocument(document: TextmodeDocumentJSON): TextmodeDocu
 }
 
 function expectLayerStackDocument(document: TextmodeDocumentJSON): TextmodeDocumentJSON {
-	if (document.layers.length < 1) {
+	if (document.frames[0].layers.length < 1) {
 		throw new Error('Expected an all-layers JSON document');
 	}
 
@@ -159,22 +159,22 @@ describe('JSONExporter', () => {
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
-		expect(document.formatVersion).toBe('3.1.0');
+		expect(document.formatVersion).toBe('4.0.0');
 		expect(document).not.toHaveProperty('target');
-		expect(document.layers[0].grid).toEqual({
+		expect(document.frames[0].layers[0].grid).toEqual({
 			cols: 2,
 			rows: 1,
 			cellWidth: 8,
 			cellHeight: 16,
 		});
-		expect(document.layers[0].id).toBe('base');
-		expect(document.layers[0].cells.encoding).toBe('object-rows-v1');
+		expect(document.frames[0].layers[0].id).toBe('base');
+		expect(document.frames[0].layers[0].cells.encoding).toBe('object-rows-v1');
 
-		if (document.layers[0].cells.encoding !== 'object-rows-v1') {
+		if (document.frames[0].layers[0].cells.encoding !== 'object-rows-v1') {
 			throw new Error('Expected object rows encoding');
 		}
 
-		expect(document.layers[0].cells.rows[0][0]).toEqual({
+		expect(document.frames[0].layers[0].cells.rows[0][0]).toEqual({
 			x: 0,
 			y: 0,
 			character: 'A',
@@ -187,7 +187,7 @@ describe('JSONExporter', () => {
 				rotation: 0,
 			},
 		});
-		expect(document.layers[0].cells.rows[0][1]).toEqual({
+		expect(document.frames[0].layers[0].cells.rows[0][1]).toEqual({
 			x: 1,
 			y: 0,
 			character: 'B',
@@ -213,13 +213,13 @@ describe('JSONExporter', () => {
 		);
 
 		expect(document.metadata).toBeUndefined();
-		expect(document.layers[0].cells.encoding).toBe('object-rows-v1');
+		expect(document.frames[0].layers[0].cells.encoding).toBe('object-rows-v1');
 
-		if (document.layers[0].cells.encoding !== 'object-rows-v1') {
+		if (document.frames[0].layers[0].cells.encoding !== 'object-rows-v1') {
 			throw new Error('Expected object rows encoding');
 		}
 
-		expect(document.layers[0].cells.rows[0][0]).toEqual({
+		expect(document.frames[0].layers[0].cells.rows[0][0]).toEqual({
 			x: 0,
 			y: 0,
 			character: 'A',
@@ -242,7 +242,7 @@ describe('JSONExporter', () => {
 		const decoded = decodeTextmodeDocument(document);
 		expect(decoded.ok).toBe(true);
 		if (!decoded.ok) return;
-		expect(decoded.document.layers).toHaveLength(target === 'selected' ? 1 : 2);
+		expect(decoded.document.frames[0].layers).toHaveLength(target === 'selected' ? 1 : 2);
 	});
 
 	it('exports a selected user layer when provided', () => {
@@ -255,8 +255,8 @@ describe('JSONExporter', () => {
 			})
 		);
 
-		expect(document.layers[0].id).toBe('layer-1');
-		expect(document.layers[0]).toMatchObject({
+		expect(document.frames[0].layers[0].id).toBe('layer-1');
+		expect(document.frames[0].layers[0]).toMatchObject({
 			visible: false,
 			opacity: 0.5,
 			blendMode: 'screen',
@@ -264,18 +264,18 @@ describe('JSONExporter', () => {
 			offsetY: 4,
 			rotationZ: 15,
 		});
-		expect(document.layers[0].cells.encoding).toBe('object-rows-v1');
+		expect(document.frames[0].layers[0].cells.encoding).toBe('object-rows-v1');
 
-		if (document.layers[0].cells.encoding !== 'object-rows-v1') {
+		if (document.frames[0].layers[0].cells.encoding !== 'object-rows-v1') {
 			throw new Error('Expected object rows encoding');
 		}
 
-		expect(document.layers[0].cells.rows[0][0]).toMatchObject({
+		expect(document.frames[0].layers[0].cells.rows[0][0]).toMatchObject({
 			character: 'X',
 			foreground: '#0a141eff',
 			background: '#46505aff',
 		});
-		expect(document.layers[0].cells.rows[0][1]).toMatchObject({
+		expect(document.frames[0].layers[0].cells.rows[0][1]).toMatchObject({
 			character: 'Y',
 			foreground: '#28323cff',
 			background: '#646e78ff',
@@ -293,12 +293,12 @@ describe('JSONExporter', () => {
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
-		expect(document.formatVersion).toBe('3.1.0');
+		expect(document.formatVersion).toBe('4.0.0');
 		expect(document).not.toHaveProperty('target');
 		expect(document.metadata).toBeUndefined();
 		expect(document).not.toHaveProperty('canvas');
-		expect(document.layers.map((layer) => layer.id)).toEqual(['base', 'layer-1']);
-		expect(document.layers[0]).toMatchObject({
+		expect(document.frames[0].layers.map((layer) => layer.id)).toEqual(['base', 'layer-1']);
+		expect(document.frames[0].layers[0]).toMatchObject({
 			id: 'base',
 			visible: true,
 			opacity: 1,
@@ -313,7 +313,7 @@ describe('JSONExporter', () => {
 				cellHeight: 16,
 			},
 		});
-		expect(document.layers[1]).toMatchObject({
+		expect(document.frames[0].layers[1]).toMatchObject({
 			id: 'layer-1',
 			visible: false,
 			opacity: 0.5,
@@ -329,7 +329,7 @@ describe('JSONExporter', () => {
 			},
 		});
 
-		const userLayerCells = document.layers[1].cells;
+		const userLayerCells = document.frames[0].layers[1].cells;
 		expect(userLayerCells.encoding).toBe('object-rows-v1');
 
 		if (userLayerCells.encoding !== 'object-rows-v1') {
@@ -372,8 +372,8 @@ describe('JSONExporter', () => {
 			})
 		);
 
-		expect(document.formatVersion).toBe('3.1.0');
-		expect(document.layers[1].blendMode).toBe(expectedName);
+		expect(document.formatVersion).toBe('4.0.0');
+		expect(document.frames[0].layers[1].blendMode).toBe(expectedName);
 	});
 
 	it('applies color mode and metadata options to all layer entries', () => {
@@ -393,7 +393,7 @@ describe('JSONExporter', () => {
 		expect(document.metadata?.generator.name).toBe('textmode.export.js');
 		expect(document.metadata?.createdAt).toBe(createdAt.toISOString());
 
-		const userLayerCells = document.layers[1].cells;
+		const userLayerCells = document.frames[0].layers[1].cells;
 		expect(userLayerCells.encoding).toBe('object-rows-v1');
 
 		if (userLayerCells.encoding !== 'object-rows-v1') {
@@ -462,7 +462,7 @@ describe('JSONExporter', () => {
 		expect(blob.type).toBe('application/json;charset=utf-8');
 		const text = await readBlobAsText(blob);
 		expect(text).toContain('"format":"textmode.document"');
-		expect(text).toContain('"formatVersion":"3.1.0"');
+		expect(text).toContain('"formatVersion":"4.0.0"');
 		expect(text).not.toContain('"target"');
 		expect(text).not.toContain('$schema');
 		expect(text).not.toContain('schemas');
@@ -520,7 +520,7 @@ const serializationBaseline: Record<string, string> = {
 		'afc4ab68439465c4b1b43ea7add49a515d5610ebe92352729242c3980345fc4a',
 };
 const schema = JSON.parse(
-	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/3.1')), 'utf8')
+	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/4.0')), 'utf8')
 ) as object;
 const schemaValidator = new Ajv2020({ validateFormats: true });
 addFormats(schemaValidator, { mode: 'full' });
@@ -540,7 +540,10 @@ describe('extracted protocol compatibility', () => {
 			new Date('2026-09-21T12:00:00.000Z')
 		);
 		const compatibility = JSON.parse(json);
-		expect(compatibility.formatVersion).toBe('3.1.0');
+		expect(compatibility.formatVersion).toBe('4.0.0');
+		const frame = compatibility.frames[0];
+		delete compatibility.frames;
+		compatibility.layers = frame.layers;
 		for (const layer of compatibility.layers) {
 			expect(layer.font.id).toMatch(/^sfnt-v1-sha256:[a-f0-9]{64}$/);
 			delete layer.font;
@@ -579,6 +582,136 @@ describe('automatic font references', () => {
 			includeMetadata: false,
 		});
 		expect(doc).not.toHaveProperty('metadata');
-		expect(doc.layers.every((layer) => layer.font?.id)).toBe(true);
+		expect(doc.frames[0].layers.every((layer) => layer.font?.id)).toBe(true);
+	});
+});
+
+describe('JSON frame sequence', () => {
+	it('captures independent snapshots with stable IDs and validates the complete v4 file', async () => {
+		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
+		const modifier = createTextmodifierMock();
+		const base = modifier.layers.base;
+		const original = modifier.testLayer;
+		const replacement = { ...original } as TextmodeLayer;
+		const all = modifier.layers.all as TextmodeLayer[];
+		const states: string[] = [];
+		const driver = {
+			canvas: document.createElement('canvas'),
+			$render: async (options: import('../base').FrameSequenceRenderOptions) => {
+				for (let frameIndex = 0; frameIndex < options.frameCount; frameIndex++) {
+					if (frameIndex === 1) all.splice(0, 1, replacement, original);
+					if (frameIndex === 2) all.splice(0, 2, original);
+					await options.onFrame({ frameIndex, canvas: document.createElement('canvas') });
+				}
+			},
+		};
+		const exporter = new JSONSequenceExporter(modifier, vi.fn(), () => driver);
+		const blob = await exporter.$generateBlob({
+			frameCount: 3,
+			frameRate: 60,
+			target: 'all',
+			onProgress: ({ state }) => states.push(state),
+		});
+		const value = JSON.parse(await readBlobAsText(blob)) as TextmodeDocumentJSON;
+		expect(blob.type).toContain('application/json');
+		expect(value.frames.map((frame) => frame.durationMs)).toEqual([1000 / 60, 1000 / 60, 1000 / 60]);
+		expect(value.frames.map((frame) => frame.layers.map((layer) => layer.id))).toEqual([
+			['base', 'layer-1'],
+			['base', 'layer-2', 'layer-1'],
+			['base', 'layer-1'],
+		]);
+		expect(modifier.layers.base).toBe(base);
+		expect(value.frames[0].layers[0]).not.toBe(value.frames[1].layers[0]);
+		expect(validateExport(value), JSON.stringify(validateExport.errors)).toBe(true);
+		expect(decodeTextmodeDocument(value).ok).toBe(true);
+		expect(states).toEqual(['capturing', 'capturing', 'capturing', 'capturing', 'finalizing', 'completed']);
+	});
+
+	it('rejects invalid options and checks cancellation before capturing', async () => {
+		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
+		const factory = vi.fn();
+		const exporter = new JSONSequenceExporter(createTextmodifierMock(), vi.fn(), factory);
+		await expect(exporter.$generateBlob({ frameCount: 0 })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_INVALID_OPTIONS',
+		});
+		await expect(exporter.$generateBlob({ frameRate: 0 })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_INVALID_OPTIONS',
+		});
+		const controller = new AbortController();
+		controller.abort();
+		await expect(exporter.$generateBlob({ signal: controller.signal })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_ABORTED',
+		});
+		expect(factory).not.toHaveBeenCalled();
+	});
+
+	it('enforces cumulative cell limits before extracting the next frame', async () => {
+		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
+		const modifier = createTextmodifierMock();
+		const driver = {
+			canvas: document.createElement('canvas'),
+			$render: async (options: import('../base').FrameSequenceRenderOptions) => {
+				Object.assign(modifier.layers.base.grid!, { cols: 16_777_217, rows: 1 });
+				await options.onFrame({ frameIndex: 0, canvas: document.createElement('canvas') });
+			},
+		};
+		const exporter = new JSONSequenceExporter(modifier, vi.fn(), () => driver);
+		await expect(exporter.$generateBlob({ frameCount: 1 })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_LIMIT_EXCEEDED',
+		});
+	});
+
+	it('fails when the selected layer is removed during capture', async () => {
+		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
+		const modifier = createTextmodifierMock();
+		const driver = {
+			canvas: document.createElement('canvas'),
+			$render: async (options: import('../base').FrameSequenceRenderOptions) => {
+				(modifier.layers.all as TextmodeLayer[]).splice(0, 1);
+				await options.onFrame({ frameIndex: 0, canvas: document.createElement('canvas') });
+			},
+		};
+		const exporter = new JSONSequenceExporter(modifier, vi.fn(), () => driver);
+		await expect(exporter.$generateBlob({ frameCount: 1, layer: modifier.testLayer })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_FAILED',
+		});
+	});
+});
+
+describe('JSON sequence capture failures', () => {
+	it('normalizes frame timeouts and reports the failure', async () => {
+		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
+		const { FrameSequenceError } = await import('../base');
+		const driver = {
+			canvas: document.createElement('canvas'),
+			$render: async () => {
+				throw new FrameSequenceError('FRAME_SEQUENCE_TIMEOUT', 'Timed out');
+			},
+		};
+		const progress = vi.fn();
+		const exporter = new JSONSequenceExporter(createTextmodifierMock(), vi.fn(), () => driver);
+		await expect(exporter.$generateBlob({ frameCount: 1, onProgress: progress })).rejects.toMatchObject({
+			code: 'JSON_SEQUENCE_TIMEOUT',
+		});
+		expect(progress).toHaveBeenLastCalledWith(expect.objectContaining({ state: 'error', message: 'Timed out' }));
+	});
+
+	it('aborts after a captured frame without publishing a result', async () => {
+		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
+		const controller = new AbortController();
+		const driver = {
+			canvas: document.createElement('canvas'),
+			$render: async (options: import('../base').FrameSequenceRenderOptions) => {
+				await options.onFrame({ frameIndex: 0, canvas: document.createElement('canvas') });
+				controller.abort();
+				await options.onFrame({ frameIndex: 1, canvas: document.createElement('canvas') });
+			},
+		};
+		const ready = vi.fn();
+		const exporter = new JSONSequenceExporter(createTextmodifierMock(), vi.fn(), () => driver);
+		await expect(exporter.$generateBlob({ frameCount: 2, signal: controller.signal }, ready)).rejects.toMatchObject(
+			{ code: 'JSON_SEQUENCE_ABORTED' }
+		);
+		expect(ready).not.toHaveBeenCalled();
 	});
 });
