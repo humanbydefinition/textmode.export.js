@@ -63,7 +63,7 @@
 		"textmode.js": "^0.19.0-dev.0"
 	},
 	"dependencies": {
-		"@textmode/document": "file:../textmode-document",
+		"@textmode/document": "^2.0.0",
 		"fflate": "0.8.3",
 		"gifenc": "^1.0.1",
 		"mediabunny": "1.62.1"
