@@ -1,11 +1,12 @@
 import type { Textmodifier } from 'textmode.js';
-import { LayerBlendMode } from 'textmode.js';
+import { LayerBlendMode, TextmodeTileset } from 'textmode.js';
 import {
 	FileHandler,
 	resolveLayerStackExportTargets,
 	type ResolvedLayerExportTarget,
 	type ResolvedLayerStackExportTarget,
 } from '../base';
+import { getFontReference } from './font-reference';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import packageJson from '../../../package.json';
 import {
@@ -159,6 +160,7 @@ export class JSONExporter {
 	): TextmodeDocumentLayer {
 		return {
 			id: target.id,
+			...(!(target.font instanceof TextmodeTileset) ? { font: getFontReference(target.font) } : {}),
 			visible: target.visible,
 			opacity: target.opacity,
 			blendMode: JSON_BLEND_MODE_NAMES[target.blendMode],

@@ -137,3 +137,5 @@ declare global {
 if (typeof window !== 'undefined') {
 	window.ExportPlugin = ExportPlugin;
 }
+
+export { getFontReference } from './exporters/json/font-reference';

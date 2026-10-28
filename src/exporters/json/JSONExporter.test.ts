@@ -9,8 +9,25 @@ import packageJson from '../../../package.json';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LayerBlendMode, type Textmodifier, type TextmodeLayer } from 'textmode.js';
 import { decodeTextmodeDocument } from '@textmode/document';
+import { getFontReference } from './font-reference';
 import { JSONExporter } from './JSONExporter';
 import type { TextmodeDocumentJSON } from '@textmode/document';
+
+function sourceData() {
+	return {
+		copyBytes: vi.fn(() => {
+			const bytes = new Uint8Array(40),
+				view = new DataView(bytes.buffer);
+			view.setUint32(0, 0x10000);
+			view.setUint16(4, 1);
+			bytes.set([104, 101, 97, 100], 12);
+			view.setUint32(20, 28);
+			view.setUint32(24, 12);
+			return bytes;
+		}),
+	};
+}
+const defaultSource = sourceData();
 
 type LayerMockOptions = {
 	visible?: boolean;
@@ -68,7 +85,7 @@ function createLayerMock(
 			width: 16,
 			height: 16,
 		},
-		font: { characters },
+		font: { characters, sourceData: defaultSource },
 		drawFramebuffer: {
 			readPixels: (attachment: number) => {
 				switch (attachment) {
@@ -142,7 +159,7 @@ describe('JSONExporter', () => {
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
-		expect(document.formatVersion).toBe('3.0.0');
+		expect(document.formatVersion).toBe('3.1.0');
 		expect(document).not.toHaveProperty('target');
 		expect(document.layers[0].grid).toEqual({
 			cols: 2,
@@ -276,7 +293,7 @@ describe('JSONExporter', () => {
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
-		expect(document.formatVersion).toBe('3.0.0');
+		expect(document.formatVersion).toBe('3.1.0');
 		expect(document).not.toHaveProperty('target');
 		expect(document.metadata).toBeUndefined();
 		expect(document).not.toHaveProperty('canvas');
@@ -355,7 +372,7 @@ describe('JSONExporter', () => {
 			})
 		);
 
-		expect(document.formatVersion).toBe('3.0.0');
+		expect(document.formatVersion).toBe('3.1.0');
 		expect(document.layers[1].blendMode).toBe(expectedName);
 	});
 
@@ -445,7 +462,7 @@ describe('JSONExporter', () => {
 		expect(blob.type).toBe('application/json;charset=utf-8');
 		const text = await readBlobAsText(blob);
 		expect(text).toContain('"format":"textmode.document"');
-		expect(text).toContain('"formatVersion":"3.0.0"');
+		expect(text).toContain('"formatVersion":"3.1.0"');
 		expect(text).not.toContain('"target"');
 		expect(text).not.toContain('$schema');
 		expect(text).not.toContain('schemas');
@@ -503,7 +520,7 @@ const serializationBaseline: Record<string, string> = {
 		'afc4ab68439465c4b1b43ea7add49a515d5610ebe92352729242c3980345fc4a',
 };
 const schema = JSON.parse(
-	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/3.0')), 'utf8')
+	readFileSync(fileURLToPath(import.meta.resolve('@textmode/document/schema/3.1')), 'utf8')
 ) as object;
 const schemaValidator = new Ajv2020({ validateFormats: true });
 addFormats(schemaValidator, { mode: 'full' });
@@ -522,12 +539,46 @@ describe('extracted protocol compatibility', () => {
 			options,
 			new Date('2026-09-21T12:00:00.000Z')
 		);
-		const normalizedVersion = json.replace(/("version"\s*:\s*")[^"]+(")/g, '$1<package-version>$2');
+		const compatibility = JSON.parse(json);
+		expect(compatibility.formatVersion).toBe('3.1.0');
+		for (const layer of compatibility.layers) {
+			expect(layer.font.id).toMatch(/^sfnt-v1-sha256:[a-f0-9]{64}$/);
+			delete layer.font;
+		}
+		compatibility.formatVersion = '3.0.0';
+		const indentation = typeof options.pretty === 'number' ? options.pretty : options.pretty ? 2 : 0;
+		const normalizedVersion = JSON.stringify(compatibility, null, indentation).replace(
+			/("version"\s*:\s*")[^"]+(")/g,
+			'$1<package-version>$2'
+		);
 		const hash = createHash('sha256').update(normalizedVersion).digest('hex');
 		expect(hash).toBe(expectedHash);
 		const value = JSON.parse(json) as TextmodeDocumentJSON;
 		expect(validateExport(value), JSON.stringify(validateExport.errors)).toBe(true);
 		expect(decodeTextmodeDocument(value).ok).toBe(true);
 		if (options.includeMetadata) expect(value.metadata?.generator.version).toBe(packageJson.version);
+	});
+});
+
+describe('automatic font references', () => {
+	it('caches a shared source, returns copies, and identifies replacements', () => {
+		const source = sourceData();
+		const font = { sourceData: source } as unknown as import('textmode.js').TextmodeFont;
+		const first = getFontReference(font);
+		getFontReference({ ...font } as import('textmode.js').TextmodeFont);
+		expect(source.copyBytes).toHaveBeenCalledOnce();
+		first.name = 'changed';
+		expect(getFontReference(font)).not.toHaveProperty('name');
+		const next = sourceData();
+		getFontReference({ sourceData: next } as unknown as import('textmode.js').TextmodeFont);
+		expect(next.copyBytes).toHaveBeenCalledOnce();
+	});
+	it('keeps font references when producer metadata is disabled', () => {
+		const doc = new JSONExporter().$generateJSONData(createTextmodifierMock(), {
+			target: 'all',
+			includeMetadata: false,
+		});
+		expect(doc).not.toHaveProperty('metadata');
+		expect(doc.layers.every((layer) => layer.font?.id)).toBe(true);
 	});
 });
