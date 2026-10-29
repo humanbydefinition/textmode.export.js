@@ -5,7 +5,6 @@ import { unzipSync } from 'fflate';
 import type { FrameSequenceRenderOptions } from '../base';
 import { FileHandler } from '../base';
 import { IMAGE_MIME_TYPES, ImageExporter } from '../image';
-import { JSONExporter } from '../json';
 import { SVGExporter } from '../svg';
 import { TXTExporter } from '../txt';
 import { ZIPExporter } from './ZIPExporter';
@@ -159,14 +158,12 @@ describe('ZIPExporter', () => {
 			return new Blob([new Uint8Array([1])], { type: IMAGE_MIME_TYPES[format] });
 		});
 		vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg/>');
-		vi.spyOn(JSONExporter.prototype, '$generateJSONString').mockReturnValue('{}');
 		vi.spyOn(TXTExporter.prototype, '$generateTXT').mockReturnValue('A');
 		const policies = [
 			['png', '.png', 'store'],
 			['jpg', '.jpg', 'store'],
 			['webp', '.webp', 'store'],
 			['svg', '.svg', 'deflate'],
-			['json', '.json', 'deflate'],
 			['txt', '.txt', 'deflate'],
 		] as const;
 
@@ -187,47 +184,11 @@ describe('ZIPExporter', () => {
 		}
 	});
 
-	it('identifies the current font in every JSON frame and reuses shared sources', async () => {
-		const bytes = new Uint8Array(40),
-			view = new DataView(bytes.buffer);
-		view.setUint32(0, 0x10000);
-		view.setUint16(4, 1);
-		bytes.set([104, 101, 97, 100], 12);
-		view.setUint32(20, 28);
-		view.setUint32(24, 12);
-		const shared = { copyBytes: vi.fn(() => bytes.slice()) };
-		const nextBytes = bytes.slice();
-		nextBytes[28] = 1;
-		const next = { copyBytes: vi.fn(() => nextBytes.slice()) };
-		const layer = {
-			grid: { cols: 1, rows: 1, cellWidth: 8, cellHeight: 8, width: 8, height: 8 },
-			font: { characters: [{ character: 'A', color: [0, 0, 0] }], sourceData: shared },
-			drawFramebuffer: { readPixels: () => new Uint8Array([0, 0, 0, 255]) },
-			isVisible: () => true,
-			opacity: () => 1,
-			blendMode: () => 0,
-			offset: () => ({ x: 0, y: 0 }),
-			rotateZ: () => 0,
-		};
-		const writer = new FakeWriter();
-		const driver = createDriver(async ({ onFrame }) => {
-			for (let frameIndex = 0; frameIndex < 3; frameIndex++) {
-				if (frameIndex === 2) layer.font = { ...layer.font, sourceData: next };
-				await onFrame({ frameIndex, canvas: document.createElement('canvas') });
-			}
+	it('rejects JSON as a ZIP frame format at runtime', async () => {
+		const exporter = new ZIPExporter(createTextmodifierMock(), vi.fn() as never);
+		await expect(exporter.$generateZIPBlob({ format: 'json' } as never)).rejects.toMatchObject({
+			code: 'ZIP_EXPORT_INVALID_OPTIONS',
 		});
-		const exporter = new ZIPExporter(
-			{ canvas: driver.canvas, layers: { base: layer, all: [] } } as never,
-			vi.fn() as never,
-			{ createDriver: () => driver, createWriter: () => writer }
-		);
-		await exporter.$generateZIPBlob({ format: 'json', frameCount: 3, frameOptions: { includeMetadata: false } });
-		const docs = writer.entries.slice(1).map((entry) => JSON.parse(new TextDecoder().decode(entry.data)));
-		expect(docs[0].layers[0].font.id).toBe(docs[1].layers[0].font.id);
-		expect(docs[2].layers[0].font.id).not.toBe(docs[0].layers[0].font.id);
-		expect(shared.copyBytes).toHaveBeenCalledOnce();
-		expect(next.copyBytes).toHaveBeenCalledOnce();
-		expect(docs.every((doc) => doc.formatVersion === '3.1.0' && !doc.metadata)).toBe(true);
 	});
 
 	it('applies defaults and rejects invalid input before allocating capture resources', async () => {

@@ -1,6 +1,5 @@
 import type { PrepareExportFrame } from '../base';
 import type { ImageExportOptions } from '../image';
-import type { JSONExportOptions } from '../json';
 import type { SVGExportOptions } from '../svg';
 import type { TXTExportOptions } from '../txt';
 
@@ -10,7 +9,7 @@ import type { TXTExportOptions } from '../txt';
  * @category ZIP frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ZIPFrameFormat | ZIPFrameFormat API reference}
  */
-export type ZIPFrameFormat = 'png' | 'jpg' | 'webp' | 'svg' | 'json' | 'txt';
+export type ZIPFrameFormat = 'png' | 'jpg' | 'webp' | 'svg' | 'txt';
 
 /**
  * Lifecycle state reported by a ZIP frame-sequence export.
@@ -131,7 +130,6 @@ export interface ZIPFrameOptionsMap {
 	jpg: Omit<ImageExportOptions, 'filename' | 'format'>;
 	webp: Omit<ImageExportOptions, 'filename' | 'format'>;
 	svg: Omit<SVGExportOptions, 'filename'>;
-	json: Omit<JSONExportOptions, 'filename'>;
 	txt: Omit<TXTExportOptions, 'filename'>;
 }
 

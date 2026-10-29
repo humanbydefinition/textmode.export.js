@@ -106,6 +106,8 @@ function createExportAPI(): TextmodeExportAPI {
 		toJSON: vi.fn(() => ({}) as never),
 		toJSONString: vi.fn(() => ''),
 		saveJSON: vi.fn(),
+		toJSONSequenceBlob: vi.fn(async () => new Blob()),
+		saveJSONSequence: vi.fn(async () => undefined),
 		saveGIF: vi.fn(async () => undefined),
 		toGIFBlob: vi.fn(async () => new Blob()),
 		saveVideo: vi.fn(async () => undefined),

@@ -11,6 +11,8 @@ describe('textmode.js type augmentation', () => {
 		expectTypeOf<Textmodifier['exportOverlay']>().toEqualTypeOf<TextmodeExportAPI['exportOverlay']>();
 		expectTypeOf<Textmodifier['saveZip']>().toEqualTypeOf<TextmodeExportAPI['saveZip']>();
 		expectTypeOf<Textmodifier['toZipBlob']>().toEqualTypeOf<TextmodeExportAPI['toZipBlob']>();
+		expectTypeOf<Textmodifier['toJSONSequenceBlob']>().toEqualTypeOf<TextmodeExportAPI['toJSONSequenceBlob']>();
+		expectTypeOf<Textmodifier['saveJSONSequence']>().toEqualTypeOf<TextmodeExportAPI['saveJSONSequence']>();
 	});
 
 	it('discriminates ZIP frame options by format', () => {
@@ -20,9 +22,12 @@ describe('textmode.js type augmentation', () => {
 		const mismatched: ZIPExportOptions = { format: 'svg', frameOptions: { scale: 2 } };
 		// @ts-expect-error Animated containers cannot be ZIP frame formats.
 		const animated: ZIPExportOptions = { format: 'gif' };
+		// @ts-expect-error JSON sequences are exported as a document, not ZIP frames.
+		const json: ZIPExportOptions = { format: 'json' };
 		expectTypeOf(png).toMatchTypeOf<ZIPExportOptions>();
 		expectTypeOf(svg).toMatchTypeOf<ZIPExportOptions>();
 		void mismatched;
 		void animated;
+		void json;
 	});
 });
