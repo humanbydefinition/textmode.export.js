@@ -153,14 +153,15 @@ describe('JSONExporter', () => {
 		vi.unstubAllGlobals();
 	});
 
-	it('generates a textmode.document selected-layer document with row-based cells by default', () => {
+	it('generates a textmode.document with the full layer stack by default', () => {
 		const exporter = new JSONExporter();
-		const document = expectSingleLayerDocument(exporter.$generateJSONData(createTextmodifierMock()));
+		const document = expectLayerStackDocument(exporter.$generateJSONData(createTextmodifierMock()));
 
 		expect(document).not.toHaveProperty('$schema');
 		expect(document.format).toBe('textmode.document');
 		expect(document.formatVersion).toBe('4.0.0');
 		expect(document).not.toHaveProperty('target');
+		expect(document.frames[0].layers).toHaveLength(2);
 		expect(document.frames[0].layers[0].grid).toEqual({
 			cols: 2,
 			rows: 1,
@@ -207,6 +208,7 @@ describe('JSONExporter', () => {
 		const exporter = new JSONExporter();
 		const document = expectSingleLayerDocument(
 			exporter.$generateJSONData(createTextmodifierMock(), {
+				target: 'selected',
 				colorMode: 'rgba',
 				includeMetadata: false,
 			})
@@ -609,7 +611,6 @@ describe('JSON frame sequence', () => {
 		const blob = await exporter.$generateBlob({
 			frameCount: 3,
 			frameRate: 60,
-			target: 'all',
 			onProgress: ({ state }) => states.push(state),
 		});
 		const value = JSON.parse(await readBlobAsText(blob)) as TextmodeDocumentJSON;
@@ -661,7 +662,7 @@ describe('JSON frame sequence', () => {
 		});
 	});
 
-	it('fails when the selected layer is removed during capture', async () => {
+	it('fails when the explicitly selected layer is removed during capture', async () => {
 		const { JSONSequenceExporter } = await import('./JSONSequenceExporter');
 		const modifier = createTextmodifierMock();
 		const driver = {
@@ -672,7 +673,9 @@ describe('JSON frame sequence', () => {
 			},
 		};
 		const exporter = new JSONSequenceExporter(modifier, vi.fn(), () => driver);
-		await expect(exporter.$generateBlob({ frameCount: 1, layer: modifier.testLayer })).rejects.toMatchObject({
+		await expect(
+			exporter.$generateBlob({ frameCount: 1, target: 'selected', layer: modifier.testLayer })
+		).rejects.toMatchObject({
 			code: 'JSON_SEQUENCE_FAILED',
 		});
 	});

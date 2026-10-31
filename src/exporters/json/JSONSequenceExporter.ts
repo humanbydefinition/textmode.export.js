@@ -92,7 +92,7 @@ export class JSONSequenceExporter {
 					'Invalid JSON sequence frame count or frame rate.'
 				);
 			checkAbort();
-			const selected = options.target === 'all' ? undefined : (options.layer ?? this.modifier.layers.base);
+			const selected = options.target === 'selected' ? (options.layer ?? this.modifier.layers.base) : undefined;
 			const ids = new WeakMap<TextmodeLayer, string>();
 			const initial = getLayerTargetOptions(this.modifier);
 			for (const target of initial) ids.set(target.layer, target.id);

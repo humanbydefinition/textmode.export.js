@@ -55,7 +55,7 @@ export class JSONExporter {
 	 */
 	private _applyDefaultOptions(options: JSONExportOptions): JSONGenerationOptions {
 		return {
-			target: options.target ?? 'selected',
+			target: options.target ?? 'all',
 			pretty: options.pretty ?? true,
 			colorMode: options.colorMode ?? 'hex',
 			includeMetadata: options.includeMetadata ?? true,

@@ -8,7 +8,7 @@ describe('DefaultsStore', () => {
 		const store = new DefaultsStore();
 		expect(store.current.format).toBe('txt');
 		expect(store.current.txt).toMatchObject({ preserveTrailingSpaces: false, emptyCharacter: ' ' });
-		expect(store.current.json).toMatchObject({ target: 'selected', pretty: true, includeMetadata: true });
+		expect(store.current.json).toMatchObject({ target: 'all', pretty: true, includeMetadata: true });
 		expect(store.current.image).toMatchObject({ format: 'png', scale: 1 });
 		expect(store.current.svg).toMatchObject({
 			includeBackgroundRectangles: true,
