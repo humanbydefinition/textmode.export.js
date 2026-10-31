@@ -27,7 +27,7 @@ export type JSONExportColorMode = 'hex' | 'rgba';
 export type JSONExportOptions = LayerExportOptions & {
 	/**
 	 * Export one selected layer or the complete layer stack.
-	 * Defaults to `selected`.
+	 * Defaults to `all`. When `selected`, uses the base layer if `layer` is omitted.
 	 */
 	target?: JSONExportTarget;
 
@@ -66,3 +66,46 @@ export interface JSONCellData {
 	background: TextmodeDocumentRGBAColor;
 	transform: TextmodeDocumentCellTransform;
 }
+
+/**
+ * Progress emitted by JSON frame-sequence capture.
+ *
+ * @category JSON frame-sequence export
+ * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONSequenceExportProgress | JSONSequenceExportProgress API reference}
+ */
+export interface JSONSequenceExportProgress {
+	state: 'capturing' | 'finalizing' | 'completed' | 'error';
+	frameIndex: number;
+	totalFrames: number;
+	progress: number;
+	message?: string;
+}
+
+/**
+ * Options for deterministic, fixed-rate JSON sequence capture.
+ *
+ * @category JSON frame-sequence export
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONSequenceExportOptions | JSONSequenceExportOptions API reference}
+ */
+export type JSONSequenceExportOptions = JSONExportOptions & {
+	frameCount?: number;
+	frameRate?: number;
+	prepareFrame?: import('../base').PrepareExportFrame;
+	signal?: AbortSignal;
+	onProgress?: (progress: JSONSequenceExportProgress) => void;
+};
+
+/**
+ * Machine-readable JSON sequence failure.
+ *
+ * @category JSON frame-sequence export
+ * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONSequenceExportErrorCode | JSONSequenceExportErrorCode API reference}
+ */
+export type JSONSequenceExportErrorCode =
+	| 'JSON_SEQUENCE_INVALID_OPTIONS'
+	| 'JSON_SEQUENCE_LIMIT_EXCEEDED'
+	| 'JSON_SEQUENCE_ABORTED'
+	| 'JSON_SEQUENCE_TIMEOUT'
+	| 'JSON_SEQUENCE_BUSY'
+	| 'JSON_SEQUENCE_DISPOSED'
+	| 'JSON_SEQUENCE_FAILED';

@@ -21,7 +21,7 @@ import type {
 const DEFAULT_FRAME_COUNT = 300;
 const DEFAULT_FRAME_RATE = 60;
 const MAX_FRAME_COUNT = 65_534;
-const SUPPORTED_FORMATS: ReadonlySet<string> = new Set<ZIPFrameFormat>(['png', 'jpg', 'webp', 'svg', 'json', 'txt']);
+const SUPPORTED_FORMATS: ReadonlySet<string> = new Set<ZIPFrameFormat>(['png', 'jpg', 'webp', 'svg', 'txt']);
 
 interface ZIPExporterDependencies {
 	createDriver?: () => FrameSequenceDriverLike;
@@ -208,7 +208,7 @@ export class ZIPExporter {
 		if (typeof format !== 'string' || !SUPPORTED_FORMATS.has(format)) {
 			throw new ZIPExportError(
 				'ZIP_EXPORT_INVALID_OPTIONS',
-				"ZIP frame format must be one of 'png', 'jpg', 'webp', 'svg', 'json', or 'txt'."
+				"ZIP frame format must be one of 'png', 'jpg', 'webp', 'svg', or 'txt'."
 			);
 		}
 		const frameCount = options.frameCount ?? DEFAULT_FRAME_COUNT;

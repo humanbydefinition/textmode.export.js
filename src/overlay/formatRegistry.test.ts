@@ -32,10 +32,13 @@ describe('getExportFormatDefinitions', () => {
 		for (const definition of definitions) {
 			const blade = definition.createBlade();
 			blade.mount(container);
-			const options = blade.getOptions() as { layer?: TextmodeLayer };
+			const options = blade.getOptions() as { layer?: TextmodeLayer; target?: string };
 
-			if (definition.format === 'txt' || definition.format === 'json' || definition.format === 'svg') {
+			if (definition.format === 'txt' || definition.format === 'svg') {
 				expect(options.layer).toBe(layer);
+			} else if (definition.format === 'json') {
+				expect(options.target).toBe('all');
+				expect(options.layer).toBeUndefined();
 			} else {
 				expect(options.layer).toBeUndefined();
 			}
@@ -44,7 +47,7 @@ describe('getExportFormatDefinitions', () => {
 		}
 	});
 
-	it('lets JSON exports target all layers without passing a selected layer', () => {
+	it('defaults JSON exports to all layers without a selected layer', () => {
 		const layer = {} as TextmodeLayer;
 		const provider: LayerTargetProvider = {
 			getDefaultId: () => 'base',
@@ -62,8 +65,8 @@ describe('getExportFormatDefinitions', () => {
 		blade.mount(container);
 
 		expect(blade.getOptions()).toMatchObject({
-			target: 'selected',
-			layer,
+			target: 'all',
+			layer: undefined,
 		});
 
 		const targetSelect = container.querySelector<HTMLSelectElement>('#textmode-export-json-target');

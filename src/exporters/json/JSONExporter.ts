@@ -1,11 +1,12 @@
-import type { Textmodifier } from 'textmode.js';
-import { LayerBlendMode } from 'textmode.js';
+import type { Textmodifier, TextmodeLayer } from 'textmode.js';
+import { LayerBlendMode, TextmodeTileset } from 'textmode.js';
 import {
 	FileHandler,
 	resolveLayerStackExportTargets,
 	type ResolvedLayerExportTarget,
 	type ResolvedLayerStackExportTarget,
 } from '../base';
+import { getFontReference } from './font-reference';
 import { JSONDataExtractor } from './JSONDataExtractor';
 import packageJson from '../../../package.json';
 import {
@@ -54,7 +55,7 @@ export class JSONExporter {
 	 */
 	private _applyDefaultOptions(options: JSONExportOptions): JSONGenerationOptions {
 		return {
-			target: options.target ?? 'selected',
+			target: options.target ?? 'all',
 			pretty: options.pretty ?? true,
 			colorMode: options.colorMode ?? 'hex',
 			includeMetadata: options.includeMetadata ?? true,
@@ -159,6 +160,7 @@ export class JSONExporter {
 	): TextmodeDocumentLayer {
 		return {
 			id: target.id,
+			...(!(target.font instanceof TextmodeTileset) ? { font: getFontReference(target.font) } : {}),
 			visible: target.visible,
 			opacity: target.opacity,
 			blendMode: JSON_BLEND_MODE_NAMES[target.blendMode],
@@ -180,7 +182,8 @@ export class JSONExporter {
 	public $generateJSONData(
 		textmodifier: Textmodifier,
 		options: JSONExportOptions = {},
-		createdAt: Date = new Date()
+		createdAt: Date = new Date(),
+		resolveId?: (layer: TextmodeLayer, defaultId: string) => string
 	): TextmodeDocumentJSON {
 		const generationOptions = this._applyDefaultOptions(options);
 		const metadata = this._createMetadata(generationOptions, createdAt);
@@ -193,7 +196,17 @@ export class JSONExporter {
 			format: TEXTMODE_DOCUMENT_FORMAT,
 			formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
 			...(metadata ? { metadata } : {}),
-			layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
+			frames: [
+				{
+					durationMs: 100,
+					layers: targets.map((target) =>
+						this._createStackLayer(
+							{ ...target, id: resolveId?.(target.layer, target.id) ?? target.id },
+							generationOptions
+						)
+					),
+				},
+			],
 		};
 	}
 

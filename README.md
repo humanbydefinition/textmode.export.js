@@ -22,7 +22,7 @@ Choose a compact still, structured document data, or a complete animation to sui
 - **Interactive overlay** - Built-in format controls, live layer selectors, runtime defaults, visibility controls, and remembered placement
 - **Clipboard workflows** - Copy text, JSON, SVG, and raster output without downloading files
 - **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
-- **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames with a versioned manifest
+- **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, or TXT frames with a versioned manifest
 
 ## Try it online first
 

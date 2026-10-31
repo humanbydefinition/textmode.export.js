@@ -5,7 +5,6 @@ import { unzipSync } from 'fflate';
 import type { FrameSequenceRenderOptions } from '../base';
 import { FileHandler } from '../base';
 import { IMAGE_MIME_TYPES, ImageExporter } from '../image';
-import { JSONExporter } from '../json';
 import { SVGExporter } from '../svg';
 import { TXTExporter } from '../txt';
 import { ZIPExporter } from './ZIPExporter';
@@ -159,14 +158,12 @@ describe('ZIPExporter', () => {
 			return new Blob([new Uint8Array([1])], { type: IMAGE_MIME_TYPES[format] });
 		});
 		vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg/>');
-		vi.spyOn(JSONExporter.prototype, '$generateJSONString').mockReturnValue('{}');
 		vi.spyOn(TXTExporter.prototype, '$generateTXT').mockReturnValue('A');
 		const policies = [
 			['png', '.png', 'store'],
 			['jpg', '.jpg', 'store'],
 			['webp', '.webp', 'store'],
 			['svg', '.svg', 'deflate'],
-			['json', '.json', 'deflate'],
 			['txt', '.txt', 'deflate'],
 		] as const;
 
@@ -185,6 +182,13 @@ describe('ZIPExporter', () => {
 				compression,
 			});
 		}
+	});
+
+	it('rejects JSON as a ZIP frame format at runtime', async () => {
+		const exporter = new ZIPExporter(createTextmodifierMock(), vi.fn() as never);
+		await expect(exporter.$generateZIPBlob({ format: 'json' } as never)).rejects.toMatchObject({
+			code: 'ZIP_EXPORT_INVALID_OPTIONS',
+		});
 	});
 
 	it('applies defaults and rejects invalid input before allocating capture resources', async () => {

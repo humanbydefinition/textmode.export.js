@@ -7,7 +7,7 @@ export const CURATED_DEFAULTS: Readonly<ExportDefaults> = Object.freeze({
 		emptyCharacter: ' ',
 	}),
 	json: Object.freeze({
-		target: 'selected',
+		target: 'all',
 		pretty: true,
 		includeMetadata: true,
 		colorMode: 'hex',

@@ -18,7 +18,7 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 				{ value: 'selected', label: 'selected layer' },
 				{ value: 'all', label: 'all layers' },
 			],
-			defaultValue: 'selected',
+			defaultValue: 'all',
 		})
 	);
 
@@ -125,7 +125,7 @@ export class JSONBlade extends Blade<JSONExportOptions> {
 
 	private applyDefaults(): void {
 		const defaults = this._config.defaultOptions;
-		this.target.value = defaults.target ?? 'selected';
+		this.target.value = defaults.target ?? 'all';
 		this.prettyPrint.checked =
 			typeof defaults.pretty === 'number' ? defaults.pretty > 0 : (defaults.pretty ?? true);
 		this.includeMetadata.checked = defaults.includeMetadata ?? true;
