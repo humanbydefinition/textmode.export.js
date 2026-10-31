@@ -18,7 +18,8 @@ import type { ZIPExportOptions } from './exporters/zip';
 export type TXTOverlayDefaults = Pick<TXTExportOptions, 'preserveTrailingSpaces' | 'emptyCharacter'>;
 
 /**
- * Default JSON export fields controlled by the export overlay.
+ * Default JSON export fields controlled by the export overlay. JSON exports
+ * include all layers by default.
  *
  * @category Overlay
  *
@@ -438,17 +439,18 @@ export interface TextmodeExportAPI {
 	toString(options?: TXTExportOptions): string;
 
 	/**
-	 * Produces a v3 document with a nonempty layers array.
-	 * Selected layers retain their visibility, opacity, blending, and transforms.
+	 * Produces a v4 document with a nonempty frames array. The full layer stack
+	 * is included by default. Selected layers retain their visibility, opacity,
+	 * blending, and transforms.
 	 *
 	 * @param options Export options.
 	 * @returns The JSON document representing the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
-	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
-	 * const stack = t.toJSON({ target: 'all' });
-	 * console.log(layer.layers[0].grid, stack.formatVersion); // 3.0.0
+	 * const layer = t.toJSON({ target: 'selected', layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
+	 * const stack = t.toJSON(); // The full layer stack is the default.
+	 * console.log(layer.frames[0].layers[0].grid, stack.formatVersion); // 4.0.0
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojson | TextmodeExportAPI.toJSON API reference}
@@ -458,15 +460,15 @@ export interface TextmodeExportAPI {
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
 	/**
-	 * Produces the selected layer or layer stack as a v3 JSON document string.
+	 * Produces the full layer stack as a v4 JSON document string by default.
 	 *
 	 * @param options Export options.
 	 * @returns Serialized JSON string for the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
-	 * const json = t.toJSONString({ layer: t.layers.base, pretty: false, colorMode: 'hex' });
-	 * const stackJson = t.toJSONString({ target: 'all' });
+	 * const json = t.toJSONString({ target: 'selected', layer: t.layers.base, pretty: false, colorMode: 'hex' });
+	 * const stackJson = t.toJSONString(); // The full layer stack is the default.
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonstring | TextmodeExportAPI.toJSONString API reference}
@@ -476,14 +478,14 @@ export interface TextmodeExportAPI {
 	toJSONString(options?: JSONExportOptions): string;
 
 	/**
-	 * Downloads the selected layer or layer stack as a v3 JSON document file.
+	 * Downloads the full layer stack as a v4 JSON document by default.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
-	 * t.saveJSON({ filename: 'frame', layer: t.layers.base, pretty: true });
-	 * t.saveJSON({ filename: 'stack', target: 'all' });
+	 * t.saveJSON({ filename: 'frame', target: 'selected', layer: t.layers.base, pretty: true });
+	 * t.saveJSON({ filename: 'stack' }); // The full layer stack is the default.
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejson | TextmodeExportAPI.saveJSON API reference}

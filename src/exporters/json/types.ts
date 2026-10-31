@@ -27,7 +27,7 @@ export type JSONExportColorMode = 'hex' | 'rgba';
 export type JSONExportOptions = LayerExportOptions & {
 	/**
 	 * Export one selected layer or the complete layer stack.
-	 * Defaults to `selected`.
+	 * Defaults to `all`. When `selected`, uses the base layer if `layer` is omitted.
 	 */
 	target?: JSONExportTarget;
 

@@ -113,12 +113,14 @@ Contribution details and profile links are maintained on the [textmode.js contri
 ## JSON frame sequences
 
 Still JSON exports use `textmode.document@4.0.0`: each document has a `frames`
-array, and each frame has its own `layers` array. Consumers of older exports
-should read `document.frames[0].layers` instead of `document.layers`.
+array, and each frame has its own `layers` array. Read a still export from
+`document.frames[0].layers` instead of `document.layers`.
+JSON exports include all layers by default. Set `target: 'selected'` to export
+only one layer; if `layer` is omitted, the base layer is used.
 
 ```js
-const blob = await t.toJSONSequenceBlob({ frameCount: 120, frameRate: 60, target: 'all' });
-await t.saveJSONSequence({ filename: 'animation', frameCount: 120, frameRate: 60, target: 'all' });
+const blob = await t.toJSONSequenceBlob({ frameCount: 120, frameRate: 60 });
+await t.saveJSONSequence({ filename: 'animation', frameCount: 120, frameRate: 60 });
 ```
 
 Sequence capture writes a single JSON file. Frame duration is `1000 / frameRate`
