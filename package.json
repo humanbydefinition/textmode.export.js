@@ -60,7 +60,7 @@
 		"release": "textmode-release release"
 	},
 	"peerDependencies": {
-		"textmode.js": "^0.18.1-beta.1"
+		"textmode.js": "^0.18.2"
 	},
 	"dependencies": {
 		"@textmode/document": "^4.0.0",
