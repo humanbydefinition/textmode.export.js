@@ -247,11 +247,12 @@ describe('JSONExporter', () => {
 		expect(decoded.document.frames[0].layers).toHaveLength(target === 'selected' ? 1 : 2);
 	});
 
-	it('exports a selected user layer when provided', () => {
+	it('exports a selected user layer when target is selected', () => {
 		const exporter = new JSONExporter();
 		const textmodifier = createTextmodifierMock();
 		const document = expectSingleLayerDocument(
 			exporter.$generateJSONData(textmodifier, {
+				target: 'selected',
 				layer: textmodifier.testLayer,
 				includeMetadata: false,
 			})
@@ -420,6 +421,7 @@ describe('JSONExporter', () => {
 
 		expect(() =>
 			exporter.$generateJSONData(createTextmodifierMock(), {
+				target: 'selected',
 				layer: unmanagedLayer,
 			})
 		).toThrow('Cannot export a layer that is not managed');
