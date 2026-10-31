@@ -4,6 +4,7 @@ import type { SVGExportOptions } from './exporters/svg';
 import type { GIFExportOptions } from './exporters/gif';
 import type { VideoExportOptions } from './exporters/video';
 import type { JSONExportOptions } from './exporters/json';
+import type { JSONSequenceExportOptions } from './exporters/json';
 import type { TextmodeDocumentJSON } from '@textmode/document';
 import type { ZIPExportOptions } from './exporters/zip';
 
@@ -17,7 +18,8 @@ import type { ZIPExportOptions } from './exporters/zip';
 export type TXTOverlayDefaults = Pick<TXTExportOptions, 'preserveTrailingSpaces' | 'emptyCharacter'>;
 
 /**
- * Default JSON export fields controlled by the export overlay.
+ * Default JSON export fields controlled by the export overlay. JSON exports
+ * include all layers by default.
  *
  * @category Overlay
  *
@@ -319,6 +321,8 @@ export interface TextmodeExportAPI {
 	 * Controller for managing the export overlay UI visibility at runtime.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#exportoverlay | TextmodeExportAPI.exportOverlay API reference}
+	 *
+	 * @category Overlay
 	 */
 	exportOverlay: ExportOverlayController;
 
@@ -333,6 +337,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savecanvas | TextmodeExportAPI.saveCanvas API reference}
+	 *
+	 * @category Canvas capture
 	 */
 	saveCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -345,6 +351,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#toimageblob | TextmodeExportAPI.toImageBlob API reference}
+	 *
+	 * @category Canvas capture
 	 */
 	toImageBlob(options?: ImageExportOptions): Promise<Blob>;
 
@@ -359,6 +367,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#copycanvas | TextmodeExportAPI.copyCanvas API reference}
+	 *
+	 * @category Canvas capture
 	 */
 	copyCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -373,6 +383,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savesvg | TextmodeExportAPI.saveSVG API reference}
+	 *
+	 * @category Layer data export
 	 */
 	saveSVG(options?: SVGExportOptions): void;
 
@@ -387,6 +399,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savestrings | TextmodeExportAPI.saveStrings API reference}
+	 *
+	 * @category Layer data export
 	 */
 	saveStrings(options?: TXTExportOptions): void;
 
@@ -402,6 +416,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tosvg | TextmodeExportAPI.toSVG API reference}
+	 *
+	 * @category Layer data export
 	 */
 	toSVG(options?: SVGExportOptions): string;
 
@@ -417,57 +433,92 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tostring | TextmodeExportAPI.toString API reference}
+	 *
+	 * @category Layer data export
 	 */
 	toString(options?: TXTExportOptions): string;
 
 	/**
-	 * Produces a v3 document with a nonempty layers array.
-	 * Selected layers retain their visibility, opacity, blending, and transforms.
+	 * Produces a v4 document with a nonempty frames array. The full layer stack
+	 * is included by default. Selected layers retain their visibility, opacity,
+	 * blending, and transforms.
 	 *
 	 * @param options Export options.
 	 * @returns The JSON document representing the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
-	 * const layer = t.toJSON({ layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
-	 * const stack = t.toJSON({ target: 'all' });
-	 * console.log(layer.layers[0].grid, stack.formatVersion); // 3.0.0
+	 * const layer = t.toJSON({ target: 'selected', layer: t.layers.base, colorMode: 'hex', includeMetadata: true });
+	 * const stack = t.toJSON(); // The full layer stack is the default.
+	 * console.log(layer.frames[0].layers[0].grid, stack.formatVersion); // 4.0.0
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojson | TextmodeExportAPI.toJSON API reference}
+	 *
+	 * @category JSON document data
 	 */
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
 	/**
-	 * Produces the selected layer or layer stack as a v3 JSON document string.
+	 * Produces the full layer stack as a v4 JSON document string by default.
 	 *
 	 * @param options Export options.
 	 * @returns Serialized JSON string for the selected layer or layer stack.
 	 *
 	 * @example
 	 * ```ts
-	 * const json = t.toJSONString({ layer: t.layers.base, pretty: false, colorMode: 'hex' });
-	 * const stackJson = t.toJSONString({ target: 'all' });
+	 * const json = t.toJSONString({ target: 'selected', layer: t.layers.base, pretty: false, colorMode: 'hex' });
+	 * const stackJson = t.toJSONString(); // The full layer stack is the default.
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonstring | TextmodeExportAPI.toJSONString API reference}
+	 *
+	 * @category JSON document data
 	 */
 	toJSONString(options?: JSONExportOptions): string;
 
 	/**
-	 * Downloads the selected layer or layer stack as a v3 JSON document file.
+	 * Downloads the full layer stack as a v4 JSON document by default.
 	 *
 	 * @param options Export options.
 	 *
 	 * @example
 	 * ```ts
-	 * t.saveJSON({ filename: 'frame', layer: t.layers.base, pretty: true });
-	 * t.saveJSON({ filename: 'stack', target: 'all' });
+	 * t.saveJSON({ filename: 'frame', target: 'selected', layer: t.layers.base, pretty: true });
+	 * t.saveJSON({ filename: 'stack' }); // The full layer stack is the default.
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejson | TextmodeExportAPI.saveJSON API reference}
+	 *
+	 * @category JSON document data
 	 */
 	saveJSON(options?: JSONExportOptions): void;
+
+	/**
+	 * Capture a fixed-rate sequence as one JSON blob.
+	 *
+	 * @example
+	 * ```ts
+	 * const blob = await t.toJSONSequenceBlob({ frameCount: 60, frameRate: 30 });
+	 * ```
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonsequenceblob | TextmodeExportAPI.toJSONSequenceBlob API reference}
+	 *
+	 * @category JSON frame-sequence export
+	 */
+	toJSONSequenceBlob(options?: JSONSequenceExportOptions): Promise<Blob>;
+
+	/**
+	 * Capture and download a fixed-rate JSON sequence.
+	 *
+	 * @example
+	 * ```ts
+	 * await t.saveJSONSequence({ frameCount: 60, frameRate: 30 });
+	 * ```
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejsonsequence | TextmodeExportAPI.saveJSONSequence API reference}
+	 *
+	 * @category JSON frame-sequence export
+	 */
+	saveJSONSequence(options?: JSONSequenceExportOptions): Promise<void>;
 
 	/**
 	 * Records an animated GIF and saves it to disk.
@@ -480,6 +531,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savegif | TextmodeExportAPI.saveGIF API reference}
+	 *
+	 * @category GIF export
 	 */
 	saveGIF(options?: GIFExportOptions): Promise<void>;
 
@@ -492,6 +545,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#togifblob | TextmodeExportAPI.toGIFBlob API reference}
+	 *
+	 * @category GIF export
 	 */
 	toGIFBlob(options?: GIFExportOptions): Promise<Blob>;
 
@@ -529,6 +584,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savevideo | TextmodeExportAPI.saveVideo API reference}
+	 *
+	 * @category Video export
 	 */
 	saveVideo(options?: VideoExportOptions): Promise<void>;
 
@@ -543,6 +600,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tovideoblob | TextmodeExportAPI.toVideoBlob API reference}
+	 *
+	 * @category Video export
 	 */
 	toVideoBlob(options?: VideoExportOptions): Promise<Blob>;
 

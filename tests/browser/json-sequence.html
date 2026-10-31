@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>JSON sequence browser integration</title>
+	</head>
+	<body>
+		<pre id="result">running</pre>
+		<script type="module">
+			import { textmode } from 'textmode.js';
+			import { ExportPlugin } from '/src/index.ts';
+			import { decodeTextmodeDocument } from '@textmode/document';
+			const result = document.querySelector('#result');
+			let glyph = 'A';
+			try {
+				const t = textmode.create({ width: 64, height: 64, fontSize: 16, plugins: [ExportPlugin] });
+				t.draw(() => {
+					t.background('#000000');
+					t.char(glyph);
+					t.charColor('#ffffff');
+					t.point(0, 0);
+				});
+				await new Promise((resolve) => t.setup(resolve));
+				await new Promise((resolve) => requestAnimationFrame(resolve));
+				const blob = await t.toJSONSequenceBlob({
+					frameCount: 2,
+					frameRate: 60,
+					target: 'all',
+					prepareFrame: ({ frameIndex }) => {
+						glyph = frameIndex === 0 ? 'A' : 'B';
+					},
+				});
+				const value = JSON.parse(await blob.text());
+				const decoded = decodeTextmodeDocument(value);
+				const contains = (frame, character) =>
+					frame.layers.some((layer) =>
+						layer.cells.rows.some((row) => row.some((cell) => cell.character === character))
+					);
+				if (
+					!decoded.ok ||
+					value.frames.length !== 2 ||
+					!contains(value.frames[0], 'A') ||
+					!contains(value.frames[1], 'B')
+				)
+					throw new Error('Captured frame data did not match the redrawn glyphs.');
+				result.textContent = 'PASS';
+			} catch (error) {
+				result.textContent = `FAIL: ${error?.stack ?? error}`;
+			}
+		</script>
+	</body>
+</html>

@@ -12,6 +12,8 @@ export default defineDocs({
 			'Video export',
 			'Layer data export',
 			'JSON document data',
+			'JSON frame-sequence export',
+			'ZIP frame-sequence export',
 			'Overlay',
 			'*',
 		],

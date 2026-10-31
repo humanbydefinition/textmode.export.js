@@ -2,7 +2,6 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ImageExporter } from '../image';
-import { JSONExporter } from '../json';
 import { SVGExporter } from '../svg';
 import { TXTExporter } from '../txt';
 import { createZIPFrameSerializerRegistry } from './FrameSerializerRegistry';
@@ -13,13 +12,12 @@ describe('ZIP frame serializer registry', () => {
 
 	it('exhaustively maps formats to canonical extensions and compression', () => {
 		const registry = createZIPFrameSerializerRegistry({} as never);
-		expect(Object.keys(registry)).toEqual(['png', 'jpg', 'webp', 'svg', 'json', 'txt']);
+		expect(Object.keys(registry)).toEqual(['png', 'jpg', 'webp', 'svg', 'txt']);
 		expect(Object.values(registry).map(({ extension, compression }) => [extension, compression])).toEqual([
 			['.png', 'store'],
 			['.jpg', 'store'],
 			['.webp', 'store'],
 			['.svg', 'deflate'],
-			['.json', 'deflate'],
 			['.txt', 'deflate'],
 		]);
 	});
@@ -62,7 +60,6 @@ describe('ZIP frame serializer registry', () => {
 	it('forwards complete text-format controls and encodes UTF-8 without a BOM', async () => {
 		const textmodifier = {} as never;
 		vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg>✓</svg>');
-		const jsonString = vi.spyOn(JSONExporter.prototype, '$generateJSONString').mockReturnValue('{"frame":1}');
 		const txt = vi.spyOn(TXTExporter.prototype, '$generateTXT').mockReturnValue('A B');
 		const registry = createZIPFrameSerializerRegistry(textmodifier);
 
@@ -71,11 +68,7 @@ describe('ZIP frame serializer registry', () => {
 			frameOptions: {},
 			createdAt,
 		});
-		const json = await registry.json.serialize({
-			canvas: document.createElement('canvas'),
-			frameOptions: {},
-			createdAt,
-		});
+
 		const text = await registry.txt.serialize({
 			canvas: document.createElement('canvas'),
 			frameOptions: { preserveTrailingSpaces: true, emptyCharacter: '.', filename: 'ignored' },
@@ -83,9 +76,7 @@ describe('ZIP frame serializer registry', () => {
 		});
 
 		expect(new TextDecoder().decode(svg)).toBe('<svg>✓</svg>');
-		expect(new TextDecoder().decode(json)).toBe('{"frame":1}');
 		expect(new TextDecoder().decode(text)).toBe('A B');
-		expect(jsonString).toHaveBeenCalledWith(textmodifier, {}, createdAt);
 		expect(txt).toHaveBeenCalledWith(textmodifier, { preserveTrailingSpaces: true, emptyCharacter: '.' });
 	});
 });

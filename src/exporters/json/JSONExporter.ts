@@ -1,4 +1,4 @@
-import type { Textmodifier } from 'textmode.js';
+import type { Textmodifier, TextmodeLayer } from 'textmode.js';
 import { LayerBlendMode, TextmodeTileset } from 'textmode.js';
 import {
 	FileHandler,
@@ -55,7 +55,7 @@ export class JSONExporter {
 	 */
 	private _applyDefaultOptions(options: JSONExportOptions): JSONGenerationOptions {
 		return {
-			target: options.target ?? 'selected',
+			target: options.target ?? 'all',
 			pretty: options.pretty ?? true,
 			colorMode: options.colorMode ?? 'hex',
 			includeMetadata: options.includeMetadata ?? true,
@@ -182,7 +182,8 @@ export class JSONExporter {
 	public $generateJSONData(
 		textmodifier: Textmodifier,
 		options: JSONExportOptions = {},
-		createdAt: Date = new Date()
+		createdAt: Date = new Date(),
+		resolveId?: (layer: TextmodeLayer, defaultId: string) => string
 	): TextmodeDocumentJSON {
 		const generationOptions = this._applyDefaultOptions(options);
 		const metadata = this._createMetadata(generationOptions, createdAt);
@@ -195,7 +196,17 @@ export class JSONExporter {
 			format: TEXTMODE_DOCUMENT_FORMAT,
 			formatVersion: TEXTMODE_DOCUMENT_FORMAT_VERSION,
 			...(metadata ? { metadata } : {}),
-			layers: targets.map((target) => this._createStackLayer(target, generationOptions)),
+			frames: [
+				{
+					durationMs: 100,
+					layers: targets.map((target) =>
+						this._createStackLayer(
+							{ ...target, id: resolveId?.(target.layer, target.id) ?? target.id },
+							generationOptions
+						)
+					),
+				},
+			],
 		};
 	}
 

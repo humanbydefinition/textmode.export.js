@@ -22,7 +22,7 @@ Choose a compact still, structured document data, or a complete animation to sui
 - **Interactive overlay** - Built-in format controls, live layer selectors, runtime defaults, visibility controls, and remembered placement
 - **Clipboard workflows** - Copy text, JSON, SVG, and raster output without downloading files
 - **Controlled animation capture** - Configure frames, frame rate, scale, GIF repetition, video encoding, transparency, progress, and more
-- **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, JSON, or TXT frames with a versioned manifest
+- **ZIP frame sequences** - Archive deterministic PNG, JPEG, WebP, SVG, or TXT frames with a versioned manifest
 
 ## Try it online first
 
@@ -109,3 +109,29 @@ Contribution details and profile links are maintained on the [textmode.js contri
 - **[fflate](https://github.com/101arrowz/fflate)**
   - Streaming ZIP archive creation by [101arrowz](https://github.com/101arrowz).
   - License: [MIT License](https://github.com/101arrowz/fflate/blob/master/LICENSE).
+
+## JSON frame sequences
+
+Still JSON exports use `textmode.document@4.0.0`: each document has a `frames`
+array, and each frame has its own `layers` array. Read a still export from
+`document.frames[0].layers` instead of `document.layers`.
+JSON exports include all layers by default. Set `target: 'selected'` to export
+only one layer; if `layer` is omitted, the base layer is used.
+
+```js
+const blob = await t.toJSONSequenceBlob({ frameCount: 120, frameRate: 60 });
+await t.saveJSONSequence({ filename: 'animation', frameCount: 120, frameRate: 60 });
+```
+
+Sequence capture writes a single JSON file. Frame duration is `1000 / frameRate`
+milliseconds. Layer IDs remain stable when layer objects move or disappear and
+return during capture. Use `prepareFrame` to prepare each redraw, `signal` to
+cancel, and `onProgress` to track capture. Errors expose a `JSON_SEQUENCE_*`
+code. Capture applies the document package's frame, layer, and cell limits.
+
+JSON is no longer a ZIP frame format. Replace `saveZip({ format: 'json' })`
+with `saveJSONSequence`, or `toZipBlob({ format: 'json' })` with
+`toJSONSequenceBlob`. Other ZIP formats remain supported. The built-in JSON
+overlay exports a still frame. Variable source-frame durations are not supported
+by this fixed-rate API; applications such as `export.textmode.art` need a later
+API extension or another explicit approach to preserve those durations.

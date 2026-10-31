@@ -1,6 +1,5 @@
 import type { PrepareExportFrame } from '../base';
 import type { ImageExportOptions } from '../image';
-import type { JSONExportOptions } from '../json';
 import type { SVGExportOptions } from '../svg';
 import type { TXTExportOptions } from '../txt';
 
@@ -10,7 +9,7 @@ import type { TXTExportOptions } from '../txt';
  * @category ZIP frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ZIPFrameFormat | ZIPFrameFormat API reference}
  */
-export type ZIPFrameFormat = 'png' | 'jpg' | 'webp' | 'svg' | 'json' | 'txt';
+export type ZIPFrameFormat = 'png' | 'jpg' | 'webp' | 'svg' | 'txt';
 
 /**
  * Lifecycle state reported by a ZIP frame-sequence export.
@@ -78,6 +77,9 @@ export interface ZIPExportProgress {
 /**
  * Options shared by all ZIP frame formats.
  *
+ * Set these alongside the required `format` in {@link ZIPExportOptions}.
+ * For example, `frameCount: 120` and `frameRate: 30` capture four seconds.
+ *
  * @category ZIP frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPCaptureOptions | ZIPCaptureOptions API reference}
  */
@@ -89,19 +91,21 @@ export interface ZIPCaptureOptions {
 	 */
 	filename?: string;
 	/**
-	 * Number of frames to capture. Defaults to `300`.
+	 * Number of frames to capture, from 1 through 65,534. Defaults to `300`.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPCaptureOptions#framecount | ZIPCaptureOptions.frameCount API reference}
 	 */
 	frameCount?: number;
 	/**
-	 * Deterministic sampling rate. Defaults to `60`.
+	 * Number of frames to capture per second. Must be greater than zero and finite. Defaults to `60`.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPCaptureOptions#framerate | ZIPCaptureOptions.frameRate API reference}
 	 */
 	frameRate?: number;
 	/**
-	 * Prepares external state before each deterministic redraw.
+	 * Updates external state before each frame is drawn. The callback receives `frameIndex` (starting at zero),
+	 * `frameCount`, `frameRate`, `startSeconds`, `centerSeconds`, `endSeconds`, and an optional abort `signal`.
+	 * Use `centerSeconds` to sample external media. Capture waits for a returned promise before drawing.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPCaptureOptions#prepareframe | ZIPCaptureOptions.prepareFrame API reference}
 	 */
@@ -121,22 +125,79 @@ export interface ZIPCaptureOptions {
 }
 
 /**
- * Format-specific options forwarded to each existing still exporter.
+ * Options accepted by `frameOptions` for each ZIP frame format.
+ *
+ * Choose the frame format with {@link ZIPExportOptions}. Set the archive filename
+ * on {@link ZIPCaptureOptions}, not inside `frameOptions`. For image frames,
+ * the outer `format` also selects the image format.
  *
  * @category ZIP frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPFrameOptionsMap | ZIPFrameOptionsMap API reference}
  */
 export interface ZIPFrameOptionsMap {
+	/**
+	 * PNG image settings, such as `scale`. See {@link ImageExportOptions}.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPFrameOptionsMap#property-png | ZIPFrameOptionsMap.png API reference}
+	 */
 	png: Omit<ImageExportOptions, 'filename' | 'format'>;
+	/**
+	 * JPEG image settings, such as `scale`. See {@link ImageExportOptions}.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPFrameOptionsMap#property-jpg | ZIPFrameOptionsMap.jpg API reference}
+	 */
 	jpg: Omit<ImageExportOptions, 'filename' | 'format'>;
+	/**
+	 * WebP image settings, such as `scale`. See {@link ImageExportOptions}.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPFrameOptionsMap#property-webp | ZIPFrameOptionsMap.webp API reference}
+	 */
 	webp: Omit<ImageExportOptions, 'filename' | 'format'>;
+	/**
+	 * SVG layer settings, such as `drawMode`. See {@link SVGExportOptions}.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPFrameOptionsMap#property-svg | ZIPFrameOptionsMap.svg API reference}
+	 */
 	svg: Omit<SVGExportOptions, 'filename'>;
-	json: Omit<JSONExportOptions, 'filename'>;
+	/**
+	 * Text layer settings, such as `preserveTrailingSpaces`. See {@link TXTExportOptions}.
+	 *
+	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ZIPFrameOptionsMap#property-txt | ZIPFrameOptionsMap.txt API reference}
+	 */
 	txt: Omit<TXTExportOptions, 'filename'>;
 }
 
 /**
- * Discriminated options for a deterministic ZIP frame-sequence export.
+ * Options for capturing a frame sequence as a ZIP archive.
+ *
+ * Set the required `format` to `png`, `jpg`, `webp`, `svg`, or `txt`.
+ * Add shared capture settings such as `frameCount`, `frameRate`, and `filename`
+ * from {@link ZIPCaptureOptions}. Use `frameOptions` for settings specific to
+ * the selected format; {@link ZIPFrameOptionsMap} lists the available options.
+ * Set the archive filename and image format on the outer options, not in `frameOptions`.
+ *
+ * @example
+ * Capture 120 PNG frames at 30 frames per second, scaled to double size:
+ * ```ts
+ * await t.saveZip({
+ *     format: 'png',
+ *     filename: 'animation',
+ *     frameCount: 120,
+ *     frameRate: 30,
+ *     frameOptions: { scale: 2 },
+ * });
+ * ```
+ *
+ * @example
+ * Capture SVG frames with outlined characters:
+ * ```ts
+ * const archive = await t.toZipBlob({
+ *     format: 'svg',
+ *     frameCount: 60,
+ *     frameRate: 30,
+ *     frameOptions: { drawMode: 'stroke', strokeWidth: 1.5 },
+ * });
+ * ```
  *
  * @category ZIP frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/ZIPExportOptions | ZIPExportOptions API reference}

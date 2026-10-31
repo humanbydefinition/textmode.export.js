@@ -17,7 +17,7 @@ describe('CURATED_DEFAULTS', () => {
 
 	it('defines values for json', () => {
 		expect(CURATED_DEFAULTS.json).toEqual({
-			target: 'selected',
+			target: 'all',
 			pretty: true,
 			includeMetadata: true,
 			colorMode: 'hex',

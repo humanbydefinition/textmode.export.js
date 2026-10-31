@@ -1,7 +1,6 @@
 import type { Textmodifier } from 'textmode.js';
 import { resolveLayerExportTarget, type LayerExportOptions } from '../base';
 import { IMAGE_MIME_TYPES, ImageExporter, type ImageExportOptions } from '../image';
-import { JSONExporter, type JSONExportOptions } from '../json';
 import { SVGExporter, type SVGExportOptions } from '../svg';
 import { TXTExporter, type TXTExportOptions } from '../txt';
 import type { ZIPFrameFormat, ZIPFrameSerializer } from './types';
@@ -47,25 +46,20 @@ function rasterSerializer(format: 'png' | 'jpg' | 'webp'): ZIPFrameSerializer {
 	};
 }
 
-function textSerializer(format: 'svg' | 'json' | 'txt', textmodifier: Textmodifier): ZIPFrameSerializer {
+function textSerializer(format: 'svg' | 'txt', textmodifier: Textmodifier): ZIPFrameSerializer {
 	return {
 		extension: `.${format}`,
 		compression: 'deflate',
 		getDimensions({ frameOptions }) {
 			const clean = sanitizedOptions(frameOptions);
-			const target =
-				format === 'json' && clean.target === 'all'
-					? resolveLayerExportTarget(textmodifier)
-					: resolveLayerExportTarget(textmodifier, clean.layer as LayerExportOptions['layer']);
+			const target = resolveLayerExportTarget(textmodifier, clean.layer as LayerExportOptions['layer']);
 			return { width: target.grid.width, height: target.grid.height };
 		},
-		async serialize({ frameOptions, createdAt }) {
+		async serialize({ frameOptions }) {
 			const clean = sanitizedOptions(frameOptions);
 			let output: string;
 			if (format === 'svg') output = new SVGExporter().$generateSVG(textmodifier, clean as SVGExportOptions);
-			else if (format === 'json') {
-				output = new JSONExporter().$generateJSONString(textmodifier, clean as JSONExportOptions, createdAt);
-			} else output = new TXTExporter().$generateTXT(textmodifier, clean as TXTExportOptions);
+			else output = new TXTExporter().$generateTXT(textmodifier, clean as TXTExportOptions);
 			return textEncoder.encode(output);
 		},
 	};
@@ -80,7 +74,6 @@ export function createZIPFrameSerializerRegistry(
 		jpg: rasterSerializer('jpg'),
 		webp: rasterSerializer('webp'),
 		svg: textSerializer('svg', textmodifier),
-		json: textSerializer('json', textmodifier),
 		txt: textSerializer('txt', textmodifier),
 	} satisfies Record<ZIPFrameFormat, ZIPFrameSerializer>;
 }
