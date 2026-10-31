@@ -70,6 +70,7 @@ export interface JSONCellData {
 /**
  * Progress emitted by JSON frame-sequence capture.
  *
+ * @category JSON frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/JSONSequenceExportProgress | JSONSequenceExportProgress API reference}
  */
 export interface JSONSequenceExportProgress {
@@ -83,6 +84,7 @@ export interface JSONSequenceExportProgress {
 /**
  * Options for deterministic, fixed-rate JSON sequence capture.
  *
+ * @category JSON frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONSequenceExportOptions | JSONSequenceExportOptions API reference}
  */
 export type JSONSequenceExportOptions = JSONExportOptions & {
@@ -96,6 +98,7 @@ export type JSONSequenceExportOptions = JSONExportOptions & {
 /**
  * Machine-readable JSON sequence failure.
  *
+ * @category JSON frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/type-aliases/JSONSequenceExportErrorCode | JSONSequenceExportErrorCode API reference}
  */
 export type JSONSequenceExportErrorCode =
