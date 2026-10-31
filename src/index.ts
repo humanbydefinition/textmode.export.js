@@ -27,6 +27,9 @@
  * @categoryDescription Video export
  * Capture deterministic frames and encode MP4 or WebM video with Mediabunny.
  *
+ * @categoryDescription JSON frame-sequence export
+ * Capture deterministic frames as a single JSON document.
+ *
  * @categoryDescription ZIP frame-sequence export
  * Capture deterministic PNG, JPEG, WebP, SVG, or TXT frames in a code-only ZIP archive.
  *

@@ -320,6 +320,8 @@ export interface TextmodeExportAPI {
 	 * Controller for managing the export overlay UI visibility at runtime.
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#exportoverlay | TextmodeExportAPI.exportOverlay API reference}
+	 *
+	 * @category Overlay
 	 */
 	exportOverlay: ExportOverlayController;
 
@@ -334,6 +336,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savecanvas | TextmodeExportAPI.saveCanvas API reference}
+	 *
+	 * @category Canvas capture
 	 */
 	saveCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -346,6 +350,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#toimageblob | TextmodeExportAPI.toImageBlob API reference}
+	 *
+	 * @category Canvas capture
 	 */
 	toImageBlob(options?: ImageExportOptions): Promise<Blob>;
 
@@ -360,6 +366,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#copycanvas | TextmodeExportAPI.copyCanvas API reference}
+	 *
+	 * @category Canvas capture
 	 */
 	copyCanvas(options?: ImageExportOptions): Promise<void>;
 
@@ -374,6 +382,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savesvg | TextmodeExportAPI.saveSVG API reference}
+	 *
+	 * @category Layer data export
 	 */
 	saveSVG(options?: SVGExportOptions): void;
 
@@ -388,6 +398,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savestrings | TextmodeExportAPI.saveStrings API reference}
+	 *
+	 * @category Layer data export
 	 */
 	saveStrings(options?: TXTExportOptions): void;
 
@@ -403,6 +415,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tosvg | TextmodeExportAPI.toSVG API reference}
+	 *
+	 * @category Layer data export
 	 */
 	toSVG(options?: SVGExportOptions): string;
 
@@ -418,6 +432,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tostring | TextmodeExportAPI.toString API reference}
+	 *
+	 * @category Layer data export
 	 */
 	toString(options?: TXTExportOptions): string;
 
@@ -436,6 +452,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojson | TextmodeExportAPI.toJSON API reference}
+	 *
+	 * @category JSON document data
 	 */
 	toJSON(options?: JSONExportOptions): TextmodeDocumentJSON;
 
@@ -452,6 +470,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonstring | TextmodeExportAPI.toJSONString API reference}
+	 *
+	 * @category JSON document data
 	 */
 	toJSONString(options?: JSONExportOptions): string;
 
@@ -467,6 +487,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejson | TextmodeExportAPI.saveJSON API reference}
+	 *
+	 * @category JSON document data
 	 */
 	saveJSON(options?: JSONExportOptions): void;
 
@@ -478,6 +500,8 @@ export interface TextmodeExportAPI {
 	 * const blob = await t.toJSONSequenceBlob({ frameCount: 60, frameRate: 30 });
 	 * ```
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonsequenceblob | TextmodeExportAPI.toJSONSequenceBlob API reference}
+	 *
+	 * @category JSON frame-sequence export
 	 */
 	toJSONSequenceBlob(options?: JSONSequenceExportOptions): Promise<Blob>;
 
@@ -489,6 +513,8 @@ export interface TextmodeExportAPI {
 	 * await t.saveJSONSequence({ frameCount: 60, frameRate: 30 });
 	 * ```
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejsonsequence | TextmodeExportAPI.saveJSONSequence API reference}
+	 *
+	 * @category JSON frame-sequence export
 	 */
 	saveJSONSequence(options?: JSONSequenceExportOptions): Promise<void>;
 
@@ -503,6 +529,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savegif | TextmodeExportAPI.saveGIF API reference}
+	 *
+	 * @category GIF export
 	 */
 	saveGIF(options?: GIFExportOptions): Promise<void>;
 
@@ -515,6 +543,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#togifblob | TextmodeExportAPI.toGIFBlob API reference}
+	 *
+	 * @category GIF export
 	 */
 	toGIFBlob(options?: GIFExportOptions): Promise<Blob>;
 
@@ -552,6 +582,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savevideo | TextmodeExportAPI.saveVideo API reference}
+	 *
+	 * @category Video export
 	 */
 	saveVideo(options?: VideoExportOptions): Promise<void>;
 
@@ -566,6 +598,8 @@ export interface TextmodeExportAPI {
 	 * ```
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tovideoblob | TextmodeExportAPI.toVideoBlob API reference}
+	 *
+	 * @category Video export
 	 */
 	toVideoBlob(options?: VideoExportOptions): Promise<Blob>;
 

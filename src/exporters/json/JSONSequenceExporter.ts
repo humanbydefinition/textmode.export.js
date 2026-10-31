@@ -16,6 +16,7 @@ import type { JSONSequenceExportErrorCode, JSONSequenceExportOptions, JSONSequen
 /**
  * Error raised by JSON sequence capture.
  *
+ * @category JSON frame-sequence export
  * @see {@link https://code.textmode.art/api/textmode.export.js/classes/JSONSequenceExportError | JSONSequenceExportError API reference}
  */
 export class JSONSequenceExportError extends Error {
