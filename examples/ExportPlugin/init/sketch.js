@@ -3,27 +3,36 @@
  * @author humanbydefinition
  * @description Installs ExportPlugin and reveals its overlay.
  */
+const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
 	width: window.innerWidth,
 	height: window.innerHeight,
-	fontSize: 16,
+	fontSize: size,
 	plugins: [ExportPlugin],
 });
 
 const RAMP = ' .:-=+*#%@';
-const labelLayer = t.layers.add();
+const labelLayer = t.layers.add({ fontSize: size });
 t.exportOverlay.show();
 t.exportOverlay.setPosition({
 	offsetX: Math.max(8, window.innerWidth - 280),
 	offsetY: Math.max(8, window.innerHeight - 310),
 });
 
-function drawText(text, x, y, color = '#a9b7d0') {
+function drawLabel(lines) {
+	const { cols, rows } = labelLayer.grid;
+	const [left, top] = [-Math.floor(cols / 2), -Math.floor(rows / 2)];
+	const width = Math.max(...lines.map(([text]) => [...text].length)) + 2;
 	t.push();
-	t.printAlign('left', 'top');
-	t.charColor(color);
-	t.print(text, x, y);
+	t.translate(left + (width + 4) / 2, top + (lines.length + 5) / 2);
+	t.cellColor(6, 10, 22);
+	t.rect(width, lines.length + 2);
 	t.pop();
+	t.printAlign('left', 'top');
+	lines.forEach(([text, color], i) => {
+		t.charColor(color[0], color[1], color[2]);
+		t.print(text, left + 3, top + 3 + i);
+	});
 }
 
 t.draw(() => {
@@ -63,19 +72,20 @@ t.draw(() => {
 
 labelLayer.draw(() => {
 	t.clear();
-	const left = -Math.floor(t.grid.cols / 2);
-	const top = -Math.floor(t.grid.rows / 2);
-	const x = left + 3;
-	let y = top + 3;
-	drawText('EXPORTPLUGIN.INIT', x, y++, '#64f2c2');
-	drawText('------------------------------------', x, y++, '#345273');
-	drawText('CONCEPT: EXPORT OVERLAY', x, y++, '#8fcae8');
-	drawText('Plugin exposes the EXPORT API.', x, y++);
-	drawText('Overlay opens with all formats.', x, y++);
-	drawText('------------------------------------', x, y++, '#345273');
-	drawText('STATUS: OVERLAY VISIBLE', x, y, '#ffd166');
+	drawLabel([
+		['EXPORTPLUGIN.INIT', [120, 240, 180]],
+		['------------------------------------', [70, 100, 140]],
+		['CONCEPT: EXPORT OVERLAY', [140, 210, 255]],
+		['Plugin exposes the EXPORT API.', [140, 160, 190]],
+		['Overlay opens with all formats.', [140, 160, 190]],
+		['------------------------------------', [70, 100, 140]],
+		[`OVERLAY: ${t.exportOverlay.isVisible() ? 'VISIBLE' : 'HIDDEN'}`, [140, 255, 200]],
+	]);
 });
 
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);
+	const size = window.innerWidth < 700 ? 8 : 16;
+	t.fontSize(size);
+	for (const layer of t.layers.all) layer.fontSize(size);
 });

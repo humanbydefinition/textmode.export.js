@@ -1,16 +1,12 @@
-/**
- * @title ExportPlugin.defaults
- * @author humanbydefinition
- * @description Changes overlay defaults and restores them with a key press.
- */
+/** @title ExportPlugin.defaults */
+const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
 	width: window.innerWidth,
 	height: window.innerHeight,
-	fontSize: 16,
+	fontSize: size,
 	plugins: [ExportPlugin],
 });
-
-const labelLayer = t.layers.add();
+const labelLayer = t.layers.add({ fontSize: size });
 t.exportOverlay.setDefaults({ format: 'image', image: { format: 'png', scale: 2 } });
 t.exportOverlay.show();
 const presets = [
@@ -29,15 +25,21 @@ function applyPreset(value) {
 	if (value === 'json') t.exportOverlay.setDefaults({ format: value, json: { target: 'all' } });
 	if (value === 'video') t.exportOverlay.setDefaults({ format: value, video: { frameRate: 30 } });
 }
-
-function drawText(text, x, y, color = '#a9b7d0') {
+function drawLabel(lines) {
+	const { cols, rows } = labelLayer.grid;
+	const [left, top] = [-Math.floor(cols / 2), -Math.floor(rows / 2)];
+	const width = Math.max(...lines.map(([text]) => [...text].length)) + 2;
 	t.push();
-	t.printAlign('left', 'top');
-	t.charColor(color);
-	t.print(text, x, y);
+	t.translate(left + (width + 4) / 2, top + (lines.length + 5) / 2);
+	t.cellColor(6, 10, 22);
+	t.rect(width, lines.length + 2);
 	t.pop();
+	t.printAlign('left', 'top');
+	lines.forEach(([text, color], i) => {
+		t.charColor(color[0], color[1], color[2]);
+		t.print(text, left + 3, top + 3 + i);
+	});
 }
-
 t.draw(() => {
 	t.background('#0a0712');
 	const active = t.exportOverlay.getDefaults().format;
@@ -71,29 +73,28 @@ t.draw(() => {
 		}
 	}
 });
-
 t.keyPressed((data) => {
 	if (data.key === 'r') t.exportOverlay.resetDefaults();
 	const preset = presets.find((item) => item[0] === data.key);
 	if (preset) applyPreset(preset[1]);
 });
-
 labelLayer.draw(() => {
 	t.clear();
-	const left = -Math.floor(t.grid.cols / 2),
-		top = -Math.floor(t.grid.rows / 2);
-	const x = left + 3;
-	let y = top + 3;
-	drawText('EXPORTPLUGIN.DEFAULTS', x, y++, '#64f2c2');
-	drawText('------------------------------------', x, y++, '#5b3f76');
-	drawText('CONCEPT: DEFAULT VALUES', x, y++, '#d3a6f2');
-	drawText('Keys apply a format preset.', x, y++);
-	drawText('R restores curated values.', x, y++);
-	drawText('------------------------------------', x, y++, '#5b3f76');
-	drawText('ACTIVE FORMAT:', x, y, '#ffcf70');
-	drawText(t.exportOverlay.getDefaults().format.toUpperCase(), x + 15, y, '#fff4cf');
+	drawLabel([
+		['EXPORTPLUGIN.DEFAULTS', [120, 240, 180]],
+		['------------------------------------', [70, 100, 140]],
+		['CONCEPT: OVERLAY DEFAULTS', [140, 210, 255]],
+		['Format and options are preset.', [140, 160, 190]],
+		['Reset restores curated values.', [140, 160, 190]],
+		['------------------------------------', [70, 100, 140]],
+		['KEYS 1-6 PRESET, R RESET', [255, 200, 80]],
+		[`ACTIVE FORMAT: ${t.exportOverlay.getDefaults().format.toUpperCase()}`, [140, 255, 200]],
+	]);
 });
 
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);
+	const size = window.innerWidth < 700 ? 8 : 16;
+	t.fontSize(size);
+	for (const layer of t.layers.all) layer.fontSize(size);
 });
