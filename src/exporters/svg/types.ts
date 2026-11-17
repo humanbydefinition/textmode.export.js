@@ -1,4 +1,5 @@
 import type { LayerExportOptions } from '../base/LayerTarget';
+import type { color } from 'textmode.js';
 
 /**
  * RGBA color representation.
@@ -74,9 +75,16 @@ export type SVGExportOptions = LayerExportOptions & {
 	filename?: string;
 
 	/**
+	 * Canvas backdrop behind the selected layer. Defaults to `'transparent'`.
+	 * `'layer'` uses the background explicitly set on the selected layer, and a
+	 * TextmodeColor supplies an explicit backdrop. This is independent of cell backgrounds.
+	 */
+	background?: 'transparent' | 'layer' | color.TextmodeColor;
+
+	/**
 	 * Whether to include cell background rectangles in the SVG output.
 	 *
-	 * When `false`, only the character paths are included.
+	 * When `false`, cell rectangles are omitted; an explicit backdrop still applies.
 	 *
 	 * Defaults to `true`.
 	 */

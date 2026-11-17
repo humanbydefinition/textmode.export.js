@@ -1,99 +1,100 @@
 /**
  * @title ExportPlugin.defaults
- * @author humanbydefinition
- * @description Changes overlay defaults and restores them with a key press.
  */
+const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
 	width: window.innerWidth,
 	height: window.innerHeight,
-	fontSize: 16,
+	fontSize: size,
 	plugins: [ExportPlugin],
 });
-
-const labelLayer = t.layers.add();
-t.exportOverlay.setDefaults({ format: 'image', image: { format: 'png', scale: 2 } });
+const labelLayer = t.layers.add({ fontSize: size });
 t.exportOverlay.show();
+const placeOverlay = () =>
+	t.exportOverlay.setPosition({
+		offsetX: Math.max(8, window.innerWidth - 260),
+		offsetY: Math.max(8, window.innerHeight - 320),
+	});
+placeOverlay();
 const presets = [
-	['1', 'txt', '1 TXT', '='],
-	['2', 'image', '2 IMAGE', '@'],
-	['3', 'svg', '3 SVG', '#'],
-	['4', 'gif', '4 GIF', '*'],
-	['5', 'json', '5 JSON', '{'],
-	['6', 'video', '6 VIDEO', '~'],
+	{ name: 'TXT', x: -18, y: 1, patch: { format: 'txt', txt: { preserveTrailingSpaces: true } } },
+	{ name: 'JSON', x: -9, y: 1, patch: { format: 'json', json: { target: 'selected', pretty: false } } },
+	{ name: 'IMAGE', x: 0, y: 1, patch: { format: 'image', image: { format: 'webp', scale: 2 } } },
+	{ name: 'SVG', x: -18, y: 7, patch: { format: 'svg', svg: { drawMode: 'stroke' } } },
+	{ name: 'GIF', x: -9, y: 7, patch: { format: 'gif', gif: { frameRate: 24 } } },
+	{ name: 'VIDEO', x: 0, y: 7, patch: { format: 'video', video: { format: 'webm', frameRate: 30 } } },
 ];
-function applyPreset(value) {
-	if (value === 'txt') t.exportOverlay.setDefaults({ format: value, txt: { preserveTrailingSpaces: true } });
-	if (value === 'image') t.exportOverlay.setDefaults({ format: value, image: { scale: 2 } });
-	if (value === 'svg') t.exportOverlay.setDefaults({ format: value, svg: { drawMode: 'stroke' } });
-	if (value === 'gif') t.exportOverlay.setDefaults({ format: value, gif: { frameRate: 24 } });
-	if (value === 'json') t.exportOverlay.setDefaults({ format: value, json: { target: 'all' } });
-	if (value === 'video') t.exportOverlay.setDefaults({ format: value, video: { frameRate: 30 } });
-}
-
-function drawText(text, x, y, color = '#a9b7d0') {
+const controlShift = () => (window.innerWidth < 700 ? -9 : 0);
+function drawTile(preset, active, pulse) {
 	t.push();
-	t.printAlign('left', 'top');
-	t.charColor(color);
-	t.print(text, x, y);
+	t.translate(preset.x, preset.y + controlShift());
+	t.cellColor(active ? 65 : 28, active ? 70 + pulse * 25 : 35, active ? 115 : 62);
+	t.rect(preset.name.length + 2, 3);
+	t.charColor(active ? 255 : 170, active ? 235 : 190, active ? 190 : 225);
+	t.printAlign('center', 'center');
+	t.print(preset.name, 0, 0);
 	t.pop();
 }
-
-t.draw(() => {
-	t.background('#0a0712');
-	const active = t.exportOverlay.getDefaults().format;
-	const span = Math.max(8, Math.min(18, Math.floor(t.grid.cols / 4)));
-	const pulse = 0.5 + 0.5 * Math.sin(t.frameCount * 0.06);
-
-	for (let i = 0; i < presets.length; i++) {
-		const item = presets[i];
-		const x = ((i % 3) - 1) * span;
-		const y = Math.floor(i / 3) * 8 - 4;
-		const selected = active === item[1];
-		t.push();
-		t.translate(x, y, 0);
-		t.char(item[3]);
-		t.charColor(selected ? '#fff4cf' : '#b99bca');
-		t.cellColor(selected ? '#51273a' : '#171022');
-		t.rect(10, 4);
-		t.pop();
-		t.push();
-		t.printAlign('center', 'center');
-		t.charColor(selected ? '#fff4cf' : '#d0bddb');
-		t.print(item[2], x, y);
-		t.pop();
-		if (selected) {
-			t.push();
-			t.char('>');
-			t.charColor('#ff6b9d');
-			t.translate(x + 6, y - 2 + pulse, 0);
-			t.point();
-			t.pop();
-		}
+function drawLabel(rows) {
+	const left = -Math.floor((labelLayer.grid.cols - 1) / 2) + 2;
+	const top = -Math.floor(labelLayer.grid.rows / 2) + 2;
+	const width = Math.max(...rows.map(([text]) => text.length)) + 2;
+	t.printAlign('left', 'top');
+	t.push();
+	t.cellColor(6, 10, 22);
+	t.charColor(6, 10, 22);
+	for (let row = 0; row < rows.length + 2; row++) {
+		t.print('#'.repeat(width), left, top + row);
 	}
+	rows.forEach(([text, color], index) => {
+		t.charColor(...color);
+		t.print(text, left + 1, top + 1 + index);
+	});
+	t.pop();
+}
+t.draw(() => {
+	t.background(12, 8, 24);
+	const activeFormat = t.exportOverlay.getDefaults().format;
+	const pulse = 0.5 + 0.5 * Math.sin(t.frameCount * 0.08);
+	t.printAlign('center', 'center');
+	t.charColor(75, 80, 135);
+	for (let x = -23; x <= 5; x++) {
+		const wave = Math.round(Math.sin(x * 0.4 + t.frameCount * 0.04) * 2);
+		t.print(':', x, 10 + controlShift() + wave);
+	}
+	for (const preset of presets) drawTile(preset, activeFormat === preset.patch.format, pulse);
+	t.push();
+	t.translate(-9, 13 + controlShift());
+	t.cellColor(70, 35, 45);
+	t.rect(9, 3);
+	t.charColor(255, 200, 80);
+	t.print('RESET', 0, 0);
+	t.pop();
 });
-
-t.keyPressed((data) => {
-	if (data.key === 'r') t.exportOverlay.resetDefaults();
-	const preset = presets.find((item) => item[0] === data.key);
-	if (preset) applyPreset(preset[1]);
-});
-
+function gesture(x, y) {
+	if (Math.abs(x + 9) <= 4.5 && Math.abs(y - 13 - controlShift()) <= 1.5) {
+		t.exportOverlay.resetDefaults();
+		return;
+	}
+	const preset = presets.find((item) => Math.abs(x - item.x) <= 4 && Math.abs(y - item.y - controlShift()) <= 1.5);
+	if (preset) t.exportOverlay.setDefaults(preset.patch);
+}
+t.mousePressed(({ position }) => gesture(position.x, position.y));
+t.touchStarted(({ touch }) => gesture(touch.x, touch.y));
 labelLayer.draw(() => {
 	t.clear();
-	const left = -Math.floor(t.grid.cols / 2),
-		top = -Math.floor(t.grid.rows / 2);
-	const x = left + 3;
-	let y = top + 3;
-	drawText('EXPORTPLUGIN.DEFAULTS', x, y++, '#64f2c2');
-	drawText('------------------------------------', x, y++, '#5b3f76');
-	drawText('CONCEPT: DEFAULT VALUES', x, y++, '#d3a6f2');
-	drawText('Keys apply a format preset.', x, y++);
-	drawText('R restores curated values.', x, y++);
-	drawText('------------------------------------', x, y++, '#5b3f76');
-	drawText('ACTIVE FORMAT:', x, y, '#ffcf70');
-	drawText(t.exportOverlay.getDefaults().format.toUpperCase(), x + 15, y, '#fff4cf');
+	const activeFormat = t.exportOverlay.getDefaults().format;
+	drawLabel([
+		['EXPORTPLUGIN.DEFAULTS', [120, 240, 180]],
+		['------------------------------------', [70, 100, 140]],
+		['CLICK A TILE OR RESET', [255, 200, 80]],
+		[`FORMAT: ${activeFormat.toUpperCase()}`, [140, 255, 200]],
+	]);
 });
-
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);
+	const nextSize = window.innerWidth < 700 ? 8 : 16;
+	t.fontSize(nextSize);
+	for (const layer of t.layers.all) layer.fontSize(nextSize);
+	placeOverlay();
 });

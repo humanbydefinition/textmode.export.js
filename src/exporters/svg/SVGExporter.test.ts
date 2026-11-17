@@ -153,6 +153,71 @@ describe('SVGExporter', () => {
 		expect(svg).toContain('<rect');
 	});
 
+	it('exports a selected layer background without painting its cleared cells twice', () => {
+		const t = createTextmodifierMock();
+		Object.defineProperty(t.layers.base, 'background', {
+			value: { r: 8, g: 12, b: 28, a: 128 },
+			configurable: true,
+		});
+		const framebuffer = t.layers.base.drawFramebuffer!;
+		const originalRead = framebuffer.readPixels;
+		vi.spyOn(framebuffer, 'readPixels').mockImplementation((attachment) => {
+			if (attachment === 0) return Uint8Array.from([255, 255, 0, 0, 2, 0, 0, 0]);
+			if (attachment === 2) return Uint8Array.from([8, 12, 28, 128, 200, 100, 50, 128]);
+			return originalRead(attachment);
+		});
+		const exporter = new SVGExporter();
+		const svg = exporter.$generateSVG(t, { background: 'layer' });
+		expect(svg).toContain('<rect width="16" height="16" fill="rgba(8,12,28,0.5019607843137255)"/>');
+		expect(svg).not.toContain('<rect x="0" y="0"');
+		expect(svg).toContain('fill="rgba(200,100,50,0.5019607843137255)"');
+		expect(svg.indexOf('<rect width=')).toBeLessThan(svg.indexOf('<path'));
+		const noCells = exporter.$generateSVG(t, { background: 'layer', includeBackgroundRectangles: false });
+		expect(noCells.match(/<rect/g) ?? []).toHaveLength(1);
+		expect(exporter.$generateSVG(t)).not.toContain('<rect width="16" height="16"');
+		Object.defineProperty(t.layers.base, 'background', {
+			value: { r: 9, g: 12, b: 28, a: 128 },
+			configurable: true,
+		});
+		expect(exporter.$generateSVG(t, { background: 'layer' })).toContain(
+			'<rect x="0" y="0" width="8" height="16" fill="rgba(8,12,28,0.5019607843137255)"/>'
+		);
+	});
+
+	it('uses the selected layer background and handles clear or transparent backgrounds', () => {
+		const t = createTextmodifierMock();
+		Object.defineProperty(t.layers.base, 'background', {
+			value: { r: 8, g: 12, b: 28, a: 255 },
+			configurable: true,
+		});
+		Object.defineProperty(t.testLayer, 'background', {
+			value: { r: 100, g: 40, b: 20, a: 255 },
+			configurable: true,
+		});
+		const exporter = new SVGExporter();
+		expect(exporter.$generateSVG(t, { background: 'layer', layer: t.testLayer })).toContain(
+			'fill="rgba(100,40,20,1)"'
+		);
+		Object.defineProperty(t.testLayer, 'background', { value: null, configurable: true });
+		expect(exporter.$generateSVG(t, { background: 'layer', layer: t.testLayer })).not.toContain('<rect width="16"');
+		Object.defineProperty(t.testLayer, 'background', {
+			value: { r: 5, g: 6, b: 7, a: 0 },
+			configurable: true,
+		});
+		expect(exporter.$generateSVG(t, { background: 'layer', layer: t.testLayer })).not.toContain('<rect width="16"');
+	});
+
+	it('supports explicit background colors', () => {
+		const t = createTextmodifierMock();
+		const exporter = new SVGExporter();
+		const background = { r: 10, g: 20, b: 30, a: 255 } as unknown as NonNullable<
+			import('./types').SVGExportOptions['background']
+		>;
+		expect(exporter.$generateSVG(t, { background })).toContain(
+			'<rect width="16" height="16" fill="rgba(10,20,30,1)"/>'
+		);
+	});
+
 	it('omits background rectangles when disabled', () => {
 		const exporter = new SVGExporter();
 		const svg = exporter.$generateSVG(createTextmodifierMock(), {

@@ -1,4 +1,4 @@
-import type { SVGExportOptions, SVGGenerationOptions } from './types';
+import type { RGBA, SVGExportOptions, SVGGenerationOptions } from './types';
 import { SVGDataExtractor } from './SVGDataExtractor';
 import { SVGContentGenerator } from './SVGContentGenerator';
 import type { Textmodifier } from 'textmode.js';
@@ -39,6 +39,16 @@ export class SVGExporter {
 		const contentGenerator = new SVGContentGenerator();
 		const generationOptions = this._applyDefaultOptions(options);
 		const target = resolveLayerExportTarget(textmodifier, generationOptions.layer);
+		let background: RGBA | undefined;
+		const backgroundOption = options.background ?? 'transparent';
+		if (backgroundOption === 'layer') {
+			background = target.layer.background ?? undefined;
+		} else if (backgroundOption !== 'transparent') {
+			if (typeof backgroundOption !== 'object' || backgroundOption === null) {
+				throw new TypeError('[textmode-export] SVG background must be transparent, layer, or a TextmodeColor.');
+			}
+			background = backgroundOption;
+		}
 
 		// Extract SVG cell data
 		const cellDataArray = dataExtractor.$extractSVGCellData(
@@ -51,7 +61,9 @@ export class SVGExporter {
 			cellDataArray,
 			target.grid,
 			target.font as TextmodeFont,
-			generationOptions
+			generationOptions,
+			background,
+			backgroundOption === 'layer'
 		);
 
 		return contentGenerator.$optimizeSVGContent(svgContent);
