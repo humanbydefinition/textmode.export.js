@@ -1,7 +1,7 @@
 /**
  * @title ExportPlugin.init
  * @author humanbydefinition
- * @description Installs ExportPlugin and reveals its overlay.
+ * @description Installs ExportPlugin and demonstrates the overlay visibility controls.
  */
 const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
@@ -10,82 +10,89 @@ const t = textmode.create({
 	fontSize: size,
 	plugins: [ExportPlugin],
 });
-
-const RAMP = ' .:-=+*#%@';
 const labelLayer = t.layers.add({ fontSize: size });
-t.exportOverlay.show();
-t.exportOverlay.setPosition({
-	offsetX: Math.max(8, window.innerWidth - 280),
-	offsetY: Math.max(8, window.innerHeight - 310),
-});
+t.exportOverlay.hide();
+const placeOverlay = () =>
+	t.exportOverlay.setPosition({
+		offsetX: Math.max(8, window.innerWidth - 260),
+		offsetY: Math.max(8, window.innerHeight - 320),
+	});
+placeOverlay();
+const buttons = [
+	{ label: 'SHOW', x: -18 },
+	{ label: 'TOGGLE', x: -9 },
+	{ label: 'HIDE', x: 0 },
+];
 
-function drawLabel(lines) {
-	const { cols, rows } = labelLayer.grid;
-	const [left, top] = [-Math.floor(cols / 2), -Math.floor(rows / 2)];
-	const width = Math.max(...lines.map(([text]) => [...text].length)) + 2;
+function drawLabel(rows) {
+	const left = -Math.floor(labelLayer.grid.cols / 2) + 2;
+	const top = -Math.floor(labelLayer.grid.rows / 2) + 2;
+	const width = Math.max(...rows.map(([text]) => text.length)) + 2;
 	t.push();
-	t.translate(left + (width + 4) / 2, top + (lines.length + 5) / 2);
+	t.translate(left + width / 2, top + (rows.length + 2) / 2);
 	t.cellColor(6, 10, 22);
-	t.rect(width, lines.length + 2);
+	t.rect(width, rows.length + 2);
 	t.pop();
 	t.printAlign('left', 'top');
-	lines.forEach(([text, color], i) => {
-		t.charColor(color[0], color[1], color[2]);
-		t.print(text, left + 3, top + 3 + i);
+	rows.forEach(([text, color], index) => {
+		t.charColor(...color);
+		t.print(text, left + 1, top + 1 + index);
 	});
 }
 
 t.draw(() => {
-	t.background('#050914');
-	const time = t.frameCount * 0.028;
-	const halfW = Math.floor(t.grid.cols / 2);
-	const halfH = Math.floor(t.grid.rows / 2);
-
-	for (let y = -halfH + 1; y < halfH; y++) {
-		for (let x = -halfW + 1; x < halfW; x++) {
-			const distance = Math.hypot(x + 8, y - 1);
-			const rings = 0.5 + 0.5 * Math.sin(distance * 0.38 - time * 2.2);
-			const sweep = 0.5 + 0.5 * Math.sin((x - y) * 0.16 + time);
-			const value = rings * 0.72 + sweep * 0.28;
-			if (value < 0.12) continue;
-			t.push();
-			t.translate(x, y, 0);
-			t.char(RAMP[Math.min(RAMP.length - 1, Math.floor(value * RAMP.length))]);
-			t.charColor(value > 0.72 ? '#ffd166' : value > 0.38 ? '#54e6c1' : '#3b5b86');
-			t.cellColor('#071326');
-			t.point();
-			t.pop();
-		}
+	t.background(5, 9, 20);
+	t.printAlign('left', 'top');
+	for (let i = 0; i < 70; i++) {
+		const angle = i * 0.61 + Math.sin(t.frameCount * 0.03) * 0.15;
+		const radius = 3 + (i % 17);
+		const lit = i % 6 === 0;
+		t.charColor(lit ? 90 : 42, lit ? 220 : 120, 190);
+		t.print(lit ? '#' : '+', Math.round(-16 + Math.cos(angle) * radius), Math.round(7 + Math.sin(angle) * radius));
 	}
-
-	t.char('+');
-	t.charColor('#9ad7ff');
-	t.point(-halfW + 4, -halfH + 4);
-	t.point(halfW - 4, -halfH + 4);
-	t.point(-halfW + 4, halfH - 4);
-	t.point(halfW - 4, halfH - 4);
-	t.char('@');
-	t.charColor('#fff0a6');
-	t.translate(Math.sin(time * 0.7) * 12, Math.cos(time * 0.9) * 5, 0);
-	t.point();
+	for (const button of buttons) {
+		t.push();
+		t.translate(button.x, 0);
+		t.cellColor(24, 34, 58);
+		t.rect(button.label.length + 2, 3);
+		t.charColor(120, 240, 180);
+		t.printAlign('center', 'center');
+		t.print(button.label, 0, 0);
+		t.pop();
+	}
 });
+
+let lastTouch = -Infinity;
+function gesture(x, y, touch = false) {
+	if (!touch && performance.now() - lastTouch < 600) return;
+	if (touch) lastTouch = performance.now();
+	const button = buttons.find((item) => Math.abs(x - item.x) <= item.label.length / 2 + 1 && Math.abs(y) <= 1.5);
+	if (!button) return;
+	if (button.label === 'SHOW') t.exportOverlay.show();
+	if (button.label === 'HIDE') t.exportOverlay.hide();
+	if (button.label === 'TOGGLE') t.exportOverlay.toggle();
+}
+t.mousePressed(({ position }) => gesture(position.x, position.y));
+t.touchStarted(({ touch }) => gesture(touch.x, touch.y, true));
 
 labelLayer.draw(() => {
 	t.clear();
+	const visibility = t.exportOverlay.isVisible() ? 'VISIBLE' : 'HIDDEN';
 	drawLabel([
 		['EXPORTPLUGIN.INIT', [120, 240, 180]],
 		['------------------------------------', [70, 100, 140]],
-		['CONCEPT: EXPORT OVERLAY', [140, 210, 255]],
-		['Plugin exposes the EXPORT API.', [140, 160, 190]],
-		['Overlay opens with all formats.', [140, 160, 190]],
+		['CONCEPT: OVERLAY CONTROL', [140, 210, 255]],
+		['Click a deck button to call one.', [140, 160, 190]],
 		['------------------------------------', [70, 100, 140]],
-		[`OVERLAY: ${t.exportOverlay.isVisible() ? 'VISIBLE' : 'HIDDEN'}`, [140, 255, 200]],
+		['CLICK SHOW / HIDE / TOGGLE', [255, 200, 80]],
+		[`OVERLAY: ${visibility}`, [140, 255, 200]],
 	]);
 });
 
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);
-	const size = window.innerWidth < 700 ? 8 : 16;
-	t.fontSize(size);
-	for (const layer of t.layers.all) layer.fontSize(size);
+	const nextSize = window.innerWidth < 700 ? 8 : 16;
+	t.fontSize(nextSize);
+	for (const layer of t.layers.all) layer.fontSize(nextSize);
+	placeOverlay();
 });

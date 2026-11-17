@@ -9,14 +9,20 @@
 				{
 					"title": "ExportPlugin.init",
 					"sourceFile": "examples/ExportPlugin/init/sketch.js",
-					"description": "Creates a textmode sketch with ExportPlugin installed and a live overlay ready for manual export flows.",
-					"status": "unrated"
+					"description": "Installs ExportPlugin and demonstrates overlay show, hide, toggle, and visibility.",
+					"status": "good"
 				},
 				{
 					"title": "ExportPlugin.defaults",
 					"sourceFile": "examples/ExportPlugin/defaults/sketch.js",
-					"description": "Shows how to override and reset overlay default values at runtime using t.exportOverlay.setDefaults and .resetDefaults.",
-					"status": "unrated"
+					"description": "Presets overlay formats and options with setDefaults, reads getDefaults, and restores curated values with resetDefaults.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.overlayPosition",
+					"sourceFile": "examples/ExportPlugin/overlayPosition/sketch.js",
+					"description": "Moves the export overlay with setPosition, reads getPosition, and restores placement with resetPosition.",
+					"status": "good"
 				},
 				{
 					"title": "ExportPlugin.layerTargets",
