@@ -59,13 +59,13 @@ describe('ZIP frame serializer registry', () => {
 
 	it('forwards complete text-format controls and encodes UTF-8 without a BOM', async () => {
 		const textmodifier = {} as never;
-		vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg>✓</svg>');
+		const svgExporter = vi.spyOn(SVGExporter.prototype, '$generateSVG').mockReturnValue('<svg>✓</svg>');
 		const txt = vi.spyOn(TXTExporter.prototype, '$generateTXT').mockReturnValue('A B');
 		const registry = createZIPFrameSerializerRegistry(textmodifier);
 
 		const svg = await registry.svg.serialize({
 			canvas: document.createElement('canvas'),
-			frameOptions: {},
+			frameOptions: { background: 'layer' },
 			createdAt,
 		});
 
@@ -76,6 +76,7 @@ describe('ZIP frame serializer registry', () => {
 		});
 
 		expect(new TextDecoder().decode(svg)).toBe('<svg>✓</svg>');
+		expect(svgExporter).toHaveBeenCalledWith(textmodifier, { background: 'layer' });
 		expect(new TextDecoder().decode(text)).toBe('A B');
 		expect(txt).toHaveBeenCalledWith(textmodifier, { preserveTrailingSpaces: true, emptyCharacter: '.' });
 	});
