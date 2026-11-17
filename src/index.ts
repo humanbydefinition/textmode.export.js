@@ -102,6 +102,9 @@ export type { LayerExportOptions } from './exporters/base';
 /**
  * Default export plugin instance for the standard textmode.js workflow.
  *
+ * @example
+ * {@includeCode ../examples/ExportPlugin/init/sketch.js}
+ *
  * @category Workflow
  *
  * @see {@link https://code.textmode.art/api/textmode.export.js/variables/ExportPlugin | ExportPlugin API reference}

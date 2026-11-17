@@ -69,8 +69,9 @@ t.draw(() => {
 function saveLandscape() {
 	if (!ready) return;
 	try {
+		const svg = t.toSVG({ background: 'layer' });
 		t.saveSVG({ filename: 'character-landscape', background: 'layer' });
-		status = 'SVG FILE SENT';
+		status = `SVG ${svg.length} CHARS SAVED`;
 	} catch (error) {
 		status = error instanceof Error ? error.message : 'SVG EXPORT FAILED';
 	}
@@ -85,7 +86,7 @@ labelLayer.draw(() => {
 		['------------------------------------', [70, 100, 140]],
 		['CONCEPT: CHARACTER SVG', [140, 210, 255]],
 		['A vector font supplies glyph paths.', [140, 160, 190]],
-		['Export the layer background too.', [140, 160, 190]],
+		['toSVG builds; saveSVG downloads.', [140, 160, 190]],
 		['CLICK: SAVE SVG', [255, 200, 80]],
 		[`STATUS: ${status.slice(0, 32)}`, [140, 255, 200]],
 	]);

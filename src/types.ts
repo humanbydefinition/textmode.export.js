@@ -157,9 +157,7 @@ export interface ExportOverlayController {
 	 * Shows the export overlay UI.
 	 *
 	 * @example
-	 * ```ts
-	 * t.exportOverlay.show();
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/init/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#show | ExportOverlayController.show API reference}
 	 */
@@ -169,9 +167,7 @@ export interface ExportOverlayController {
 	 * Hides the export overlay UI.
 	 *
 	 * @example
-	 * ```ts
-	 * t.exportOverlay.hide();
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/init/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#hide | ExportOverlayController.hide API reference}
 	 */
@@ -181,9 +177,7 @@ export interface ExportOverlayController {
 	 * Toggles the export overlay UI visibility.
 	 *
 	 * @example
-	 * ```ts
-	 * t.exportOverlay.toggle();
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/init/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#toggle | ExportOverlayController.toggle API reference}
 	 */
@@ -193,9 +187,7 @@ export interface ExportOverlayController {
 	 * Checks if the export overlay is currently visible.
 	 *
 	 * @example
-	 * ```ts
-	 * const visible = t.exportOverlay.isVisible();
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/init/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#isvisible | ExportOverlayController.isVisible API reference}
 	 */
@@ -206,9 +198,7 @@ export interface ExportOverlayController {
 	 * clears any remembered placement.
 	 *
 	 * @example
-	 * ```ts
-	 * t.exportOverlay.resetPosition();
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/overlayPosition/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#resetposition | ExportOverlayController.resetPosition API reference}
 	 */
@@ -220,10 +210,7 @@ export interface ExportOverlayController {
 	 * @returns The current canvas-relative overlay placement state.
 	 *
 	 * @example
-	 * ```ts
-	 * const position = t.exportOverlay.getPosition();
-	 * console.log(position.mode, position.offsetX, position.offsetY);
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/overlayPosition/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#getposition | ExportOverlayController.getPosition API reference}
 	 */
@@ -236,9 +223,7 @@ export interface ExportOverlayController {
 	 * @param position Canvas-relative overlay offsets in CSS pixels.
 	 *
 	 * @example
-	 * ```ts
-	 * t.exportOverlay.setPosition({ offsetX: 24, offsetY: 24 });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/overlayPosition/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#setposition | ExportOverlayController.setPosition API reference}
 	 */
@@ -254,10 +239,7 @@ export interface ExportOverlayController {
 	 * @param patch Partial defaults to merge per format.
 	 *
 	 * @example
-	 * ```ts
-	 * // Select image export by default, set image scale to 2×, and GIF to 30 fps
-	 * t.exportOverlay.setDefaults({ format: 'image', image: { scale: 2 }, gif: { frameRate: 30 } });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/defaults/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#setdefaults | ExportOverlayController.setDefaults API reference}
 	 */
@@ -272,10 +254,7 @@ export interface ExportOverlayController {
 	 * @returns The current per-format defaults.
 	 *
 	 * @example
-	 * ```ts
-	 * const defaults = t.exportOverlay.getDefaults();
-	 * console.log(defaults.image.scale); // 1 (or whatever was set)
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/defaults/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/ExportOverlayController#getdefaults | ExportOverlayController.getDefaults API reference}
 	 */
@@ -288,6 +267,9 @@ export interface ExportOverlayController {
 	 * formats are restored.
 	 *
 	 * @param format Optional format to reset. Omit to reset all.
+	 *
+	 * @example
+	 * {@includeCode ../examples/ExportPlugin/defaults/sketch.js}
 	 *
 	 * @example
 	 * ```ts
@@ -332,9 +314,7 @@ export interface TextmodeExportAPI {
 	 * @param options Export options.
 	 *
 	 * @example
-	 * ```ts
-	 * await t.saveCanvas({ format: 'png', filename: 'frame-001' });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/canvasStills/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savecanvas | TextmodeExportAPI.saveCanvas API reference}
 	 *
@@ -346,9 +326,7 @@ export interface TextmodeExportAPI {
 	 * Generates the current canvas as an image blob without downloading it.
 	 *
 	 * @example
-	 * ```ts
-	 * const blob = await t.toImageBlob({ format: 'webp', scale: 2 });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/canvasStills/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#toimageblob | TextmodeExportAPI.toImageBlob API reference}
 	 *
@@ -362,9 +340,7 @@ export interface TextmodeExportAPI {
 	 * @param options Export options.
 	 *
 	 * @example
-	 * ```ts
-	 * await t.copyCanvas({ format: 'png' });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/canvasStills/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#copycanvas | TextmodeExportAPI.copyCanvas API reference}
 	 *
@@ -378,9 +354,7 @@ export interface TextmodeExportAPI {
 	 * @param options Export options.
 	 *
 	 * @example
-	 * ```ts
-	 * t.saveSVG({ filename: 'poster', layer: t.layers.base, includeBackgroundRectangles: true });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/svgExport/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savesvg | TextmodeExportAPI.saveSVG API reference}
 	 *
@@ -394,9 +368,7 @@ export interface TextmodeExportAPI {
 	 * @param options Export options.
 	 *
 	 * @example
-	 * ```ts
-	 * t.saveStrings({ filename: 'frame', layer: t.layers.base, preserveTrailingSpaces: true });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savestrings | TextmodeExportAPI.saveStrings API reference}
 	 *
@@ -409,6 +381,9 @@ export interface TextmodeExportAPI {
 	 *
 	 * @param options Export options.
 	 * @returns The SVG content representing the artwork.
+	 *
+	 * @example
+	 * {@includeCode ../examples/ExportPlugin/svgExport/sketch.js}
 	 *
 	 * @example
 	 * ```ts
@@ -428,9 +403,7 @@ export interface TextmodeExportAPI {
 	 * @returns The textual representation of the artwork.
 	 *
 	 * @example
-	 * ```ts
-	 * const text = t.toString({ layer: t.layers.base, preserveTrailingSpaces: false });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/layerTargets/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tostring | TextmodeExportAPI.toString API reference}
 	 *
@@ -445,6 +418,9 @@ export interface TextmodeExportAPI {
 	 *
 	 * @param options Export options.
 	 * @returns The JSON document representing the selected layer or layer stack.
+	 *
+	 * @example
+	 * {@includeCode ../examples/ExportPlugin/jsonDocument/sketch.js}
 	 *
 	 * @example
 	 * ```ts
@@ -466,6 +442,9 @@ export interface TextmodeExportAPI {
 	 * @returns Serialized JSON string for the selected layer or layer stack.
 	 *
 	 * @example
+	 * {@includeCode ../examples/ExportPlugin/jsonDocument/sketch.js}
+	 *
+	 * @example
 	 * ```ts
 	 * const json = t.toJSONString({ target: 'selected', layer: t.layers.base, pretty: false, colorMode: 'hex' });
 	 * const stackJson = t.toJSONString(); // The full layer stack is the default.
@@ -483,6 +462,9 @@ export interface TextmodeExportAPI {
 	 * @param options Export options.
 	 *
 	 * @example
+	 * {@includeCode ../examples/ExportPlugin/jsonDocument/sketch.js}
+	 *
+	 * @example
 	 * ```ts
 	 * t.saveJSON({ filename: 'frame', target: 'selected', layer: t.layers.base, pretty: true });
 	 * t.saveJSON({ filename: 'stack' }); // The full layer stack is the default.
@@ -498,9 +480,7 @@ export interface TextmodeExportAPI {
 	 * Capture a fixed-rate sequence as one JSON blob.
 	 *
 	 * @example
-	 * ```ts
-	 * const blob = await t.toJSONSequenceBlob({ frameCount: 60, frameRate: 30 });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/jsonSequence/sketch.js}
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tojsonsequenceblob | TextmodeExportAPI.toJSONSequenceBlob API reference}
 	 *
 	 * @category JSON frame-sequence export
@@ -511,9 +491,7 @@ export interface TextmodeExportAPI {
 	 * Capture and download a fixed-rate JSON sequence.
 	 *
 	 * @example
-	 * ```ts
-	 * await t.saveJSONSequence({ frameCount: 60, frameRate: 30 });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/jsonSequence/sketch.js}
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savejsonsequence | TextmodeExportAPI.saveJSONSequence API reference}
 	 *
 	 * @category JSON frame-sequence export
@@ -526,9 +504,7 @@ export interface TextmodeExportAPI {
 	 * @param options Export options.
 	 *
 	 * @example
-	 * ```ts
-	 * await t.saveGIF({ frameCount: 120, frameRate: 30, filename: 'loop' });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/gifExport/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#savegif | TextmodeExportAPI.saveGIF API reference}
 	 *
@@ -540,9 +516,7 @@ export interface TextmodeExportAPI {
 	 * Generates an animated GIF blob without downloading it.
 	 *
 	 * @example
-	 * ```ts
-	 * const blob = await t.toGIFBlob({ frameCount: 90, frameRate: 30 });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/gifExport/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#togifblob | TextmodeExportAPI.toGIFBlob API reference}
 	 *
@@ -554,6 +528,9 @@ export interface TextmodeExportAPI {
 	 * Captures a video and saves it to disk *(`'mp4'` by default)*.
 	 *
 	 * @param options Export options.
+	 *
+	 * @example
+	 * {@includeCode ../examples/ExportPlugin/videoExport/sketch.js}
 	 *
 	 * @example
 	 * ```ts
@@ -595,9 +572,7 @@ export interface TextmodeExportAPI {
 	 * `destination` is only used by {@link saveVideo}; this method always buffers and returns a `Blob`.
 	 *
 	 * @example
-	 * ```ts
-	 * const blob = await t.toVideoBlob({ format: 'webm', frameCount: 120, frameRate: 30 });
-	 * ```
+	 * {@includeCode ../examples/ExportPlugin/videoExport/sketch.js}
 	 *
 	 * @see {@link https://code.textmode.art/api/textmode.export.js/interfaces/TextmodeExportAPI#tovideoblob | TextmodeExportAPI.toVideoBlob API reference}
 	 *
@@ -616,6 +591,9 @@ export interface TextmodeExportAPI {
 	 * @throws {Error} When validation, capture, serialization, archive writing, or download fails.
 	 *
 	 * @category ZIP frame-sequence export
+	 *
+	 * @example
+	 * {@includeCode ../examples/ExportPlugin/zipSequence/sketch.js}
 	 *
 	 * @example
 	 * ```ts
@@ -643,6 +621,9 @@ export interface TextmodeExportAPI {
 	 * @throws {Error} When validation, capture, serialization, archive writing, or cancellation fails.
 	 *
 	 * @category ZIP frame-sequence export
+	 *
+	 * @example
+	 * {@includeCode ../examples/ExportPlugin/zipSequence/sketch.js}
 	 *
 	 * @example
 	 * ```ts
