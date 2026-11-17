@@ -16,19 +16,21 @@ const controlRow = () => Math.floor(t.grid.rows / 2) - 2;
 let status = 'CLICK BLOB OR SAVE';
 let busy = false;
 function drawLabel(rows) {
-	const left = -Math.floor(labelLayer.grid.cols / 2) + 2;
+	const left = -Math.floor((labelLayer.grid.cols - 1) / 2) + 2;
 	const top = -Math.floor(labelLayer.grid.rows / 2) + 2;
 	const width = Math.max(...rows.map(([text]) => text.length)) + 2;
-	t.push();
-	t.translate(left + width / 2, top + (rows.length + 2) / 2);
-	t.cellColor(6, 10, 22);
-	t.rect(width, rows.length + 2);
-	t.pop();
 	t.printAlign('left', 'top');
+	t.push();
+	t.cellColor(6, 10, 22);
+	t.charColor(6, 10, 22);
+	for (let row = 0; row < rows.length + 2; row++) {
+		t.print('#'.repeat(width), left, top + row);
+	}
 	rows.forEach(([text, color], index) => {
 		t.charColor(...color);
 		t.print(text, left + 1, top + 1 + index);
 	});
+	t.pop();
 }
 t.draw(() => {
 	t.printAlign('left', 'top');
