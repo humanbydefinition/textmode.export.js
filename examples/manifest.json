@@ -4,18 +4,12 @@
 	"groups": [
 		{
 			"name": "ExportPlugin",
-			"description": "Plugin installation, overlay controls, export helpers, and layer-targeted exports.",
+			"description": "Plugin installation, overlay controls, export helpers, layer targets, and animation captures.",
 			"examples": [
 				{
 					"title": "ExportPlugin.init",
 					"sourceFile": "examples/ExportPlugin/init/sketch.js",
 					"description": "Installs ExportPlugin and demonstrates overlay show, hide, toggle, and visibility.",
-					"status": "good"
-				},
-				{
-					"title": "ExportPlugin.defaults",
-					"sourceFile": "examples/ExportPlugin/defaults/sketch.js",
-					"description": "Presets overlay formats and options with setDefaults, reads getDefaults, and restores curated values with resetDefaults.",
 					"status": "good"
 				},
 				{
@@ -25,16 +19,58 @@
 					"status": "good"
 				},
 				{
+					"title": "ExportPlugin.defaults",
+					"sourceFile": "examples/ExportPlugin/defaults/sketch.js",
+					"description": "Presets overlay formats and options with setDefaults, reads getDefaults, and restores curated values with resetDefaults.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.canvasStills",
+					"sourceFile": "examples/ExportPlugin/canvasStills/sketch.js",
+					"description": "Saves a PNG canvas image, creates a WebP image blob, and copies a canvas image to the clipboard.",
+					"status": "good"
+				},
+				{
 					"title": "ExportPlugin.layerTargets",
 					"sourceFile": "examples/ExportPlugin/layerTargets/sketch.js",
-					"description": "Draws base, foreground, and annotation layers so TXT, JSON, and SVG exports can target individual layers.",
-					"status": "unrated"
+					"description": "Exports one chosen layer as text with toString and saveStrings.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.svgExport",
+					"sourceFile": "examples/ExportPlugin/svgExport/sketch.js",
+					"description": "Exports a character landscape as an SVG using saveSVG and a vector font.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.jsonDocument",
+					"sourceFile": "examples/ExportPlugin/jsonDocument/sketch.js",
+					"description": "Builds an all-layer JSON document with toJSON, measures toJSONString, and downloads with saveJSON.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.jsonSequence",
+					"sourceFile": "examples/ExportPlugin/jsonSequence/sketch.js",
+					"description": "Captures a fixed-rate JSON sequence with toJSONSequenceBlob and saveJSONSequence.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.gifExport",
+					"sourceFile": "examples/ExportPlugin/gifExport/sketch.js",
+					"description": "Records a looping GIF with toGIFBlob and saveGIF, including progress feedback.",
+					"status": "good"
+				},
+				{
+					"title": "ExportPlugin.videoExport",
+					"sourceFile": "examples/ExportPlugin/videoExport/sketch.js",
+					"description": "Records a short WebM clip with toVideoBlob and saveVideo, including progress feedback.",
+					"status": "good"
 				},
 				{
 					"title": "ExportPlugin.zipSequence",
 					"sourceFile": "examples/ExportPlugin/zipSequence/sketch.js",
-					"description": "Exports a deterministic PNG frame sequence from code when Z is pressed, without adding ZIP to the overlay.",
-					"status": "unrated"
+					"description": "Packs PNG frames into a ZIP archive with toZipBlob and saveZip, including progress feedback.",
+					"status": "good"
 				}
 			]
 		}

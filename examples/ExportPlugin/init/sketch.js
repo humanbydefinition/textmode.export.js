@@ -1,7 +1,5 @@
 /**
  * @title ExportPlugin.init
- * @author humanbydefinition
- * @description Installs ExportPlugin and demonstrates the overlay visibility controls.
  */
 const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
@@ -42,30 +40,33 @@ function drawLabel(rows) {
 
 t.draw(() => {
 	t.background(5, 9, 20);
-	t.printAlign('left', 'top');
-	for (let i = 0; i < 70; i++) {
-		const angle = i * 0.61 + Math.sin(t.frameCount * 0.03) * 0.15;
-		const radius = 3 + (i % 17);
-		const lit = i % 6 === 0;
-		t.charColor(lit ? 90 : 42, lit ? 220 : 120, 190);
-		t.print(lit ? '#' : '+', Math.round(-16 + Math.cos(angle) * radius), Math.round(7 + Math.sin(angle) * radius));
+	t.printAlign('center', 'center');
+	const pulse = Math.sin(t.frameCount * 0.04);
+	const visible = t.exportOverlay.isVisible();
+	for (let y = -4; y <= 15; y++) {
+		for (let x = -23; x <= 3; x++) {
+			const wave = Math.sin(x * 0.4 + y * 0.7 - t.frameCount * 0.04);
+			if (wave < 0.55) continue;
+			t.charColor(30, 75 + wave * 45, 115 + wave * 45);
+			t.print(wave > 0.85 ? '+' : '.', x, y);
+		}
 	}
+	t.charColor(visible ? 120 : 55, visible ? 240 : 90, visible ? 180 : 120);
+	t.print(visible ? '>>> SIGNAL OPEN >>>' : '--- SIGNAL CLOSED ---', -9, 7);
+	t.charColor(255, 200 + pulse * 25, 80);
+	t.print(visible ? 'TRANSMITTING' : 'STANDBY', -9, 12);
 	for (const button of buttons) {
 		t.push();
 		t.translate(button.x, 0);
-		t.cellColor(24, 34, 58);
+		t.cellColor(24, 44, 65);
 		t.rect(button.label.length + 2, 3);
-		t.charColor(120, 240, 180);
-		t.printAlign('center', 'center');
+		t.charColor(140, 255, 200);
 		t.print(button.label, 0, 0);
 		t.pop();
 	}
 });
 
-let lastTouch = -Infinity;
-function gesture(x, y, touch = false) {
-	if (!touch && performance.now() - lastTouch < 600) return;
-	if (touch) lastTouch = performance.now();
+function gesture(x, y) {
 	const button = buttons.find((item) => Math.abs(x - item.x) <= item.label.length / 2 + 1 && Math.abs(y) <= 1.5);
 	if (!button) return;
 	if (button.label === 'SHOW') t.exportOverlay.show();
@@ -73,7 +74,7 @@ function gesture(x, y, touch = false) {
 	if (button.label === 'TOGGLE') t.exportOverlay.toggle();
 }
 t.mousePressed(({ position }) => gesture(position.x, position.y));
-t.touchStarted(({ touch }) => gesture(touch.x, touch.y, true));
+t.touchStarted(({ touch }) => gesture(touch.x, touch.y));
 
 labelLayer.draw(() => {
 	t.clear();
@@ -82,8 +83,7 @@ labelLayer.draw(() => {
 		['EXPORTPLUGIN.INIT', [120, 240, 180]],
 		['------------------------------------', [70, 100, 140]],
 		['CONCEPT: OVERLAY CONTROL', [140, 210, 255]],
-		['Click a deck button to call one.', [140, 160, 190]],
-		['------------------------------------', [70, 100, 140]],
+		['Open or close the export panel.', [140, 160, 190]],
 		['CLICK SHOW / HIDE / TOGGLE', [255, 200, 80]],
 		[`OVERLAY: ${visibility}`, [140, 255, 200]],
 	]);

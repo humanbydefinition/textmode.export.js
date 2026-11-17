@@ -1,7 +1,5 @@
 /**
  * @title ExportPlugin.defaults
- * @author humanbydefinition
- * @description Presets overlay formats with setDefaults, reads getDefaults, and resets with resetDefaults.
  */
 const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
@@ -26,10 +24,11 @@ const presets = [
 	{ name: 'GIF', x: -9, y: 7, patch: { format: 'gif', gif: { frameRate: 24 } } },
 	{ name: 'VIDEO', x: 0, y: 7, patch: { format: 'video', video: { format: 'webm', frameRate: 30 } } },
 ];
+const controlShift = () => (window.innerWidth < 700 ? -9 : 0);
 function drawTile(preset, active, pulse) {
 	t.push();
-	t.translate(preset.x, preset.y);
-	t.cellColor(20 + pulse * 20, 28 + (active ? pulse * 20 : 0), active ? 60 + pulse * 30 : 48);
+	t.translate(preset.x, preset.y + controlShift());
+	t.cellColor(active ? 65 : 28, active ? 70 + pulse * 25 : 35, active ? 115 : 62);
 	t.rect(preset.name.length + 2, 3);
 	t.charColor(active ? 255 : 170, active ? 235 : 190, active ? 190 : 225);
 	t.printAlign('center', 'center');
@@ -52,40 +51,39 @@ function drawLabel(rows) {
 	});
 }
 t.draw(() => {
-	t.background(10, 7, 18);
+	t.background(12, 8, 24);
 	const activeFormat = t.exportOverlay.getDefaults().format;
 	const pulse = 0.5 + 0.5 * Math.sin(t.frameCount * 0.08);
+	t.printAlign('center', 'center');
+	t.charColor(75, 80, 135);
+	for (let x = -23; x <= 5; x++) {
+		const wave = Math.round(Math.sin(x * 0.4 + t.frameCount * 0.04) * 2);
+		t.print(':', x, 10 + controlShift() + wave);
+	}
 	for (const preset of presets) drawTile(preset, activeFormat === preset.patch.format, pulse);
 	t.push();
-	t.translate(-16, 13);
-	t.cellColor(44, 20, 34);
-	t.rect(7, 3);
+	t.translate(-9, 13 + controlShift());
+	t.cellColor(70, 35, 45);
+	t.rect(9, 3);
 	t.charColor(255, 200, 80);
-	t.printAlign('center', 'center');
 	t.print('RESET', 0, 0);
 	t.pop();
 });
-let lastTouch = -Infinity;
-function gesture(x, y, touch = false) {
-	if (!touch && performance.now() - lastTouch < 600) return;
-	if (touch) lastTouch = performance.now();
-	if (Math.abs(x + 16) <= 3.5 && Math.abs(y - 13) <= 1.5) {
+function gesture(x, y) {
+	if (Math.abs(x + 9) <= 4.5 && Math.abs(y - 13 - controlShift()) <= 1.5) {
 		t.exportOverlay.resetDefaults();
 		return;
 	}
-	const preset = presets.find((item) => Math.abs(x - item.x) <= 4 && Math.abs(y - item.y) <= 1.5);
+	const preset = presets.find((item) => Math.abs(x - item.x) <= 4 && Math.abs(y - item.y - controlShift()) <= 1.5);
 	if (preset) t.exportOverlay.setDefaults(preset.patch);
 }
 t.mousePressed(({ position }) => gesture(position.x, position.y));
-t.touchStarted(({ touch }) => gesture(touch.x, touch.y, true));
+t.touchStarted(({ touch }) => gesture(touch.x, touch.y));
 labelLayer.draw(() => {
 	t.clear();
 	const activeFormat = t.exportOverlay.getDefaults().format;
 	drawLabel([
 		['EXPORTPLUGIN.DEFAULTS', [120, 240, 180]],
-		['------------------------------------', [70, 100, 140]],
-		['CONCEPT: OVERLAY PRESETS', [140, 210, 255]],
-		['Click a tile to preset the overlay.', [140, 160, 190]],
 		['------------------------------------', [70, 100, 140]],
 		['CLICK A TILE OR RESET', [255, 200, 80]],
 		[`FORMAT: ${activeFormat.toUpperCase()}`, [140, 255, 200]],

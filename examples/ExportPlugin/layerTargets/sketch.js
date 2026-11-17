@@ -1,4 +1,6 @@
-/** @title ExportPlugin.layerTargets */
+/**
+ * @title ExportPlugin.layerTargets
+ */
 const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
 	width: window.innerWidth,
@@ -6,95 +8,88 @@ const t = textmode.create({
 	fontSize: size,
 	plugins: [ExportPlugin],
 });
-const RAMP = ' .:-=+*#%@';
-const energyLayer = t.layers.add({ opacity: 0.9, blendMode: t.BLEND_SCREEN, fontSize: size });
-const annotationLayer = t.layers.add({ opacity: 0.95, blendMode: t.BLEND_NORMAL, fontSize: size });
+const glowLayer = t.layers.add({ fontSize: size, blendMode: t.BLEND_SCREEN });
+const noteLayer = t.layers.add({ fontSize: size, blendMode: t.BLEND_ADDITIVE });
 const labelLayer = t.layers.add({ fontSize: size });
-t.exportOverlay.setDefaults({ format: 'json', json: { target: 'all', pretty: true } });
-t.exportOverlay.show();
-t.exportOverlay.setPosition({
-	offsetX: Math.max(8, window.innerWidth - 280),
-	offsetY: Math.max(8, window.innerHeight - 310),
-});
-function drawLabel(lines) {
-	const { cols, rows } = labelLayer.grid;
-	const [left, top] = [-Math.floor(cols / 2), -Math.floor(rows / 2)];
-	const width = Math.max(...lines.map(([text]) => [...text].length)) + 2;
-	t.push();
-	t.translate(left + (width + 4) / 2, top + (lines.length + 5) / 2);
-	t.cellColor(6, 10, 22);
-	t.rect(width, lines.length + 2);
-	t.pop();
+t.exportOverlay.hide();
+const targets = [
+	{ name: 'NOTE', layer: noteLayer, y: -1 },
+	{ name: 'GLOW', layer: glowLayer, y: 6 },
+	{ name: 'BASE', layer: t.layers.base, y: 13 },
+];
+let report = { name: 'BASE', glyphs: 0 };
+function drawBand(center, color) {
+	const halfCols = Math.floor(t.grid.cols / 2);
+	const time = t.frameCount * 0.03;
+	for (let x = -halfCols + 2; x <= halfCols - 2; x++) {
+		const y = center + Math.round(Math.sin(x * 0.12 + time + center) * 2);
+		for (let d = 0; d < 3; d++) {
+			t.charColor(color[0] - d * 20, color[1] - d * 25, color[2] - d * 20);
+			t.print(d === 0 ? '#' : d === 1 ? '=' : '.', x, y + d);
+		}
+	}
+}
+function drawLabel(rows) {
+	const left = -Math.floor(labelLayer.grid.cols / 2) + 2;
+	const top = -Math.floor(labelLayer.grid.rows / 2) + 2;
+	const width = Math.max(...rows.map(([text]) => text.length)) + 2;
+	for (let i = 0; i < width * (rows.length + 2); i++) {
+		t.cellColor(6, 10, 22);
+		t.charColor(6, 10, 22);
+		t.print('#', left + (i % width), top + Math.floor(i / width));
+	}
 	t.printAlign('left', 'top');
-	lines.forEach(([text, color], i) => {
-		t.charColor(color[0], color[1], color[2]);
-		t.print(text, left + 3, top + 3 + i);
+	rows.forEach(([text, color], index) => {
+		t.charColor(...color);
+		t.print(text, left + 1, top + 1 + index);
 	});
 }
 t.draw(() => {
-	t.background('#070b12');
-	const halfW = Math.floor(t.grid.cols / 2);
-	const halfH = Math.floor(t.grid.rows / 2);
-	for (let y = -halfH; y <= halfH; y++) {
-		for (let x = -halfW; x <= halfW; x++) {
-			const ridge = Math.sin(x * 0.17) * 3 + Math.sin(x * 0.07 + 1) * 4;
-			const depth = (y - ridge + halfH * 0.32) / (halfH * 1.1);
-			const contour = 0.5 + 0.5 * Math.sin((y - ridge) * 0.72);
-			const value = depth > 0 ? Math.min(1, 0.3 + depth * 0.45 + contour * 0.25) : 0;
-			if (value < 0.2) continue;
-			t.push();
-			t.translate(x, y, 0);
-			t.char(RAMP[Math.min(RAMP.length - 1, Math.floor(value * RAMP.length))]);
-			t.charColor(value > 0.72 ? '#a9b8c9' : '#53657f');
-			t.cellColor('#111b29');
-			t.point();
-			t.pop();
+	t.background(5, 8, 15);
+	t.printAlign('left', 'top');
+	const halfCols = Math.floor(t.grid.cols / 2),
+		halfRows = Math.floor(t.grid.rows / 2);
+	for (let y = -halfRows; y <= halfRows; y++) {
+		for (let x = -halfCols; x <= halfCols; x++) {
+			const value = Math.sin(x * 0.08 + y * 0.06 + t.frameCount * 0.02) * 0.5 + 0.5;
+			if (value < 0.52) continue;
+			t.charColor(14 + value * 18, 28 + value * 24, 52 + value * 24);
+			t.print(value > 0.78 ? '+' : '.', x, y);
 		}
 	}
+	drawBand(13, [120, 180, 230]);
 });
-energyLayer.draw(() => {
-	t.background(0, 0, 0, 0);
-	const time = t.frameCount * 0.04;
-	for (let x = -Math.floor(energyLayer.grid.cols / 2); x < energyLayer.grid.cols / 2; x += 2) {
-		const y = Math.sin(x * 0.25 + time) * 3 - 1;
-		t.push();
-		t.translate(x, y, 0);
-		t.char(x % 6 === 0 ? '*' : '~');
-		t.charColor(x % 6 === 0 ? '#ffe082' : '#54e6c1');
-		t.cellColor(0, 0, 0, 0);
-		t.point();
-		t.pop();
-	}
+glowLayer.draw(() => {
+	t.clear();
+	drawBand(6, [255, 190, 80]);
 });
-annotationLayer.draw(() => {
-	t.background(0, 0, 0, 0);
-	t.charColor('#e8efff');
-	t.printAlign('center', 'center');
-	t.print('BASE', -Math.min(Math.floor(annotationLayer.grid.cols / 2) - 5, 15), 6);
-	t.charColor('#ffd166');
-	t.print('ENERGY', Math.min(Math.floor(annotationLayer.grid.cols / 2) - 5, 15), 6);
+noteLayer.draw(() => {
+	t.clear();
+	drawBand(-1, [120, 240, 180]);
 });
-
-window.inspectStackJSON = () => t.toJSON({ target: 'all' });
-window.inspectEnergySVG = () => t.toSVG({ layer: energyLayer, drawMode: 'stroke' });
-window.inspectAnnotationsTXT = () => t.toString({ layer: annotationLayer });
-
+function gesture(x, y) {
+	const target = targets.find((item) => Math.abs(y - item.y) <= 2);
+	if (!target) return;
+	const text = t.toString({ layer: target.layer });
+	report = { name: target.name, glyphs: text.replace(/\s/g, '').length };
+	t.saveStrings({ filename: `layer-${target.name.toLowerCase()}`, layer: target.layer });
+}
+t.mousePressed(({ position }) => gesture(position.x, position.y));
+t.touchStarted(({ touch }) => gesture(touch.x, touch.y));
 labelLayer.draw(() => {
 	t.clear();
 	drawLabel([
 		['EXPORTPLUGIN.LAYERTARGETS', [120, 240, 180]],
 		['------------------------------------', [70, 100, 140]],
-		['CONCEPT: LAYERED OUTPUT', [140, 210, 255]],
-		['JSON saves the whole stack.', [140, 160, 190]],
-		['SVG and TXT target one layer.', [140, 160, 190]],
-		['------------------------------------', [70, 100, 140]],
-		['DEFAULT TARGET: ALL LAYERS', [140, 255, 200]],
+		['CONCEPT: LAYER DATA EXPORT', [140, 210, 255]],
+		['Top to bottom: NOTE, GLOW, BASE.', [140, 160, 190]],
+		['CLICK A RIBBON TO SAVE TXT', [255, 200, 80]],
+		[`TARGET: ${report.name} / ${report.glyphs} GLYPHS`, [140, 255, 200]],
 	]);
 });
-
 t.windowResized(() => {
 	t.resizeCanvas(window.innerWidth, window.innerHeight);
-	const size = window.innerWidth < 700 ? 8 : 16;
-	t.fontSize(size);
-	for (const layer of t.layers.all) layer.fontSize(size);
+	const nextSize = window.innerWidth < 700 ? 8 : 16;
+	t.fontSize(nextSize);
+	for (const layer of t.layers.all) layer.fontSize(nextSize);
 });

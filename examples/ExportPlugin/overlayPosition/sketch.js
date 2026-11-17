@@ -1,7 +1,5 @@
 /**
  * @title ExportPlugin.overlayPosition
- * @author humanbydefinition
- * @description Moves the export overlay with setPosition and reads or resets its placement.
  */
 const size = window.innerWidth < 700 ? 8 : 16;
 const t = textmode.create({
@@ -36,35 +34,36 @@ function drawLabel(rows) {
 }
 
 t.draw(() => {
-	t.background(4, 8, 18);
-	const time = t.frameCount * 0.035;
+	t.background(8, 12, 24);
 	t.printAlign('left', 'top');
-	for (let i = 0; i < 64; i++) {
-		const angle = i * 0.45 + time;
-		const radius = 3 + (i % 8) * 2;
-		const lit = i % 4 === 0;
-		t.charColor(lit ? 255 : 54, lit ? 200 : 120, lit ? 90 : 170);
-		t.print(
-			lit ? '+' : '.',
-			Math.round(15 + Math.cos(angle) * radius),
-			Math.round(2 + Math.sin(angle) * radius * 0.7)
-		);
+	const halfCols = Math.floor(t.grid.cols / 2);
+	const halfRows = Math.floor(t.grid.rows / 2);
+	for (let y = -halfRows; y <= halfRows; y++) {
+		for (let x = -halfCols; x <= halfCols; x++) {
+			if (x % 4 !== 0 || y % 3 !== 0) continue;
+			t.charColor(38, 72, 100);
+			t.print('+', x, y);
+		}
 	}
+	const position = t.exportOverlay.getPosition();
+	const markerX = Math.round((position.offsetX / window.innerWidth) * t.grid.cols - halfCols);
+	const markerY = Math.round((position.offsetY / window.innerHeight) * t.grid.rows - halfRows);
+	t.charColor(255, 190, 80);
+	t.print('[+]', markerX, markerY);
 	t.push();
-	t.translate(-15, 13);
-	t.cellColor(52, 24, 34);
+	t.translate(-halfCols + 9, halfRows - 3);
+	t.cellColor(70, 38, 28);
 	t.rect(14, 3);
-	t.charColor(255, 200, 80);
+	t.charColor(255, 210, 120);
 	t.printAlign('center', 'center');
 	t.print('HOME / RESET', 0, 0);
 	t.pop();
 });
 
-let lastTouch = -Infinity;
-function gesture(x, y, clientX, clientY, touch = false) {
-	if (!touch && performance.now() - lastTouch < 600) return;
-	if (touch) lastTouch = performance.now();
-	if (Math.abs(x + 15) <= 7 && Math.abs(y - 13) <= 1.5) {
+function gesture(x, y, clientX, clientY) {
+	const homeX = -Math.floor(t.grid.cols / 2) + 9;
+	const homeY = Math.floor(t.grid.rows / 2) - 3;
+	if (Math.abs(x - homeX) <= 7 && Math.abs(y - homeY) <= 1.5) {
 		t.exportOverlay.resetPosition();
 		return;
 	}
@@ -74,7 +73,7 @@ function gesture(x, y, clientX, clientY, touch = false) {
 t.mousePressed(({ position, originalEvent }) =>
 	gesture(position.x, position.y, originalEvent.clientX, originalEvent.clientY)
 );
-t.touchStarted(({ touch }) => gesture(touch.x, touch.y, touch.clientX, touch.clientY, true));
+t.touchStarted(({ touch }) => gesture(touch.x, touch.y, touch.clientX, touch.clientY));
 
 labelLayer.draw(() => {
 	t.clear();
@@ -84,10 +83,8 @@ labelLayer.draw(() => {
 		['------------------------------------', [70, 100, 140]],
 		['CONCEPT: OVERLAY PLACEMENT', [140, 210, 255]],
 		['Click the board: setPosition().', [140, 160, 190]],
-		['HOME: resetPosition() clears it.', [140, 160, 190]],
-		['------------------------------------', [70, 100, 140]],
 		['CLICK BOARD OR HOME / RESET', [255, 200, 80]],
-		[`POS: ${position.mode.toUpperCase()} ${position.offsetX},${position.offsetY}`, [140, 255, 200]],
+		[`POS: ${position.mode.toUpperCase()} ${position.offsetX},${position.offsetY}`.slice(0, 40), [140, 255, 200]],
 	]);
 });
 
