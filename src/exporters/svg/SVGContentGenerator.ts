@@ -1,4 +1,4 @@
-import type { SVGCellData, SVGGenerationOptions } from './types';
+import type { RGBA, SVGCellData, SVGGenerationOptions } from './types';
 import { SVGPathGenerator } from './SVGPathGenerator';
 import type { TextmodeGrid } from 'textmode.js';
 import type { GlyphData, TextmodeFont } from 'textmode.js';
@@ -142,12 +142,13 @@ export class SVGContentGenerator {
 		cellData: SVGCellData,
 		gridInfo: TextmodeGrid,
 		fontInfo: TextmodeFont,
-		options: SVGGenerationOptions
+		options: SVGGenerationOptions,
+		skipBackground = false
 	): string {
 		const parts: string[] = [];
 
 		// Add background rectangle
-		const background = this._generateCellBackground(cellData, gridInfo, options);
+		const background = skipBackground ? '' : this._generateCellBackground(cellData, gridInfo, options);
 		if (background) parts.push(background);
 
 		// Add character path with optional transform
@@ -173,13 +174,29 @@ export class SVGContentGenerator {
 		cellDataArray: SVGCellData[],
 		grid: TextmodeGrid,
 		fontInfo: TextmodeFont,
-		options: SVGGenerationOptions
+		options: SVGGenerationOptions,
+		background?: RGBA,
+		skipClearedBackground = false
 	): string {
 		const parts = [this.$generateSVGHeader(grid), '<g id="ascii-cells">'];
+		if (background && background.a > 0) {
+			const { r, g, b, a } = background;
+			parts.push(`<rect width="${grid.width}" height="${grid.height}" fill="rgba(${r},${g},${b},${a / 255})"/>`);
+		}
 
 		// Add each cell
 		for (const cellData of cellDataArray) {
-			parts.push(this.$generateCellContent(cellData, grid, fontInfo, options));
+			const cellColor = cellData.secondaryColor;
+			const redundantClear =
+				skipClearedBackground &&
+				background !== undefined &&
+				background.a > 0 &&
+				cellData.encodedGlyphSlot === 65535 &&
+				cellColor.r === background.r &&
+				cellColor.g === background.g &&
+				cellColor.b === background.b &&
+				cellColor.a === background.a;
+			parts.push(this.$generateCellContent(cellData, grid, fontInfo, options, redundantClear));
 		}
 
 		parts.push(this.$generateSVGFooter());
